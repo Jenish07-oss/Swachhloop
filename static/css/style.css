@@ -1,0 +1,97 @@
+/* SwachhLoop Custom Styles */
+
+:root {
+    --primary: #198754;
+    --primary-dark: #146c43;
+    --accent: #ffc107;
+    --danger: #dc3545;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    background-color: #f8f9fa;
+    color: #212529;
+    min-height: 100vh;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.nav-link.active {
+    color: var(--accent) !important;
+}
+
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.08) !important;
+}
+
+.btn-success {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-success:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.badge {
+    font-weight: 500;
+}
+
+/* Map container */
+#map, #admin-map, #route-map {
+    z-index: 1;
+}
+
+.leaflet-container {
+    font-family: inherit;
+}
+
+/* Smooth alert animation */
+.alert {
+    border-radius: 12px;
+    border: none;
+}
+
+.alert-success {
+    background-color: #d1e7dd;
+    color: #0a3622;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #58151c;
+}
+
+/* Timeline */
+.report-row {
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.report-row:hover {
+    background-color: #2b3040 !important;
+}
+
+/* Truck icons */
+.truck-icon {
+    text-align: center;
+}
+
+/* Form */
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}

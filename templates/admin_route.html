@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Route Optimization - SwachhLoop{% endblock %}
+
+{% block content %}
+<style>
+    body { background-color: #1a1d24; color: #e0e0e0; }
+    .admin-card { background-color: #252a36; border: 1px solid #3a3f4b; color: #fff; }
+    .mini-stat { background: linear-gradient(135deg, #2b3040, #1a1d24); padding: 1.5rem; border-radius: 12px; text-align: center; }
+</style>
+
+<div class="row g-3">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-secondary">
+            <div>
+                <h2 class="fw-bold text-white mb-1"><i class="fa-solid fa-route text-success me-2"></i>Route Optimization</h2>
+                <p class="text-muted mb-0">Vehicle: <strong class="text-info">{{ vehicle.number }}</strong> | Driver: {{ vehicle.driver }}</p>
+            </div>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light btn-sm">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Stats -->
+    <div class="col-md-4">
+        <div class="mini-stat">
+            <div class="text-muted small">Naive Route Distance (as ordered)</div>
+            <h2 class="fw-bold text-warning mb-0">{{ naive_dist }}</h2>
+            <small class="text-secondary">km</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mini-stat">
+            <div class="text-muted small">Optimized Route Distance (Nearest-Neighbor)</div>
+            <h2 class="fw-bold text-info mb-0">{{ opt_dist }}</h2>
+            <small class="text-secondary">km</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mini-stat">
+            <div class="text-muted small">Distance Saved (Demo Simulation)</div>
+            <h2 class="fw-bold text-success mb-0">{{ saved_pct }}%</h2>
+            <small class="text-secondary"><i class="fa-solid fa-leaf me-1"></i> Less fuel + CO₂</small>
+        </div>
+    </div>
+
+    <!-- Map -->
+    <div class="col-md-8">
+        <div id="route-map" style="height: 500px;" class="rounded-3 border border-secondary"></div>
+    </div>
+
+    <!-- Stop List -->
+    <div class="col-md-4">
+        <div class="admin-card rounded-3 p-3">
+            <h5 class="text-white mb-3"><i class="fa-solid fa-list-ol me-1"></i> Optimized Pickup Sequence</h5>
+            {% if stops %}
+                <ol class="list-group list-group-numbered">
+                    {% for stop in stops %}
+                    <li class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold text-info">{{ stop.type }}</div>
+                            <small class="text-muted">{{ stop.desc }}</small>
+                        </div>
+                        <span class="badge bg-secondary rounded-pill">#{{ stop.id }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+                <div class="mt-3 small text-muted">
+                    <i class="fa-solid fa-info-circle me-1"></i> Greedy heuristic chosen for transparency. Stretch: OR-Tools VRP solver.
+                </div>
+            {% else %}
+                <div class="text-center text-muted p-4">
+                    <i class="fa-solid fa-box-open fa-2x mb-2"></i>
+                    <p class="mb-0">No assigned stops for this vehicle.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Route Map
+    var map = L.map('route-map').setView([23.0225, 72.5714], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Vehicle start
+    var startIcon = L.divIcon({
+        className: 'start-icon',
+        html: '<div style="font-size: 28px; text-shadow: 1px 1px 2px #000;">🚛</div>',
+        iconSize: [30, 30]
+    });
+    L.marker([{{ vehicle.lat }}, {{ vehicle.lon }}], { icon: startIcon })
+        .bindPopup('<b>Depot / Vehicle Start</b><br>{{ vehicle.number }}').addTo(map);
+
+    // Stops
+    var stops = {{ stops|tojson }};
+    var pathCoords = [[[{{ vehicle.lat }}, {{ vehicle.lon }}]]];
+    
+    stops.forEach((stop, idx) => {
+        var stopIcon = L.divIcon({
+            className: 'stop-icon',
+            html: `<div style="background: #198754; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white;">${idx + 1}</div>`,
+            iconSize: [28, 28]
+        });
+        L.marker([stop.lat, stop.lon], { icon: stopIcon })
+            .bindPopup(`<b>Stop ${idx + 1}: #${stop.id}</b><br>${stop.type}<br>${stop.desc}`)
+            .addTo(map);
+        pathCoords[0].push([stop.lat, stop.lon]);
+    });
+
+    // Draw optimized route line
+    if (stops.length > 0) {
+        var polyline = L.polyline(pathCoords[0], {
+            color: '#198754', weight: 4, opacity: 0.7, dashArray: '10, 6'
+        }).addTo(map);
+        map.fitBounds(polyline.getBounds().pad(0.1));
+    }
+
+    // Convert newline coords for backward compat
+    var finalCoords = pathCoords.flat ? pathCoords.flat() : pathCoords[0];
+</script>
+{% endblock %}

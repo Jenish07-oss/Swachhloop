@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - SwachhLoop{% endblock %}
+
+{% block content %}
+<style>
+    .admin-body { background-color: #1a1d24; color: #e0e0e0; }
+    .admin-card { background-color: #252a36; border: 1px solid #3a3f4b; color: #fff; }
+    .kpi-card { transition: transform 0.2s; }
+    .kpi-card:hover { transform: translateY(-5px); }
+    .report-row { background-color: #2b3040; border-left: 4px solid transparent; }
+    .report-row.Reported { border-left-color: #ffc107; }
+    .report-row.Assigned { border-left-color: #0dcaf0; }
+    .report-row.InProgress { border-left-color: #0d6efd; }
+    .report-row.Resolved { border-left-color: #198754; }
+    .nav-tabs .nav-link { background-color: #2b3040; color: #e0e0e0; border-color: #3a3f4b; }
+    .nav-tabs .nav-link.active { background-color: #198754; color: #fff; border-color: #198754; }
+</style>
+
+<div class="admin-body rounded-4 p-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="fa-solid fa-shield-halved text-success me-2"></i>Admin Command Center</h2>
+            <p class="text-muted mb-0">Ahmedabad Smart Waste Monitoring | Demo Simulation View</p>
+        </div>
+        <div class="badge bg-success fs-6 p-2">LIVE MAP</div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card admin-card kpi-card border-0 shadow h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Active Reports</div>
+                    <h2 class="fw-bold text-warning mb-0">{{ pending }}</h2>
+                    <small class="text-secondary"><i class="fa-solid fa-circle-exclamation me-1"></i> Awaiting action</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card admin-card kpi-card border-0 shadow h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Active Trucks</div>
+                    <h2 class="fw-bold text-info mb-0">{{ vehicles_count }}</h2>
+                    <small class="text-secondary"><i class="fa-solid fa-truck-front me-1"></i> On field</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card admin-card kpi-card border-0 shadow h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Hotspots Predicted</div>
+                    <h2 class="fw-bold text-danger mb-0">5</h2>
+                    <small class="text-secondary"><i class="fa-solid fa-fire me-1"></i> KMeans Clusters</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card admin-card kpi-card border-0 shadow h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Resolved Today</div>
+                    <h2 class="fw-bold text-success mb-0">{{ resolved }}</h2>
+                    <small class="text-secondary"><i class="fa-solid fa-flag-checkered me-1"></i> Cleaned</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-3" id="adminTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="map-tab" data-bs-toggle="tab" data-bs-target="#map-pane">
+                <i class="fa-solid fa-map-location-dot me-1"></i> Live Map
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports-pane">
+                <i class="fa-solid fa-list-ul me-1"></i> Complaint Queue
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="charts-tab" data-bs-toggle="tab" data-bs-target="#charts-pane">
+                <i class="fa-solid fa-chart-pie me-1"></i> Analytics
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="vehicles-tab" data-bs-toggle="tab" data-bs-target="#vehicles-pane">
+                <i class="fa-solid fa-truck me-1"></i> Fleet
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- MAP TAB -->
+        <div class="tab-pane fade show active" id="map-pane">
+            <div id="admin-map" style="height: 600px;" class="rounded-3 border border-secondary"></div>
+            <div class="mt-2 small text-muted">
+                🔴 Red = Reported | 🟡 Amber = Assigned | 🔵 Blue = In Progress | 🟢 Green = Resolved | 🚛 Trucks Moving
+            </div>
+        </div>
+
+        <!-- REPORTS TAB -->
+        <div class="tab-pane fade" id="reports-pane">
+            <div class="admin-card rounded-3 p-3">
+                <h5 class="mb-3">Complaint Queue</h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Image</th>
+                                <th>Type</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in reports %}
+                            <tr class="report-row" id="row-{{ r.id }}">
+                                <td><strong>#{{ r.id }}</strong></td>
+                                <td><img src="{{ r.image_url }}" width="60" height="40" style="object-fit: cover; border-radius: 4px;"></td>
+                                <td><span class="badge bg-secondary">{{ r.waste_type }}</span></td>
+                                <td><small>{{ r.lat }}, {{ r.lon }}</small></td>
+                                <td>
+                                    <select class="form-select form-select-sm bg-dark text-white border-secondary" id="status-{{ r.id }}" onchange="updateStatus({{ r.id }})">
+                                        <option value="Reported" {% if r.status == 'Reported' %}selected{% endif %}>Reported</option>
+                                        <option value="Assigned" {% if r.status == 'Assigned' %}selected{% endif %}>Assigned</option>
+                                        <option value="In Progress" {% if r.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                        <option value="Resolved" {% if r.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    {% if r.status == 'Reported' %}
+                                    <button class="btn btn-sm btn-info" onclick="assignVehicle({{ r.id }})">
+                                        <i class="fa-solid fa-truck-front me-1"></i> Assign
+                                    </button>
+                                    {% else %}
+                                    <span class="text-success small"><i class="fa-solid fa-check"></i> {{ r.status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHARTS TAB -->
+        <div class="tab-pane fade" id="charts-pane">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="admin-card rounded-3 p-3"><canvas id="wasteChart"></canvas></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="admin-card rounded-3 p-3"><canvas id="statusChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FLEET TAB -->
+        <div class="tab-pane fade" id="vehicles-pane">
+            <div class="row">
+                {% for v in vehicles %}
+                <div class="col-md-4 mb-3">
+                    <div class="admin-card rounded-3 p-3">
+                        <h5 class="text-info"><i class="fa-solid fa-truck-monster me-1"></i> {{ v.number }}</h5>
+                        <p class="mb-1 small text-muted">Driver: <strong class="text-white">{{ v.driver }}</strong></p>
+                        <p class="mb-1 small text-muted">Status: <strong class="text-success">{{ v.status }}</strong></p>
+                        <p class="mb-3 small text-muted">Loc: <strong class="text-white">{{ "%.4f"|format(v.lat) }}, {{ "%.4f"|format(v.lon) }}</strong></p>
+                        <a href="{{ url_for('admin_route_optimization', vehicle_id=v.id) }}" class="btn btn-sm btn-success w-100">
+                            <i class="fa-solid fa-route me-1"></i> Optimize Route
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title">Assign Vehicle to Report #<span id="modal-report-id"></span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted">Select the nearest available vehicle:</p>
+        <div id="vehicle-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // ============================================
+    // ADMIN LIVE MAP (Markers + Auto-refresh)
+    // ============================================
+    var adminMap = L.map('admin-map').setView([23.0225, 72.5714], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(adminMap);
+
+    var reportLayer = L.layerGroup().addTo(adminMap);
+    var vehicleLayer = L.layerGroup().addTo(adminMap);
+
+    function getColor(status) {
+        if (status === 'Reported') return '#ffc107';
+        if (status === 'Assigned') return '#0dcaf0';
+        if (status === 'In Progress') return '#0d6efd';
+        if (status === 'Resolved') return '#198754';
+        return '#6c757d';
+    }
+
+    function refreshMap() {
+        Promise.all([fetch('/api/reports').then(r=>r.json()), fetch('/api/vehicles').then(r=>r.json())])
+        .then(([reports, vehicles]) => {
+            reportLayer.clearLayers();
+            reports.forEach(r => {
+                var marker = L.circleMarker([r.lat, r.lon], {
+                    radius: 8, fillColor: getColor(r.status), color: '#fff', weight: 2, fillOpacity: 0.8
+                }).bindPopup(
+                    `<div style="color: #000;"><b>Report #${r.id}</b><br>` +
+                    `<span class="badge" style="background-color: ${getColor(r.status)};">${r.status}</span><br>` +
+                    `Type: ${r.waste_type}<br>${r.description}</div>`
+                );
+                reportLayer.addLayer(marker);
+            });
+
+            vehicleLayer.clearLayers();
+            vehicles.forEach(v => {
+                var truckIcon = L.divIcon({
+                    className: 'truck-icon',
+                    html: '<div style="font-size: 24px; text-shadow: 1px 1px 2px #000;">🚛</div>',
+                    iconSize: [30, 30]
+                });
+                var marker = L.marker([v.lat, v.lon], { icon: truckIcon })
+                    .bindPopup(`<div style="color:#000;"><b>${v.number}</b><br>Driver: ${v.driver}<br>Status: ${v.status}</div>`);
+                vehicleLayer.addLayer(marker);
+            });
+        });
+    }
+
+    refreshMap();
+    setInterval(refreshMap, 5000);  // Auto-refresh every 5 sec
+
+    // ============================================
+    // CHARTS
+    // ============================================
+    fetch('/api/charts').then(r => r.json()).then(data => {
+        new Chart(document.getElementById('wasteChart'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(data.waste_types),
+                datasets: [{ 
+                    data: Object.values(data.waste_types),
+                    backgroundColor: ['#198754','#0dcaf0','#ffc107','#dc3545','#6c757d']
+                }]
+            },
+            options: { plugins: { title: { display: true, text: 'Waste Type Distribution', color: '#fff' }, legend: { labels: { color: '#fff' } } } }
+        });
+        new Chart(document.getElementById('statusChart'), {
+            type: 'pie',
+            data: {
+                labels: Object.keys(data.statuses),
+                datasets: [{ 
+                    data: Object.values(data.statuses),
+                    backgroundColor: ['#ffc107','#0dcaf0','#0d6efd','#198754']
+                }]
+            },
+            options: { plugins: { title: { display: true, text: 'Report Status Split', color: '#fff' }, legend: { labels: { color: '#fff' } } } }
+        });
+    });
+
+    // ============================================
+    // STATUS UPDATE & ASSIGNMENT
+    // ============================================
+    function updateStatus(reportId) {
+        var status = document.getElementById('status-' + reportId).value;
+        fetch(`/api/status/${reportId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({status: status, resolved_image_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80'})
+        }).then(r => r.json()).then(d => {
+            alert('✅ Status updated to ' + status + (status === 'Resolved' ? ' — +10 Green Points awarded to citizen!' : ''));
+            location.reload();
+        });
+    }
+
+    function assignVehicle(reportId) {
+        document.getElementById('modal-report-id').innerText = reportId;
+        var modal = new bootstrap.Modal(document.getElementById('assignModal'));
+        modal.show();
+
+        fetch('/api/vehicles').then(r => r.json()).then(vehicles => {
+            var html = '<div class="list-group">';
+            vehicles.forEach(v => {
+                html += `<button class="list-group-item list-group-item-action bg-secondary text-white border-0 mb-2" 
+                                onclick="confirmAssign(${reportId}, ${v.id}, '${v.number}')">
+                            <i class="fa-solid fa-truck me-2"></i> ${v.number} — Driver: ${v.driver}
+                         </button>`;
+            });
+            html += '</div>';
+            document.getElementById('vehicle-list').innerHTML = html;
+        });
+    }
+
+    function confirmAssign(reportId, vehicleId, vehicleNo) {
+        fetch('/api/assign', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({report_id: reportId, vehicle_id: vehicleId})
+        }).then(r => r.json()).then(d => {
+            alert('✅ Report #' + reportId + ' assigned to ' + vehicleNo);
+            location.reload();
+        });
+    }
+</script>
+{% endblock %}

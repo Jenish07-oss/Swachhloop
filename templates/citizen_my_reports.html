@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}My Reports - SwachhLoop{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="p-4 bg-white rounded-4 shadow-sm border-start border-success border-5 d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="fa-solid fa-list-check text-success me-2"></i> My Reports & Timeline</h2>
+                <p class="text-muted mb-0">Track the real-time status of your waste reports and resolution photo proofs.</p>
+            </div>
+            <div class="mt-3 mt-md-0 text-end">
+                <span class="badge bg-success p-3 fs-5 shadow-sm">
+                    <i class="fa-solid fa-leaf text-warning me-1"></i> {{ user.green_points }} Green Points Earned
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% if reports %}
+        {% for report in reports %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="position-relative">
+                    <img src="{{ report.image_url }}" class="card-img-top" alt="Waste Image" style="height: 180px; object-fit: cover;">
+                    <span class="position-absolute top-0 end-0 m-3 badge 
+                        {% if report.status == 'Reported' %}bg-warning text-dark
+                        {% elif report.status == 'Assigned' %}bg-info text-dark
+                        {% elif report.status == 'In Progress' %}bg-primary
+                        {% else %}bg-success{% endif %} p-2 shadow-sm">
+                        {{ report.status }}
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-secondary">{{ report.waste_type }}</span>
+                        <small class="text-muted"><i class="fa-regular fa-clock me-1"></i> {{ report.created_at }}</small>
+                    </div>
+                    <p class="card-text text-secondary mb-3">{{ report.description }}</p>
+                    <p class="small text-muted mb-3"><i class="fa-solid fa-location-dot text-danger me-1"></i> {{ report.lat }}, {{ report.lon }}</p>
+                    
+                    <!-- Status Timeline -->
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between small text-center text-muted">
+                            <div class="{% if report.status in ['Reported', 'Assigned', 'In Progress', 'Resolved'] %}text-success fw-bold{% endif %}">
+                                <i class="fa-solid fa-circle-check"></i><br>Reported
+                            </div>
+                            <div class="{% if report.status in ['Assigned', 'In Progress', 'Resolved'] %}text-success fw-bold{% endif %}">
+                                <i class="fa-solid fa-truck"></i><br>Assigned
+                            </div>
+                            <div class="{% if report.status in ['In Progress', 'Resolved'] %}text-success fw-bold{% endif %}">
+                                <i class="fa-solid fa-person-digging"></i><br>Cleaning
+                            </div>
+                            <div class="{% if report.status == 'Resolved' %}text-success fw-bold{% endif %}">
+                                <i class="fa-solid fa-flag-checkered"></i><br>Resolved
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if report.resolved_image_url and report.status == 'Resolved' %}
+                    <div class="mt-3 bg-light p-2 rounded-3 border">
+                        <small class="fw-bold text-success d-block mb-1"><i class="fa-solid fa-shield-check me-1"></i> Resolution Proof (Verified):</small>
+                        <img src="{{ report.resolved_image_url }}" alt="Resolved Proof" class="img-fluid rounded-2" style="max-height: 120px; width: 100%; object-fit: cover;">
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="p-5 bg-white rounded-4 shadow-sm">
+                <i class="fa-solid fa-folder-open text-muted fa-3x mb-3"></i>
+                <h4>No reports submitted yet!</h4>
+                <p class="text-muted">Report your first waste issue to earn Green Points.</p>
+                <a href="{{ url_for('citizen_home') }}" class="btn btn-success mt-2">Report Now</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
