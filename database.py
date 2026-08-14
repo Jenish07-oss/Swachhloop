@@ -6,69 +6,110 @@ DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'swachhloop.d
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
 def init_db():
     conn = get_db()
     cursor = conn.cursor()
-    
-    # Users table
+
+    # 1. Households table
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
+        CREATE TABLE IF NOT EXISTS households (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            household_code TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            street_segment TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # 2. Vans table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS vans (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            van_code TEXT UNIQUE NOT NULL,
+            driver_name TEXT NOT NULL,
+            lat REAL NOT NULL,
+            lng REAL NOT NULL,
+            status TEXT DEFAULT 'idle',
+            capacity_kg REAL DEFAULT 500.0
+        )
+    ''')
+
+    # 3. Facilities table (Circular Economy Destinations)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS facilities (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
-            role TEXT DEFAULT 'citizen',
-            phone TEXT UNIQUE,
-            green_points INTEGER DEFAULT 0
+            facility_type TEXT NOT NULL,
+            stream_type TEXT NOT NULL,
+            lat REAL NOT NULL,
+            lng REAL NOT NULL,
+            registration_note TEXT,
+            capacity_kg REAL DEFAULT 10000.0
         )
     ''')
-    
-    # Waste reports table
+
+    # 4. Pickups table
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS waste_reports (
+        CREATE TABLE IF NOT EXISTS pickups (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
+            household_id INTEGER NOT NULL,
             lat REAL NOT NULL,
-            lon REAL NOT NULL,
-            waste_type TEXT NOT NULL,
-            description TEXT,
-            image_url TEXT,
-            status TEXT DEFAULT 'Reported',
+            lng REAL NOT NULL,
+            bin_score INTEGER DEFAULT 75,
+            photo_path TEXT,
+            status TEXT DEFAULT 'pending',
+            assigned_van_id INTEGER,
+            pickup_zone INTEGER DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            resolved_image_url TEXT,
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            FOREIGN KEY (household_id) REFERENCES households(id),
+            FOREIGN KEY (assigned_van_id) REFERENCES vans(id)
         )
     ''')
-    
-    # Vehicles table
+
+    # 5. Pickup Streams table (1 Pickup -> Multiple Segregated Streams)
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS vehicles (
+        CREATE TABLE IF NOT EXISTS pickup_streams (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            number TEXT NOT NULL UNIQUE,
-            driver TEXT NOT NULL,
-            lat REAL NOT NULL,
-            lon REAL NOT NULL,
-            status TEXT DEFAULT 'Idle',
-            phone TEXT
+            pickup_id INTEGER NOT NULL,
+            stream_type TEXT NOT NULL,
+            estimated_kg REAL DEFAULT 0.0,
+            facility_id INTEGER,
+            status TEXT DEFAULT 'pending',
+            delivered_at TIMESTAMP,
+            UNIQUE(pickup_id, stream_type),
+            FOREIGN KEY (pickup_id) REFERENCES pickups(id) ON DELETE CASCADE,
+            FOREIGN KEY (facility_id) REFERENCES facilities(id)
         )
     ''')
-    
-    # Assignments table
+
+    # 6. Points Ledger table (Green Points tracking)
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS assignments (
+        CREATE TABLE IF NOT EXISTS points_ledger (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            report_id INTEGER NOT NULL,
-            vehicle_id INTEGER NOT NULL,
-            status TEXT DEFAULT 'Assigned',
-            assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (report_id) REFERENCES waste_reports(id),
-            FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
+            household_id INTEGER NOT NULL,
+            pickup_id INTEGER,
+            points INTEGER NOT NULL,
+            reason TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (household_id) REFERENCES households(id),
+            FOREIGN KEY (pickup_id) REFERENCES pickups(id) ON DELETE SET NULL
         )
     ''')
-    
+
+    # Create helpful indexes
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickups_status ON pickups(status)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickups_zone ON pickups(pickup_zone)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickup_streams_pickup ON pickup_streams(pickup_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickup_streams_stream ON pickup_streams(stream_type)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_points_ledger_hh ON points_ledger(household_id)')
+
     conn.commit()
     conn.close()
 
 if __name__ == '__main__':
     init_db()
-    print("Database initialized successfully.")
+    print("SwachhLoop 4R Database schema initialized successfully.")

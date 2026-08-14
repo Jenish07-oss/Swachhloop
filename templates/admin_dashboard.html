@@ -1,143 +1,281 @@
 {% extends "base.html" %}
-{% block title %}Admin Dashboard - SwachhLoop{% endblock %}
+{% block title %}Admin Command Center - SwachhLoop 4R{% endblock %}
 
 {% block content %}
 <style>
-    .admin-body { background-color: #1a1d24; color: #e0e0e0; }
-    .admin-card { background-color: #252a36; border: 1px solid #3a3f4b; color: #fff; }
-    .kpi-card { transition: transform 0.2s; }
-    .kpi-card:hover { transform: translateY(-5px); }
-    .report-row { background-color: #2b3040; border-left: 4px solid transparent; }
-    .report-row.Reported { border-left-color: #ffc107; }
-    .report-row.Assigned { border-left-color: #0dcaf0; }
-    .report-row.InProgress { border-left-color: #0d6efd; }
-    .report-row.Resolved { border-left-color: #198754; }
-    .nav-tabs .nav-link { background-color: #2b3040; color: #e0e0e0; border-color: #3a3f4b; }
-    .nav-tabs .nav-link.active { background-color: #198754; color: #fff; border-color: #198754; }
+    .admin-body { background-color: #12161f; color: #e2e8f0; }
+    .admin-card { background-color: #1a202c; border: 1px solid #2d3748; color: #fff; border-radius: 12px; }
+    .kpi-card { transition: transform 0.2s, box-shadow 0.2s; border-radius: 12px; }
+    .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+    .nav-pills .nav-link { color: #a0aec0; background-color: #2d3748; border-radius: 8px; font-weight: 600; }
+    .nav-pills .nav-link.active { background-color: #198754; color: #fff; }
+    .zone-badge-1 { background-color: #198754; color: #fff; }
+    .zone-badge-2 { background-color: #0dcaf0; color: #000; }
+    .zone-badge-3 { background-color: #ffc107; color: #000; }
+    .zone-badge-4 { background-color: #fd7e14; color: #fff; }
+    .zone-badge-5 { background-color: #d63384; color: #fff; }
 </style>
 
-<div class="admin-body rounded-4 p-4">
-    
+<div class="admin-body rounded-4 p-4 shadow-lg">
+
+    <!-- Top Command Header -->
     <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
         <div>
-            <h2 class="fw-bold mb-1"><i class="fa-solid fa-shield-halved text-success me-2"></i>Admin Command Center</h2>
-            <p class="text-muted mb-0">Ahmedabad Smart Waste Monitoring | Demo Simulation View</p>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h2 class="fw-bold text-white mb-0"><i class="fa-solid fa-satellite-dish text-success me-2"></i> 4R Command Center</h2>
+                <span class="badge bg-success text-white px-2 py-1 fs-7">LIVE SIMULATION</span>
+            </div>
+            <p class="text-muted mb-0 small">Ahmedabad Navrangpura Ward | AI-Clustered 4R Stream Logistics & Zero-Mixing Circular Chain</p>
         </div>
-        <div class="badge bg-success fs-6 p-2">LIVE MAP</div>
+        <div class="text-end">
+            <span class="badge bg-dark border border-secondary p-2 px-3 text-info fw-mono">
+                <i class="fa-solid fa-circle text-success me-1 fa-beat-fade"></i> Auto-Sync: 5s
+            </span>
+        </div>
     </div>
 
-    <!-- KPI Cards -->
+    <!-- 7 Real KPI Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card admin-card kpi-card border-0 shadow h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Active Reports</div>
-                    <h2 class="fw-bold text-warning mb-0">{{ pending }}</h2>
-                    <small class="text-secondary"><i class="fa-solid fa-circle-exclamation me-1"></i> Awaiting action</small>
+        <div class="col-md-3 col-sm-6">
+            <div class="card admin-card kpi-card border-0 p-3 h-100">
+                <div class="text-muted small fw-semibold text-uppercase">Total Pickups</div>
+                <div class="d-flex justify-content-between align-items-end mt-1">
+                    <h2 class="fw-bold text-white mb-0">{{ total }}</h2>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">40 Seeded</span>
                 </div>
+                <small class="text-secondary mt-1 d-block"><i class="fa-solid fa-map-pin me-1"></i> Single Ward Boundary</small>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card admin-card kpi-card border-0 shadow h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Active Trucks</div>
-                    <h2 class="fw-bold text-info mb-0">{{ vehicles_count }}</h2>
-                    <small class="text-secondary"><i class="fa-solid fa-truck-front me-1"></i> On field</small>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card admin-card kpi-card border-0 p-3 h-100">
+                <div class="text-muted small fw-semibold text-uppercase">Pending Pickup</div>
+                <div class="d-flex justify-content-between align-items-end mt-1">
+                    <h2 class="fw-bold text-warning mb-0" id="kpi-pending">{{ pending }}</h2>
+                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Awaiting Van</span>
                 </div>
+                <small class="text-secondary mt-1 d-block"><i class="fa-solid fa-clock me-1"></i> In dispatch queue</small>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card admin-card kpi-card border-0 shadow h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Hotspots Predicted</div>
-                    <h2 class="fw-bold text-danger mb-0">5</h2>
-                    <small class="text-secondary"><i class="fa-solid fa-fire me-1"></i> KMeans Clusters</small>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card admin-card kpi-card border-0 p-3 h-100">
+                <div class="text-muted small fw-semibold text-uppercase">Collected & En-Route</div>
+                <div class="d-flex justify-content-between align-items-end mt-1">
+                    <h2 class="fw-bold text-info mb-0" id="kpi-collected">{{ collected }}</h2>
+                    <span class="badge bg-info-subtle text-info border border-info-subtle">In Transit</span>
                 </div>
+                <small class="text-secondary mt-1 d-block"><i class="fa-solid fa-truck-fast me-1"></i> Zero-mixing segregation</small>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card admin-card kpi-card border-0 shadow h-100">
-                <div class="card-body">
-                    <div class="text-muted small">Resolved Today</div>
-                    <h2 class="fw-bold text-success mb-0">{{ resolved }}</h2>
-                    <small class="text-secondary"><i class="fa-solid fa-flag-checkered me-1"></i> Cleaned</small>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card admin-card kpi-card border-0 p-3 h-100">
+                <div class="text-muted small fw-semibold text-uppercase">Delivered to Facilities</div>
+                <div class="d-flex justify-content-between align-items-end mt-1">
+                    <h2 class="fw-bold text-success mb-0" id="kpi-delivered">{{ delivered }}</h2>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle">100% Circular</span>
                 </div>
+                <small class="text-secondary mt-1 d-block"><i class="fa-solid fa-check-double me-1"></i> At 4 destination hubs</small>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card admin-card kpi-card border-0 p-3 h-100 border-start border-success border-4">
+                <div class="text-muted small fw-semibold text-uppercase">Total Diverted Material</div>
+                <div class="d-flex justify-content-between align-items-end mt-1">
+                    <h2 class="fw-bold text-success mb-0">{{ total_kg_diverted }} <span class="fs-6">kg</span></h2>
+                    <span class="badge bg-success text-white">Zero Landfill</span>
+                </div>
+                <small class="text-secondary mt-1 d-block">Across all 4 segregated streams</small>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card admin-card kpi-card border-0 p-3 h-100 border-start border-warning border-4">
+                <div class="text-muted small fw-semibold text-uppercase">Green Points Awarded</div>
+                <div class="d-flex justify-content-between align-items-end mt-1">
+                    <h2 class="fw-bold text-warning mb-0">{{ total_green_points }} <span class="fs-6">pts</span></h2>
+                    <span class="badge bg-warning text-dark">Formula-Based</span>
+                </div>
+                <small class="text-secondary mt-1 d-block"><code>20 + floor(bin_score/10)</code></small>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card admin-card kpi-card border-0 p-3 h-100 border-start border-info border-4">
+                <div class="text-muted small fw-semibold text-uppercase">Active Fleet Vans</div>
+                <div class="d-flex justify-content-between align-items-end mt-1">
+                    <h2 class="fw-bold text-info mb-0">{{ active_vans }} <span class="fs-6">Vans</span></h2>
+                    <span class="badge bg-info text-dark">500kg Cap/Van</span>
+                </div>
+                <small class="text-secondary mt-1 d-block">Operating in Navrangpura Ward</small>
             </div>
         </div>
     </div>
 
-    <!-- Tabs -->
-    <ul class="nav nav-tabs mb-3" id="adminTabs" role="tablist">
+    <!-- Facility Demand Board (Real Calculated Demand) -->
+    <div class="admin-card p-3 mb-4 border-emerald-subtle">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0 fw-bold text-white">
+                <i class="fa-solid fa-industry text-success me-2"></i> Facility Demand Board (Live Segregated Inflow)
+            </h5>
+            <span class="badge bg-secondary small">Calculated from pickup_streams.estimated_kg</span>
+        </div>
+        <div class="row g-3">
+            {% for d in demand %}
+            <div class="col-md-3 col-sm-6">
+                <div class="p-3 rounded-3 bg-dark border border-secondary h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge 
+                            {% if d.stream_type == 'wet' %}bg-success
+                            {% elif d.stream_type == 'dry' %}bg-info text-dark
+                            {% elif d.stream_type == 'e_waste' %}bg-warning text-dark
+                            {% else %}bg-danger{% endif %} fw-bold">
+                            {{ d.stream_type|upper }} STREAM
+                        </span>
+                        <span class="fw-bold fs-5 text-white">{{ "%.1f"|format(d.total_demand_kg) }} kg</span>
+                    </div>
+                    <div class="fw-bold text-white small mb-1">→ {{ d.name }}</div>
+                    <div class="small text-muted" style="font-size: 11px;">{{ d.facility_type }}</div>
+                    <div class="small text-secondary mt-2 pt-2 border-top border-secondary" style="font-size: 10px;">
+                        <i class="fa-solid fa-box me-1"></i> {{ d.stream_count }} stream loads
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Main Navigation Tabs -->
+    <ul class="nav nav-pills mb-3 gap-2" id="adminTabs" role="tablist">
         <li class="nav-item">
-            <button class="nav-link active" id="map-tab" data-bs-toggle="tab" data-bs-target="#map-pane">
-                <i class="fa-solid fa-map-location-dot me-1"></i> Live Map
+            <button class="nav-link active" id="map-tab" data-bs-toggle="pill" data-bs-target="#map-pane">
+                <i class="fa-solid fa-map-location-dot me-1"></i> Live 4R Ward Map & KMeans Zones
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports-pane">
-                <i class="fa-solid fa-list-ul me-1"></i> Complaint Queue
+            <button class="nav-link" id="queue-tab" data-bs-toggle="pill" data-bs-target="#queue-pane">
+                <i class="fa-solid fa-list-check me-1"></i> Pickup Dispatch Queue ({{ pickups|length }})
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" id="charts-tab" data-bs-toggle="tab" data-bs-target="#charts-pane">
-                <i class="fa-solid fa-chart-pie me-1"></i> Analytics
+            <button class="nav-link" id="fleet-tab" data-bs-toggle="pill" data-bs-target="#fleet-pane">
+                <i class="fa-solid fa-truck me-1"></i> Fleet & Route Optimization
             </button>
         </li>
         <li class="nav-item">
-            <button class="nav-link" id="vehicles-tab" data-bs-toggle="tab" data-bs-target="#vehicles-pane">
-                <i class="fa-solid fa-truck me-1"></i> Fleet
+            <button class="nav-link" id="analytics-tab" data-bs-toggle="pill" data-bs-target="#analytics-pane">
+                <i class="fa-solid fa-chart-pie me-1"></i> Analytics & Ward Leaderboard
             </button>
         </li>
     </ul>
 
+    <!-- Tab Contents -->
     <div class="tab-content">
-        <!-- MAP TAB -->
+
+        <!-- TAB 1: LIVE 4R MAP -->
         <div class="tab-pane fade show active" id="map-pane">
-            <div id="admin-map" style="height: 600px;" class="rounded-3 border border-secondary"></div>
-            <div class="mt-2 small text-muted">
-                🔴 Red = Reported | 🟡 Amber = Assigned | 🔵 Blue = In Progress | 🟢 Green = Resolved | 🚛 Trucks Moving
+            <div class="admin-card p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                    <div>
+                        <span class="fw-bold text-white me-2"><i class="fa-solid fa-layer-group text-info me-1"></i> KMeans Pickup Zones (K=5):</span>
+                        <span class="badge zone-badge-1 me-1">Zone 1</span>
+                        <span class="badge zone-badge-2 me-1">Zone 2</span>
+                        <span class="badge zone-badge-3 me-1">Zone 3</span>
+                        <span class="badge zone-badge-4 me-1">Zone 4</span>
+                        <span class="badge zone-badge-5 me-1">Zone 5</span>
+                    </div>
+                    <div class="small text-muted">
+                        🚛 <strong>Vans</strong> | 🏭 <strong>4 Circular Facilities</strong> | 📍 <strong>Pickups</strong>
+                    </div>
+                </div>
+                <div id="admin-map" style="height: 600px;" class="rounded-3 border border-secondary"></div>
+                <div class="mt-2 small text-muted d-flex justify-content-between">
+                    <span>Click any pickup pin to inspect Bin Score, Segregated Streams, and Destination Facilities.</span>
+                    <span>Ahmedabad Ward Coordinates: ~23.0375° N, 72.5520° E</span>
+                </div>
             </div>
         </div>
 
-        <!-- REPORTS TAB -->
-        <div class="tab-pane fade" id="reports-pane">
-            <div class="admin-card rounded-3 p-3">
-                <h5 class="mb-3">Complaint Queue</h5>
+        <!-- TAB 2: PICKUP QUEUE -->
+        <div class="tab-pane fade" id="queue-pane">
+            <div class="admin-card p-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0 fw-bold text-white"><i class="fa-solid fa-table-list text-primary me-2"></i> All 40 Seeded Ward Pickups</h5>
+                    <span class="badge bg-secondary">Real SQLite Records</span>
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover align-middle mb-0">
+                    <table class="table table-dark table-hover align-middle mb-0 small">
                         <thead>
-                            <tr>
+                            <tr class="text-secondary">
                                 <th>ID</th>
-                                <th>Image</th>
-                                <th>Type</th>
-                                <th>Location</th>
+                                <th>Household</th>
+                                <th>Bin Score</th>
+                                <th>Streams</th>
+                                <th>Zone</th>
+                                <th>Assigned Van</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for r in reports %}
-                            <tr class="report-row" id="row-{{ r.id }}">
-                                <td><strong>#{{ r.id }}</strong></td>
-                                <td><img src="{{ r.image_url }}" width="60" height="40" style="object-fit: cover; border-radius: 4px;"></td>
-                                <td><span class="badge bg-secondary">{{ r.waste_type }}</span></td>
-                                <td><small>{{ r.lat }}, {{ r.lon }}</small></td>
+                            {% for p in pickups %}
+                            <tr id="pickup-row-{{ p.id }}">
+                                <td><strong class="text-info">#{{ p.id }}</strong></td>
                                 <td>
-                                    <select class="form-select form-select-sm bg-dark text-white border-secondary" id="status-{{ r.id }}" onchange="updateStatus({{ r.id }})">
-                                        <option value="Reported" {% if r.status == 'Reported' %}selected{% endif %}>Reported</option>
-                                        <option value="Assigned" {% if r.status == 'Assigned' %}selected{% endif %}>Assigned</option>
-                                        <option value="In Progress" {% if r.status == 'In Progress' %}selected{% endif %}>In Progress</option>
-                                        <option value="Resolved" {% if r.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                                    <div class="fw-bold text-white">{{ p.household_code }} ({{ p.citizen_name }})</div>
+                                    <small class="text-muted">{{ p.street_segment }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if p.bin_score >= 90 %}bg-success
+                                        {% elif p.bin_score >= 75 %}bg-primary
+                                        {% elif p.bin_score >= 55 %}bg-info text-dark
+                                        {% elif p.bin_score >= 31 %}bg-warning text-dark
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ p.bin_score }}/100
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1 flex-wrap">
+                                        {% for st in p.streams %}
+                                        <span class="badge 
+                                            {% if st.stream_type == 'wet' %}bg-success-subtle text-success border border-success-subtle
+                                            {% elif st.stream_type == 'dry' %}bg-info-subtle text-info border border-info-subtle
+                                            {% elif st.stream_type == 'e_waste' %}bg-warning-subtle text-warning border border-warning-subtle
+                                            {% else %}bg-danger-subtle text-danger border border-danger-subtle{% endif %}" style="font-size: 10px;">
+                                            {{ st.stream_type|upper }} ({{ st.estimated_kg }}k)
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge zone-badge-{{ p.pickup_zone }}">Zone {{ p.pickup_zone }}</span>
+                                </td>
+                                <td>
+                                    {% if p.van_code %}
+                                        <span class="text-info"><i class="fa-solid fa-truck-fast me-1"></i> {{ p.van_code }}</span>
+                                    {% else %}
+                                        <span class="text-muted">Unassigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <select class="form-select form-select-sm bg-dark text-white border-secondary" id="status-select-{{ p.id }}" onchange="updatePickupStatus({{ p.id }})">
+                                        <option value="pending" {% if p.status == 'pending' %}selected{% endif %}>Pending</option>
+                                        <option value="collected" {% if p.status == 'collected' %}selected{% endif %}>Collected</option>
+                                        <option value="delivered" {% if p.status == 'delivered' %}selected{% endif %}>Delivered</option>
                                     </select>
                                 </td>
                                 <td>
-                                    {% if r.status == 'Reported' %}
-                                    <button class="btn btn-sm btn-info" onclick="assignVehicle({{ r.id }})">
-                                        <i class="fa-solid fa-truck-front me-1"></i> Assign
-                                    </button>
-                                    {% else %}
-                                    <span class="text-success small"><i class="fa-solid fa-check"></i> {{ r.status }}</span>
-                                    {% endif %}
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-sm btn-outline-info" onclick="openAssignModal({{ p.id }})">
+                                            <i class="fa-solid fa-truck me-1"></i> Assign
+                                        </button>
+                                        <a href="{{ url_for('manifest_page', pickup_id=p.id) }}" class="btn btn-sm btn-outline-light" target="_blank">
+                                            <i class="fa-solid fa-qrcode"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -147,179 +285,336 @@
             </div>
         </div>
 
-        <!-- CHARTS TAB -->
-        <div class="tab-pane fade" id="charts-pane">
+        <!-- TAB 3: FLEET & ROUTING -->
+        <div class="tab-pane fade" id="fleet-pane">
             <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="admin-card rounded-3 p-3"><canvas id="wasteChart"></canvas></div>
-                </div>
-                <div class="col-md-6">
-                    <div class="admin-card rounded-3 p-3"><canvas id="statusChart"></canvas></div>
-                </div>
-            </div>
-        </div>
+                {% for v in vans %}
+                <div class="col-md-4">
+                    <div class="admin-card p-4 h-100 border-top border-info border-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h4 class="fw-bold text-info mb-0">{{ v.van_code }}</h4>
+                                <small class="text-muted">Driver: <strong class="text-white">{{ v.driver_name }}</strong></small>
+                            </div>
+                            <span class="badge 
+                                {% if v.status == 'idle' %}bg-secondary
+                                {% elif v.status == 'en_route' %}bg-primary
+                                {% else %}bg-warning text-dark{% endif %} px-2 py-1">
+                                {{ v.status|upper }}
+                            </span>
+                        </div>
 
-        <!-- FLEET TAB -->
-        <div class="tab-pane fade" id="vehicles-pane">
-            <div class="row">
-                {% for v in vehicles %}
-                <div class="col-md-4 mb-3">
-                    <div class="admin-card rounded-3 p-3">
-                        <h5 class="text-info"><i class="fa-solid fa-truck-monster me-1"></i> {{ v.number }}</h5>
-                        <p class="mb-1 small text-muted">Driver: <strong class="text-white">{{ v.driver }}</strong></p>
-                        <p class="mb-1 small text-muted">Status: <strong class="text-success">{{ v.status }}</strong></p>
-                        <p class="mb-3 small text-muted">Loc: <strong class="text-white">{{ "%.4f"|format(v.lat) }}, {{ "%.4f"|format(v.lon) }}</strong></p>
-                        <a href="{{ url_for('admin_route_optimization', vehicle_id=v.id) }}" class="btn btn-sm btn-success w-100">
-                            <i class="fa-solid fa-route me-1"></i> Optimize Route
+                        <div class="p-3 bg-dark rounded-3 border border-secondary mb-3 small">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Capacity:</span>
+                                <span class="fw-bold text-white">{{ v.capacity_kg }} kg</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Live Location:</span>
+                                <code>{{ "%.4f"|format(v.lat) }}, {{ "%.4f"|format(v.lng) }}</code>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Operating Zone:</span>
+                                <span class="text-success fw-bold">Navrangpura Hub</span>
+                            </div>
+                        </div>
+
+                        <a href="{{ url_for('admin_route_optimization', van_id=v.id) }}" class="btn btn-success w-100 fw-bold">
+                            <i class="fa-solid fa-route me-1"></i> Stream-Wise Route Optimization
                         </a>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
+
+        <!-- TAB 4: ANALYTICS & LEADERBOARD -->
+        <div class="tab-pane fade" id="analytics-pane">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="admin-card p-4">
+                        <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-chart-pie text-success me-2"></i> Waste Stream Inflow (kg)</h5>
+                        <canvas id="streamChart" style="max-height: 280px;"></canvas>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="admin-card p-4">
+                        <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-chart-simple text-info me-2"></i> Ward Pickup Status Split</h5>
+                        <canvas id="statusChart" style="max-height: 280px;"></canvas>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="admin-card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-trophy text-warning me-2"></i> Ward Leaderboard: Top Participating Households</h5>
+                            <span class="badge bg-secondary">Real points_ledger Data</span>
+                        </div>
+                        <canvas id="leaderboardChart" style="max-height: 320px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
-<!-- Assign Modal -->
+<!-- Van Assign Modal -->
 <div class="modal fade" id="assignModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content bg-dark text-white">
-      <div class="modal-header border-secondary">
-        <h5 class="modal-title">Assign Vehicle to Report #<span id="modal-report-id"></span></h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p class="text-muted">Select the nearest available vehicle:</p>
-        <div id="vehicle-list"></div>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">Assign Van to Pickup #<span id="modal-pickup-id"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small">Select a collection van to dispatch for this 4R segregated batch:</p>
+                <div id="van-selection-list"></div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
     // ============================================
-    // ADMIN LIVE MAP (Markers + Auto-refresh)
+    // LEAFLET ADMIN MAP WITH KMEANS ZONES & FACILITIES
     // ============================================
-    var adminMap = L.map('admin-map').setView([23.0225, 72.5714], 13);
+    var adminMap = L.map('admin-map').setView([23.0375, 72.5520], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(adminMap);
 
-    var reportLayer = L.layerGroup().addTo(adminMap);
-    var vehicleLayer = L.layerGroup().addTo(adminMap);
+    var pickupLayer = L.layerGroup().addTo(adminMap);
+    var vanLayer = L.layerGroup().addTo(adminMap);
+    var facilityLayer = L.layerGroup().addTo(adminMap);
 
-    function getColor(status) {
-        if (status === 'Reported') return '#ffc107';
-        if (status === 'Assigned') return '#0dcaf0';
-        if (status === 'In Progress') return '#0d6efd';
-        if (status === 'Resolved') return '#198754';
-        return '#6c757d';
+    var zoneColors = {
+        1: '#198754',
+        2: '#0dcaf0',
+        3: '#ffc107',
+        4: '#fd7e14',
+        5: '#d63384'
+    };
+
+    function loadFacilities() {
+        fetch('/api/facilities').then(r => r.json()).then(facilities => {
+            facilityLayer.clearLayers();
+            facilities.forEach(f => {
+                var facIcon = L.divIcon({
+                    className: 'facility-icon',
+                    html: `<div style="background:#212529; border:2px solid #fff; border-radius:8px; padding:4px 6px; font-size:18px; box-shadow:0 2px 6px rgba(0,0,0,0.5); text-align:center;">🏭</div>`,
+                    iconSize: [32, 32]
+                });
+                var m = L.marker([f.lat, f.lng], { icon: facIcon }).bindPopup(
+                    `<div style="color:#000;">` +
+                    `<span class="badge bg-dark mb-1">DESTINATION FACILITY</span><br>` +
+                    `<b>${f.name}</b><br>` +
+                    `<small class="text-muted">${f.facility_type}</small><br>` +
+                    `<b>Stream:</b> ${f.stream_type.toUpperCase()}<br>` +
+                    `<small>${f.registration_note}</small>` +
+                    `</div>`
+                );
+                facilityLayer.addLayer(m);
+            });
+        });
     }
 
-    function refreshMap() {
-        Promise.all([fetch('/api/reports').then(r=>r.json()), fetch('/api/vehicles').then(r=>r.json())])
-        .then(([reports, vehicles]) => {
-            reportLayer.clearLayers();
-            reports.forEach(r => {
-                var marker = L.circleMarker([r.lat, r.lon], {
-                    radius: 8, fillColor: getColor(r.status), color: '#fff', weight: 2, fillOpacity: 0.8
+    function refreshMapData() {
+        Promise.all([
+            fetch('/api/pickups').then(r => r.json()),
+            fetch('/api/vans').then(r => r.json())
+        ]).then(([pickups, vans]) => {
+            // Update Pickups
+            pickupLayer.clearLayers();
+            var pendingCount = 0, collectedCount = 0, deliveredCount = 0;
+
+            pickups.forEach(p => {
+                if (p.status === 'pending') pendingCount++;
+                if (p.status === 'collected') collectedCount++;
+                if (p.status === 'delivered') deliveredCount++;
+
+                var zColor = zoneColors[p.pickup_zone] || '#198754';
+                
+                var streamsHtml = p.streams.map(s => `• <b>${s.stream_type.toUpperCase()}</b> (${s.estimated_kg}kg) → ${s.facility_name}`).join('<br>');
+
+                var marker = L.circleMarker([p.lat, p.lng], {
+                    radius: 8,
+                    fillColor: zColor,
+                    color: p.status === 'delivered' ? '#198754' : '#ffffff',
+                    weight: 2,
+                    fillOpacity: 0.85
                 }).bindPopup(
-                    `<div style="color: #000;"><b>Report #${r.id}</b><br>` +
-                    `<span class="badge" style="background-color: ${getColor(r.status)};">${r.status}</span><br>` +
-                    `Type: ${r.waste_type}<br>${r.description}</div>`
+                    `<div style="color:#000; min-width:200px;">` +
+                    `<div class="d-flex justify-content-between align-items-center mb-1">` +
+                    `<b>Pickup #${p.id}</b>` +
+                    `<span class="badge" style="background:${zColor}; color:#fff;">Zone ${p.pickup_zone}</span>` +
+                    `</div>` +
+                    `<b>Household:</b> ${p.household_code} (${p.citizen_name})<br>` +
+                    `<b>Address:</b> ${p.street_segment}<br>` +
+                    `<b>Bin Score:</b> ${p.bin_score}/100<br>` +
+                    `<b>Status:</b> <span class="badge bg-secondary">${p.status.toUpperCase()}</span><br>` +
+                    `<hr style="margin:6px 0;">` +
+                    `<div class="small"><b>Segregated Streams:</b><br>${streamsHtml}</div>` +
+                    `<div class="mt-2 text-center">` +
+                    `<a href="/manifest/${p.id}" target="_blank" class="btn btn-sm btn-dark text-white" style="font-size:11px; padding:2px 8px;">View QR Manifest</a>` +
+                    `</div>` +
+                    `</div>`
                 );
-                reportLayer.addLayer(marker);
+                pickupLayer.addLayer(marker);
             });
 
-            vehicleLayer.clearLayers();
-            vehicles.forEach(v => {
-                var truckIcon = L.divIcon({
-                    className: 'truck-icon',
-                    html: '<div style="font-size: 24px; text-shadow: 1px 1px 2px #000;">🚛</div>',
+            // Update Vans
+            vanLayer.clearLayers();
+            vans.forEach(v => {
+                var vanIcon = L.divIcon({
+                    className: 'van-icon',
+                    html: `<div style="font-size:24px; text-shadow:0 0 4px #000;">🚛</div>`,
                     iconSize: [30, 30]
                 });
-                var marker = L.marker([v.lat, v.lon], { icon: truckIcon })
-                    .bindPopup(`<div style="color:#000;"><b>${v.number}</b><br>Driver: ${v.driver}<br>Status: ${v.status}</div>`);
-                vehicleLayer.addLayer(marker);
+                var vm = L.marker([v.lat, v.lng], { icon: vanIcon }).bindPopup(
+                    `<div style="color:#000;">` +
+                    `<b>${v.van_code}</b><br>` +
+                    `Driver: ${v.driver_name}<br>` +
+                    `Status: <b>${v.status.toUpperCase()}</b><br>` +
+                    `Capacity: ${v.capacity_kg} kg<br>` +
+                    `<a href="/admin/route/${v.id}" class="btn btn-sm btn-success text-white mt-1" style="font-size:11px;">Optimize Route</a>` +
+                    `</div>`
+                );
+                vanLayer.addLayer(vm);
             });
+
+            // Update KPI badges
+            var elP = document.getElementById('kpi-pending');
+            var elC = document.getElementById('kpi-collected');
+            var elD = document.getElementById('kpi-delivered');
+            if (elP) elP.innerText = pendingCount;
+            if (elC) elC.innerText = collectedCount;
+            if (elD) elD.innerText = deliveredCount;
         });
     }
 
-    refreshMap();
-    setInterval(refreshMap, 5000);  // Auto-refresh every 5 sec
+    loadFacilities();
+    refreshMapData();
+    setInterval(refreshMapData, 5000); // 5s Auto-refresh
 
     // ============================================
-    // CHARTS
+    // CHARTS (Chart.js)
     // ============================================
     fetch('/api/charts').then(r => r.json()).then(data => {
-        new Chart(document.getElementById('wasteChart'), {
+        // 1. Waste Stream Inflow Chart
+        new Chart(document.getElementById('streamChart'), {
             type: 'doughnut',
             data: {
-                labels: Object.keys(data.waste_types),
-                datasets: [{ 
-                    data: Object.values(data.waste_types),
-                    backgroundColor: ['#198754','#0dcaf0','#ffc107','#dc3545','#6c757d']
+                labels: Object.keys(data.streams).map(s => s.toUpperCase() + ' (kg)'),
+                datasets: [{
+                    data: Object.values(data.streams),
+                    backgroundColor: ['#198754', '#0dcaf0', '#ffc107', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: '#1a202c'
                 }]
             },
-            options: { plugins: { title: { display: true, text: 'Waste Type Distribution', color: '#fff' }, legend: { labels: { color: '#fff' } } } }
+            options: {
+                plugins: {
+                    legend: { labels: { color: '#e2e8f0' } }
+                }
+            }
         });
+
+        // 2. Status Split Chart
         new Chart(document.getElementById('statusChart'), {
-            type: 'pie',
+            type: 'bar',
             data: {
-                labels: Object.keys(data.statuses),
-                datasets: [{ 
+                labels: Object.keys(data.statuses).map(s => s.toUpperCase()),
+                datasets: [{
+                    label: 'Pickups Count',
                     data: Object.values(data.statuses),
-                    backgroundColor: ['#ffc107','#0dcaf0','#0d6efd','#198754']
+                    backgroundColor: ['#ffc107', '#0dcaf0', '#198754'],
+                    borderRadius: 6
                 }]
             },
-            options: { plugins: { title: { display: true, text: 'Report Status Split', color: '#fff' }, legend: { labels: { color: '#fff' } } } }
+            options: {
+                scales: {
+                    x: { ticks: { color: '#e2e8f0' }, grid: { color: '#2d3748' } },
+                    y: { ticks: { color: '#e2e8f0' }, grid: { color: '#2d3748' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    });
+
+    // 3. Ward Leaderboard Bar Chart
+    fetch('/api/leaderboard').then(r => r.json()).then(data => {
+        new Chart(document.getElementById('leaderboardChart'), {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Green Points Earned',
+                    data: data.points,
+                    backgroundColor: '#198754',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                scales: {
+                    x: { ticks: { color: '#e2e8f0' }, grid: { color: '#2d3748' } },
+                    y: { ticks: { color: '#e2e8f0' }, grid: { color: '#2d3748' } }
+                },
+                plugins: {
+                    legend: { labels: { color: '#e2e8f0' } }
+                }
+            }
         });
     });
 
     // ============================================
-    // STATUS UPDATE & ASSIGNMENT
+    // STATUS UPDATE & ASSIGN MODAL
     // ============================================
-    function updateStatus(reportId) {
-        var status = document.getElementById('status-' + reportId).value;
-        fetch(`/api/status/${reportId}`, {
+    function updatePickupStatus(pickupId) {
+        var status = document.getElementById('status-select-' + pickupId).value;
+        fetch(`/api/status/${pickupId}`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({status: status, resolved_image_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80'})
+            body: JSON.stringify({ status: status })
         }).then(r => r.json()).then(d => {
-            alert('✅ Status updated to ' + status + (status === 'Resolved' ? ' — +10 Green Points awarded to citizen!' : ''));
-            location.reload();
+            refreshMapData();
         });
     }
 
-    function assignVehicle(reportId) {
-        document.getElementById('modal-report-id').innerText = reportId;
+    function openAssignModal(pickupId) {
+        document.getElementById('modal-pickup-id').innerText = pickupId;
         var modal = new bootstrap.Modal(document.getElementById('assignModal'));
         modal.show();
 
-        fetch('/api/vehicles').then(r => r.json()).then(vehicles => {
+        fetch('/api/vans').then(r => r.json()).then(vans => {
             var html = '<div class="list-group">';
-            vehicles.forEach(v => {
-                html += `<button class="list-group-item list-group-item-action bg-secondary text-white border-0 mb-2" 
-                                onclick="confirmAssign(${reportId}, ${v.id}, '${v.number}')">
-                            <i class="fa-solid fa-truck me-2"></i> ${v.number} — Driver: ${v.driver}
+            vans.forEach(v => {
+                html += `<button class="list-group-item list-group-item-action bg-dark text-white border-secondary mb-2 rounded-3 d-flex justify-content-between align-items-center" 
+                                onclick="confirmAssign(${pickupId}, ${v.id}, '${v.van_code}')">
+                            <div>
+                                <i class="fa-solid fa-truck text-info me-2"></i>
+                                <strong>${v.van_code}</strong> — Driver: ${v.driver_name}
+                            </div>
+                            <span class="badge bg-secondary">${v.status.toUpperCase()}</span>
                          </button>`;
             });
             html += '</div>';
-            document.getElementById('vehicle-list').innerHTML = html;
+            document.getElementById('van-selection-list').innerHTML = html;
         });
     }
 
-    function confirmAssign(reportId, vehicleId, vehicleNo) {
+    function confirmAssign(pickupId, vanId, vanCode) {
         fetch('/api/assign', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({report_id: reportId, vehicle_id: vehicleId})
+            body: JSON.stringify({ pickup_id: pickupId, van_id: vanId })
         }).then(r => r.json()).then(d => {
-            alert('✅ Report #' + reportId + ' assigned to ' + vehicleNo);
+            alert(`✅ Pickup #${pickupId} assigned to ${vanCode}`);
             location.reload();
         });
     }

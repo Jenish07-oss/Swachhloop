@@ -1,77 +1,132 @@
 {% extends "base.html" %}
-{% block title %}Route Optimization - SwachhLoop{% endblock %}
+{% block title %}Route Optimization - SwachhLoop 4R{% endblock %}
 
 {% block content %}
 <style>
-    body { background-color: #1a1d24; color: #e0e0e0; }
-    .admin-card { background-color: #252a36; border: 1px solid #3a3f4b; color: #fff; }
-    .mini-stat { background: linear-gradient(135deg, #2b3040, #1a1d24); padding: 1.5rem; border-radius: 12px; text-align: center; }
+    body { background-color: #12161f; color: #e2e8f0; }
+    .admin-card { background-color: #1a202c; border: 1px solid #2d3748; color: #fff; border-radius: 12px; }
+    .stat-box { background: linear-gradient(135deg, #1e2638, #161b26); border: 1px solid #2d3748; border-radius: 12px; padding: 1.25rem; text-align: center; }
 </style>
 
 <div class="row g-3">
+    <!-- Header -->
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-secondary">
+        <div class="d-flex justify-content-between align-items-center mb-2 pb-3 border-bottom border-secondary">
             <div>
-                <h2 class="fw-bold text-white mb-1"><i class="fa-solid fa-route text-success me-2"></i>Route Optimization</h2>
-                <p class="text-muted mb-0">Vehicle: <strong class="text-info">{{ vehicle.number }}</strong> | Driver: {{ vehicle.driver }}</p>
+                <h2 class="fw-bold text-white mb-1">
+                    <i class="fa-solid fa-route text-success me-2"></i> Stream-Wise Route Optimization
+                </h2>
+                <p class="text-muted mb-0">
+                    Van: <strong class="text-info">{{ van.van_code }}</strong> (Driver: {{ van.driver_name }}) | Capacity: {{ van.capacity_kg }} kg
+                </p>
             </div>
-            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light btn-sm">
-                <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Command Center
+            </a>
+        </div>
+
+        <!-- Stream Batch Filter Tabs -->
+        <div class="d-flex gap-2 flex-wrap mb-3 align-items-center">
+            <span class="small text-muted fw-bold me-1">STREAM BATCH:</span>
+            <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='all') }}" class="btn btn-sm {% if stream_filter == 'all' %}btn-success{% else %}btn-outline-secondary text-white{% endif %}">
+                All Assigned Stops
+            </a>
+            <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='wet') }}" class="btn btn-sm {% if stream_filter == 'wet' %}btn-success{% else %}btn-outline-secondary text-white{% endif %}">
+                <i class="fa-solid fa-apple-whole me-1"></i> Wet Batch (→ Compost)
+            </a>
+            <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='dry') }}" class="btn btn-sm {% if stream_filter == 'dry' %}btn-info{% else %}btn-outline-secondary text-white{% endif %}">
+                <i class="fa-solid fa-box-open me-1"></i> Dry Batch (→ MRF)
+            </a>
+            <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='e_waste') }}" class="btn btn-sm {% if stream_filter == 'e_waste' %}btn-warning text-dark{% else %}btn-outline-secondary text-white{% endif %}">
+                <i class="fa-solid fa-plug me-1"></i> E-Waste Batch (→ Recycler)
+            </a>
+            <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='residual') }}" class="btn btn-sm {% if stream_filter == 'residual' %}btn-danger{% else %}btn-outline-secondary text-white{% endif %}">
+                <i class="fa-solid fa-fire me-1"></i> Residual Batch (→ RDF Kiln)
             </a>
         </div>
     </div>
 
-    <!-- KPI Stats -->
+    <!-- Algorithm KPI Proof Points -->
     <div class="col-md-4">
-        <div class="mini-stat">
-            <div class="text-muted small">Naive Route Distance (as ordered)</div>
-            <h2 class="fw-bold text-warning mb-0">{{ naive_dist }}</h2>
-            <small class="text-secondary">km</small>
+        <div class="stat-box">
+            <div class="text-muted small fw-semibold text-uppercase">Naive Route Distance</div>
+            <h2 class="fw-bold text-warning mb-0">{{ naive_dist }} <span class="fs-6">km</span></h2>
+            <small class="text-secondary">Sequential database / booking order</small>
         </div>
     </div>
+
     <div class="col-md-4">
-        <div class="mini-stat">
-            <div class="text-muted small">Optimized Route Distance (Nearest-Neighbor)</div>
-            <h2 class="fw-bold text-info mb-0">{{ opt_dist }}</h2>
-            <small class="text-secondary">km</small>
+        <div class="stat-box">
+            <div class="text-muted small fw-semibold text-uppercase">Optimized Route Distance</div>
+            <h2 class="fw-bold text-info mb-0">{{ opt_dist }} <span class="fs-6">km</span></h2>
+            <small class="text-secondary">Nearest-Neighbour heuristic order</small>
         </div>
     </div>
+
     <div class="col-md-4">
-        <div class="mini-stat">
-            <div class="text-muted small">Distance Saved (Demo Simulation)</div>
+        <div class="stat-box border-success">
+            <div class="text-muted small fw-semibold text-uppercase">Distance Saved %</div>
             <h2 class="fw-bold text-success mb-0">{{ saved_pct }}%</h2>
-            <small class="text-secondary"><i class="fa-solid fa-leaf me-1"></i> Less fuel + CO₂</small>
+            <small class="badge bg-success-subtle text-success border border-success-subtle">
+                <i class="fa-solid fa-leaf me-1"></i> Nearest-neighbour estimate
+            </small>
         </div>
     </div>
 
-    <!-- Map -->
-    <div class="col-md-8">
-        <div id="route-map" style="height: 500px;" class="rounded-3 border border-secondary"></div>
+    <!-- Leaflet Route Map -->
+    <div class="col-lg-8">
+        <div class="admin-card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold text-white small"><i class="fa-solid fa-map me-1 text-success"></i> Optimized Trajectory & Stop Sequence</span>
+                <span class="badge bg-dark border border-secondary text-muted small">Green Line = Optimized Order</span>
+            </div>
+            <div id="route-map" style="height: 520px;" class="rounded-3 border border-secondary"></div>
+        </div>
     </div>
 
-    <!-- Stop List -->
-    <div class="col-md-4">
-        <div class="admin-card rounded-3 p-3">
-            <h5 class="text-white mb-3"><i class="fa-solid fa-list-ol me-1"></i> Optimized Pickup Sequence</h5>
+    <!-- Optimized Stops List -->
+    <div class="col-lg-4">
+        <div class="admin-card p-3" style="max-height: 575px; overflow-y: auto;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-list-ol text-info me-2"></i> Stop Sequence</h5>
+                <span class="badge bg-secondary">{{ stops|length }} stops</span>
+            </div>
+
             {% if stops %}
-                <ol class="list-group list-group-numbered">
-                    {% for stop in stops %}
-                    <li class="list-group-item bg-dark text-white border-secondary d-flex justify-content-between align-items-start">
-                        <div class="ms-2 me-auto">
-                            <div class="fw-bold text-info">{{ stop.type }}</div>
-                            <small class="text-muted">{{ stop.desc }}</small>
+                <div class="d-flex flex-column gap-2">
+                    <div class="p-2 bg-dark rounded-3 border border-secondary text-muted small d-flex align-items-center gap-2">
+                        <span class="badge bg-primary">START</span>
+                        <div><strong>Van Depot:</strong> {{ "%.4f"|format(van.lat) }}, {{ "%.4f"|format(van.lng) }}</div>
+                    </div>
+
+                    {% for s in stops %}
+                    <div class="p-3 bg-dark rounded-3 border border-secondary">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-success rounded-circle" style="width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">
+                                    {{ s.sequence }}
+                                </span>
+                                <div>
+                                    <strong class="text-white">Pickup #{{ s.id }}</strong> ({{ s.household_code }})
+                                </div>
+                            </div>
+                            <span class="badge bg-secondary" style="font-size:10px;">Zone {{ s.zone }}</span>
                         </div>
-                        <span class="badge bg-secondary rounded-pill">#{{ stop.id }}</span>
-                    </li>
+                        <div class="small text-muted mb-1">{{ s.street }}</div>
+                        <div class="small text-info fw-semibold">{{ s.streams }}</div>
+                        <div class="small text-secondary mt-1">Bin Score: <span class="text-success">{{ s.bin_score }}/100</span></div>
+                    </div>
                     {% endfor %}
-                </ol>
-                <div class="mt-3 small text-muted">
-                    <i class="fa-solid fa-info-circle me-1"></i> Greedy heuristic chosen for transparency. Stretch: OR-Tools VRP solver.
+                </div>
+
+                <div class="mt-3 p-2 bg-dark rounded-3 border border-secondary text-muted small" style="font-size:11px;">
+                    <i class="fa-solid fa-circle-info text-info me-1"></i>
+                    <strong>Proof Point:</strong> Greedy Nearest-Neighbour evaluates point-to-point Haversine matrices to reduce city deadhead mileage.
                 </div>
             {% else %}
-                <div class="text-center text-muted p-4">
+                <div class="text-center py-4 text-muted">
                     <i class="fa-solid fa-box-open fa-2x mb-2"></i>
-                    <p class="mb-0">No assigned stops for this vehicle.</p>
+                    <p class="mb-0">No stops found for this filter criteria.</p>
                 </div>
             {% endif %}
         </div>
@@ -81,46 +136,46 @@
 
 {% block extra_js %}
 <script>
-    // Route Map
-    var map = L.map('route-map').setView([23.0225, 72.5714], 13);
+    var map = L.map('route-map').setView([{{ van.lat }}, {{ van.lng }}], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Vehicle start
+    // Van Start Pin
     var startIcon = L.divIcon({
         className: 'start-icon',
-        html: '<div style="font-size: 28px; text-shadow: 1px 1px 2px #000;">🚛</div>',
-        iconSize: [30, 30]
+        html: '<div style="font-size: 26px; text-shadow: 0 0 5px #000;">🚛</div>',
+        iconSize: [32, 32]
     });
-    L.marker([{{ vehicle.lat }}, {{ vehicle.lon }}], { icon: startIcon })
-        .bindPopup('<b>Depot / Vehicle Start</b><br>{{ vehicle.number }}').addTo(map);
+    L.marker([{{ van.lat }}, {{ van.lng }}], { icon: startIcon })
+        .bindPopup('<b>Depot / Van Start</b><br>{{ van.van_code }} ({{ van.driver_name }})')
+        .addTo(map);
 
-    // Stops
     var stops = {{ stops|tojson }};
-    var pathCoords = [[[{{ vehicle.lat }}, {{ vehicle.lon }}]]];
-    
-    stops.forEach((stop, idx) => {
-        var stopIcon = L.divIcon({
-            className: 'stop-icon',
-            html: `<div style="background: #198754; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white;">${idx + 1}</div>`,
-            iconSize: [28, 28]
+    var pathCoords = [[{{ van.lat }}, {{ van.lng }}]];
+
+    stops.forEach((s) => {
+        var numIcon = L.divIcon({
+            className: 'stop-num-icon',
+            html: `<div style="background:#198754; color:#fff; border:2px solid #fff; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; box-shadow:0 2px 5px rgba(0,0,0,0.5);">${s.sequence}</div>`,
+            iconSize: [26, 26]
         });
-        L.marker([stop.lat, stop.lon], { icon: stopIcon })
-            .bindPopup(`<b>Stop ${idx + 1}: #${stop.id}</b><br>${stop.type}<br>${stop.desc}`)
+
+        L.marker([s.lat, s.lng], { icon: numIcon })
+            .bindPopup(`<b>Stop ${s.sequence}: Pickup #${s.id}</b><br>${s.household_code} (${s.name})<br>${s.street}<br><small>${s.streams}</small>`)
             .addTo(map);
-        pathCoords[0].push([stop.lat, stop.lon]);
+
+        pathCoords.push([s.lat, s.lng]);
     });
 
-    // Draw optimized route line
-    if (stops.length > 0) {
-        var polyline = L.polyline(pathCoords[0], {
-            color: '#198754', weight: 4, opacity: 0.7, dashArray: '10, 6'
+    if (pathCoords.length > 1) {
+        var polyline = L.polyline(pathCoords, {
+            color: '#198754',
+            weight: 4,
+            opacity: 0.85,
+            dashArray: '8, 6'
         }).addTo(map);
         map.fitBounds(polyline.getBounds().pad(0.1));
     }
-
-    // Convert newline coords for backward compat
-    var finalCoords = pathCoords.flat ? pathCoords.flat() : pathCoords[0];
 </script>
 {% endblock %}

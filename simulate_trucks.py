@@ -1,7 +1,6 @@
 """
-Simulated truck movement for demo purposes.
-Run this script in a separate terminal OR via Flask background thread to see
-trucks animate on the admin map.
+Simulated van movement for demo purposes in SwachhLoop 4R.
+Moves collection vans toward assigned pickups or destination facilities.
 """
 import time
 import random
@@ -16,45 +15,61 @@ def haversine(lat1, lon1, lat2, lon2):
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
 
 def move_trucks():
-    """Move each truck slightly toward a random nearby report every 5 sec."""
+    """Move each van slightly toward assigned pending/collected pickups."""
     conn = get_db()
     cursor = conn.cursor()
-    
-    vehicles = cursor.execute("SELECT * FROM vehicles").fetchall()
-    
-    for v in vehicles:
-        # Find nearest pending report
-        reports = cursor.execute(
-            "SELECT * FROM waste_reports WHERE status IN ('Reported', 'Assigned', 'In Progress') ORDER BY RANDOM() LIMIT 1"
-        ).fetchone()
-        
-        if not reports:
+
+    vans = cursor.execute("SELECT * FROM vans").fetchall()
+
+    for v in vans:
+        # Find an assigned pickup that is pending or collected
+        pickup = cursor.execute("""
+            SELECT * FROM pickups 
+            WHERE assigned_van_id = ? AND status IN ('pending', 'collected')
+            ORDER BY id ASC LIMIT 1
+        """, (v['id'],)).fetchone()
+
+        if not pickup:
+            # If no assigned pickup, pick any unassigned pending pickup to simulate movement
+            pickup = cursor.execute("""
+                SELECT * FROM pickups 
+                WHERE status = 'pending'
+                ORDER BY RANDOM() LIMIT 1
+            """).fetchone()
+
+        if not pickup:
             continue
-        
-        # Move vehicle toward that report (small step per tick)
-        step_lat = (reports['lat'] - v['lat']) * 0.05
-        step_lon = (reports['lon'] - v['lon']) * 0.05
-        
+
+        # Move van toward that pickup
+        step_lat = (pickup['lat'] - v['lat']) * 0.05
+        step_lng = (pickup['lng'] - v['lng']) * 0.05
+
         new_lat = round(v['lat'] + step_lat, 5)
-        new_lon = round(v['lon'] + step_lon, 5)
-        
-        # If arrived within 0.0005 degrees (~50m), update status
-        if haversine(new_lat, new_lon, reports['lat'], reports['lon']) < 0.05:
-            cursor.execute("UPDATE waste_reports SET status = 'In Progress' WHERE id = ? AND status = 'Assigned'", (reports['id'],))
-            cursor.execute("UPDATE vehicles SET status = 'On Route' WHERE id = ?", (v['id'],))
-        
-        # Add random jitter for realistic movement
-        new_lat += random.uniform(-0.0005, 0.0005)
-        new_lon += random.uniform(-0.0005, 0.0005)
-        
-        cursor.execute("UPDATE vehicles SET lat = ?, lon = ? WHERE id = ?", (new_lat, new_lon, v['id']))
-    
+        new_lng = round(v['lng'] + step_lng, 5)
+
+        # Arrived within ~50m
+        dist = haversine(new_lat, new_lng, pickup['lat'], pickup['lng'])
+        if dist < 0.05:
+            if pickup['status'] == 'pending':
+                cursor.execute("UPDATE pickups SET status = 'collected' WHERE id = ?", (pickup['id'],))
+                cursor.execute("UPDATE pickup_streams SET status = 'collected' WHERE pickup_id = ?", (pickup['id'],))
+                cursor.execute("UPDATE vans SET status = 'en_route' WHERE id = ?", (v['id'],))
+
+        # Add tiny jitter for realistic movement
+        new_lat += random.uniform(-0.0003, 0.0003)
+        new_lng += random.uniform(-0.0003, 0.0003)
+
+        cursor.execute("UPDATE vans SET lat = ?, lng = ? WHERE id = ?", (new_lat, new_lng, v['id']))
+
     conn.commit()
     conn.close()
-    print(f"[{time.strftime('%H:%M:%S')}] Trucks moved...")
 
 if __name__ == '__main__':
-    print("Starting truck simulation. Press Ctrl+C to stop.")
+    print("Starting SwachhLoop 4R van simulation. Press Ctrl+C to stop.")
     while True:
-        move_trucks()
-        time.sleep(5)
+        try:
+            move_trucks()
+            time.sleep(5)
+        except Exception as e:
+            print(f"Sim error: {e}")
+            time.sleep(5)

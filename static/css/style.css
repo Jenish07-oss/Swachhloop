@@ -1,56 +1,101 @@
-/* SwachhLoop Custom Styles */
+/* SwachhLoop 4R - Civic Tech Stylesheet (SIH 2026 PS 8-L) */
 
 :root {
-    --primary: #198754;
-    --primary-dark: #146c43;
-    --accent: #ffc107;
-    --danger: #dc3545;
+    --emerald-primary: #198754;
+    --emerald-dark: #0f5132;
+    --emerald-light: #d1e7dd;
+    --dark-navy: #12161f;
+    --card-bg-dark: #1a202c;
+    --accent-amber: #ffc107;
+    --accent-blue: #0dcaf0;
+    --accent-red: #dc3545;
 }
 
 body {
-    font-family: 'Segoe UI', Roboto, sans-serif;
-    background-color: #f8f9fa;
-    color: #212529;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #f4f6f9;
+    color: #1e293b;
     min-height: 100vh;
 }
 
-.navbar-brand {
-    font-weight: 700;
-    letter-spacing: -0.5px;
+/* Navbar */
+.bg-dark-emerald {
+    background-color: #0d3b26 !important;
 }
 
-.nav-link {
-    font-weight: 500;
-    transition: color 0.2s;
+.brand-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #198754;
+    color: #fff;
+    border-radius: 8px;
 }
 
-.nav-link.active {
-    color: var(--accent) !important;
+.citizen-pill {
+    background-color: rgba(209, 231, 221, 0.2);
+    border: 1px solid rgba(25, 135, 84, 0.3);
 }
 
-.card {
-    transition: transform 0.2s, box-shadow 0.2s;
+/* Custom Colors & Utilities */
+.bg-emerald {
+    background-color: #198754 !important;
 }
 
-.card:hover {
-    box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.08) !important;
+.text-emerald {
+    color: #198754 !important;
 }
 
-.btn-success {
-    background-color: var(--primary);
-    border-color: var(--primary);
+.bg-emerald-subtle {
+    background-color: #d1e7dd !important;
 }
 
-.btn-success:hover {
-    background-color: var(--primary-dark);
-    border-color: var(--primary-dark);
+.border-emerald-subtle {
+    border-color: #badbcc !important;
 }
 
-.badge {
-    font-weight: 500;
+.btn-emerald {
+    background-color: #198754;
+    color: #fff;
+    border: none;
+    transition: all 0.2s;
 }
 
-/* Map container */
+.btn-emerald:hover {
+    background-color: #146c43;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* Stream Cards */
+.stream-card {
+    background-color: #ffffff;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.stream-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.stream-wet {
+    border-left: 4px solid #198754 !important;
+}
+
+.stream-dry {
+    border-left: 4px solid #0dcaf0 !important;
+}
+
+.stream-ewaste {
+    border-left: 4px solid #ffc107 !important;
+}
+
+.stream-residual {
+    border-left: 4px solid #dc3545 !important;
+}
+
+/* Map Containers */
 #map, #admin-map, #route-map {
     z-index: 1;
 }
@@ -59,39 +104,13 @@ body {
     font-family: inherit;
 }
 
-/* Smooth alert animation */
-.alert {
-    border-radius: 12px;
-    border: none;
+/* Card hover animation */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.alert-success {
-    background-color: #d1e7dd;
-    color: #0a3622;
-}
-
-.alert-danger {
-    background-color: #f8d7da;
-    color: #58151c;
-}
-
-/* Timeline */
-.report-row {
-    border-radius: 8px;
-    transition: all 0.2s;
-}
-
-.report-row:hover {
-    background-color: #2b3040 !important;
-}
-
-/* Truck icons */
-.truck-icon {
-    text-align: center;
-}
-
-/* Form */
-.form-control:focus, .form-select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+/* Badges */
+.badge {
+    font-weight: 600;
+    letter-spacing: 0.2px;
 }

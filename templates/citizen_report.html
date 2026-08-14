@@ -1,108 +1,307 @@
 {% extends "base.html" %}
-{% block title %}Report Waste - SwachhLoop{% endblock %}
+{% block title %}Book 4R Segregated Pickup - SwachhLoop 4R{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card shadow border-0 rounded-4 overflow-hidden">
-            <div class="card-header bg-success text-white p-4">
-                <h3 class="mb-1"><i class="fa-solid fa-camera-retro me-2"></i> Report Waste Issue</h3>
-                <p class="mb-0 text-white-55">Help keep Ahmedabad clean. Snap a photo, share your location, and earn <strong>+10 Green Points</strong>!</p>
+<div class="row g-4">
+
+    <!-- Left Column: Booking Form -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-emerald text-white p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="mb-1 fw-bold"><i class="fa-solid fa-truck-ramp-box me-2"></i> Book Segregated 4R Pickup</h4>
+                        <p class="mb-0 text-emerald-light small">Zero-mixing circular collection. Segregate at source for maximum Green Points!</p>
+                    </div>
+                    <span class="badge bg-warning text-dark px-3 py-2 fw-bold">SIH PS 8-L</span>
+                </div>
             </div>
-            <div class="card-body p-4 p-md-5">
-                <form action="{{ url_for('submit_report') }}" method="POST" enctype="multipart/form-data">
-                    
-                    <!-- Location Selection -->
+
+            <div class="card-body p-4">
+                <form action="{{ url_for('book_pickup') }}" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="household_id" value="{{ household.id }}">
+
+                    <!-- 1. Four Waste Streams Selection -->
                     <div class="mb-4">
-                        <label class="form-label fw-bold"><i class="fa-solid fa-location-dot text-danger me-1"></i> Issue Location (Ahmedabad)</label>
-                        <div class="input-group mb-2">
-                            <input type="text" class="form-control" id="lat_display" name="lat" value="23.0225" readonly required>
-                            <input type="text" class="form-control" id="lon_display" name="lon" value="72.5714" readonly required>
-                            <button type="button" class="btn btn-outline-success" id="get_gps_btn" onclick="getGPSLocation()">
+                        <label class="form-label fw-bold d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-layer-group text-success me-1"></i> 1. Select Waste Streams for this Pickup</span>
+                            <span class="badge bg-light text-muted border small">Multi-Stream Supported</span>
+                        </label>
+                        <p class="small text-muted mb-2">Check all streams you have segregated for collection today:</p>
+
+                        <div class="row g-2">
+                            <!-- Stream 1: Wet -->
+                            <div class="col-md-6">
+                                <div class="stream-card p-3 rounded-3 border h-100 stream-wet">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="stream_wet" id="stream_wet" checked onchange="updateEstimates()">
+                                        <label class="form-check-label fw-bold d-block" for="stream_wet">
+                                            <span class="text-success"><i class="fa-solid fa-apple-whole me-1"></i> Wet / Organic</span>
+                                            <span class="d-block small text-muted fw-normal mt-1">Food waste, peels, kitchen organics</span>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle mt-1 small">
+                                                → Compost / Bio-CNG
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-top">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white">Est. Kg</span>
+                                            <input type="number" step="0.5" min="0.5" max="50" class="form-control" name="kg_wet" id="kg_wet" value="3.5" onchange="updateEstimates()">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stream 2: Dry -->
+                            <div class="col-md-6">
+                                <div class="stream-card p-3 rounded-3 border h-100 stream-dry">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="stream_dry" id="stream_dry" checked onchange="updateEstimates()">
+                                        <label class="form-check-label fw-bold d-block" for="stream_dry">
+                                            <span class="text-info"><i class="fa-solid fa-box-open me-1"></i> Dry Recyclables</span>
+                                            <span class="d-block small text-muted fw-normal mt-1">Paper, cardboard, plastics, glass, metals</span>
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle mt-1 small">
+                                                → Material Recovery Facility (MRF)
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-top">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white">Est. Kg</span>
+                                            <input type="number" step="0.5" min="0.5" max="50" class="form-control" name="kg_dry" id="kg_dry" value="2.5" onchange="updateEstimates()">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stream 3: E-Waste -->
+                            <div class="col-md-6">
+                                <div class="stream-card p-3 rounded-3 border h-100 stream-ewaste">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="stream_ewaste" id="stream_ewaste" onchange="updateEstimates()">
+                                        <label class="form-check-label fw-bold d-block" for="stream_ewaste">
+                                            <span class="text-warning"><i class="fa-solid fa-plug-circle-bolt me-1"></i> E-Waste</span>
+                                            <span class="d-block small text-muted fw-normal mt-1">Cables, chargers, batteries, electronics</span>
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle mt-1 small">
+                                                → CPCB-Registered Recycler
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-top">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white">Est. Kg</span>
+                                            <input type="number" step="0.5" min="0.5" max="50" class="form-control" name="kg_ewaste" id="kg_ewaste" value="1.0" onchange="updateEstimates()">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stream 4: Residual -->
+                            <div class="col-md-6">
+                                <div class="stream-card p-3 rounded-3 border h-100 stream-residual">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="stream_residual" id="stream_residual" onchange="updateEstimates()">
+                                        <label class="form-check-label fw-bold d-block" for="stream_residual">
+                                            <span class="text-danger"><i class="fa-solid fa-fire me-1"></i> Residual Combustibles</span>
+                                            <span class="d-block small text-muted fw-normal mt-1">Multi-layer plastics, non-recyclables</span>
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle mt-1 small">
+                                                → RDF → Cement Kiln Co-Processing
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-top">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white">Est. Kg</span>
+                                            <input type="number" step="0.5" min="0.5" max="50" class="form-control" name="kg_residual" id="kg_residual" value="1.5" onchange="updateEstimates()">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Bin Check Photo Upload Stub -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold"><i class="fa-solid fa-camera text-primary me-1"></i> 2. Bin Check Photo (Quality Verification)</label>
+                        <input type="file" class="form-control" id="photo" name="photo" accept="image/*" onchange="previewImage(event)">
+                        <small class="text-muted d-block mt-1">Upload a photo of your segregated bins to earn high Bin Score points.</small>
+                        <div class="mt-2 text-center">
+                            <img id="preview" src="#" alt="Bin Preview" class="img-fluid rounded-3 d-none border shadow-sm" style="max-height: 160px;">
+                        </div>
+                    </div>
+
+                    <!-- 3. Pickup Location Pin -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label fw-bold mb-0"><i class="fa-solid fa-location-dot text-danger me-1"></i> 3. Pickup Location (Navrangpura Ward)</label>
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="getGPSLocation()">
                                 <i class="fa-solid fa-crosshairs me-1"></i> Auto-Detect GPS
                             </button>
                         </div>
-                        <div id="map" style="height: 250px;" class="rounded-3 border"></div>
-                        <small class="text-muted">Drag marker to pinpoint exact garbage location.</small>
-                    </div>
-
-                    <!-- Waste Type -->
-                    <div class="mb-4">
-                        <label for="waste_type" class="form-label fw-bold"><i class="fa-solid fa-trash-can me-1"></i> Waste Category</label>
-                        <select class="form-select form-select-lg" id="waste_type" name="waste_type" required>
-                            <option value="Mixed" selected>Mixed Garbage Overflow</option>
-                            <option value="Plastic">Plastic Waste / Bottles</option>
-                            <option value="Organic">Organic / Food Waste</option>
-                            <option value="E-waste">E-Waste (Electronics)</option>
-                            <option value="Construction">Construction / Demolition Debris</option>
-                        </select>
-                    </div>
-
-                    <!-- Photo Upload -->
-                    <div class="mb-4">
-                        <label for="photo" class="form-label fw-bold"><i class="fa-solid fa-image me-1"></i> Upload Photo Proof</label>
-                        <input type="file" class="form-control" id="photo" name="photo" accept="image/*" onchange="previewImage(event)" required>
-                        <div class="mt-3 text-center">
-                            <img id="preview" src="#" alt="Photo Preview" class="img-fluid rounded-3 d-none border shadow-sm" style="max-height: 200px;">
+                        <div class="input-group input-group-sm mb-2">
+                            <span class="input-group-text bg-light">Lat</span>
+                            <input type="text" class="form-control" id="lat_display" name="lat" value="23.0375" readonly required>
+                            <span class="input-group-text bg-light">Lng</span>
+                            <input type="text" class="form-control" id="lng_display" name="lng" value="72.5520" readonly required>
                         </div>
+                        <div id="map" style="height: 220px;" class="rounded-3 border"></div>
+                        <small class="text-muted">Street: <strong>{{ household.street_segment }}</strong> (Drag pin to fine-tune)</small>
                     </div>
 
-                    <!-- Description -->
-                    <div class="mb-4">
-                        <label for="description" class="form-label fw-bold"><i class="fa-solid fa-pen-to-square me-1"></i> Description / Landmark</label>
-                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="e.g. Near municipal dustbin overflowing for 2 days, near crossroads..." required></textarea>
+                    <!-- Transparent Green Points Preview Box -->
+                    <div class="p-3 bg-light rounded-3 border mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-bold text-success"><i class="fa-solid fa-calculator me-1"></i> Green Points Formula:</span>
+                                <div class="small text-muted">Base Points (20) + floor(Bin Score / 10)</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-success fs-6 py-2 px-3">+28 pts est.</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Submit Button -->
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-success btn-lg py-3 fw-bold shadow-sm">
-                            <i class="fa-solid fa-paper-plane me-2"></i> Submit Report & Earn +10 Green Points 🌿
+                        <button type="submit" class="btn btn-emerald btn-lg py-3 fw-bold shadow-sm">
+                            <i class="fa-solid fa-paper-plane me-2"></i> Confirm 4R Segregated Pickup
                         </button>
                     </div>
-
                 </form>
             </div>
         </div>
+    </div>
+
+    <!-- Right Column: 4R Impact Ledger & Recent Pickups -->
+    <div class="col-lg-5">
+        
+        <!-- 4R Impact Ledger -->
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+            <div class="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="fa-solid fa-leaf text-success me-2"></i> Your 4R Impact Ledger</h5>
+                <span class="badge bg-secondary small">ESTIMATE</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-2 text-center mb-3">
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="text-muted small">Total Diverted</div>
+                            <h3 class="fw-bold text-success mb-0">{{ total_diverted }} <small class="fs-6">kg</small></h3>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="text-muted small">CO₂e Reduced <span class="badge bg-warning text-dark small" style="font-size: 10px;">EST</span></div>
+                            <h3 class="fw-bold text-primary mb-0">{{ co2_saved }} <small class="fs-6">kg</small></h3>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold text-secondary small text-uppercase mb-2">Stream Diversion Breakdown:</h6>
+                <ul class="list-group list-group-flush small border rounded-3 mb-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-apple-whole text-success me-2"></i> Wet / Compost</span>
+                        <span class="fw-bold">{{ wet_kg }} kg</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-box-open text-info me-2"></i> Dry Recyclables (MRF)</span>
+                        <span class="fw-bold">{{ dry_kg }} kg</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-plug-circle-bolt text-warning me-2"></i> E-Waste (CPCB Recycler)</span>
+                        <span class="fw-bold">{{ ewaste_kg }} kg</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fa-solid fa-fire text-danger me-2"></i> Residual (RDF Kiln)</span>
+                        <span class="fw-bold">{{ residual_kg }} kg</span>
+                    </li>
+                </ul>
+
+                <div class="p-2 bg-emerald-subtle rounded-3 text-emerald small">
+                    <i class="fa-solid fa-circle-info me-1"></i>
+                    <strong>SIH Transparent Formula:</strong> CO₂ estimates use standard circular factors (Wet 0.85, Dry 1.95, E-Waste 3.2, RDF 0.60 kg CO₂e/kg).
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Pickups & Manifest Access -->
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i> Recent Pickups</h6>
+                <a href="{{ url_for('my_reports') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+            </div>
+            <div class="card-body p-3">
+                {% if pickups %}
+                    {% for p in pickups[:3] %}
+                    <div class="p-3 bg-light rounded-3 border mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-dark">Pickup #{{ p.id }}</span>
+                            <span class="badge 
+                                {% if p.status == 'pending' %}bg-warning text-dark
+                                {% elif p.status == 'collected' %}bg-info text-dark
+                                {% else %}bg-success{% endif %}">
+                                {{ p.status|upper }}
+                            </span>
+                        </div>
+                        <div class="d-flex gap-1 flex-wrap my-1">
+                            {% for st in p.streams %}
+                                <span class="badge bg-white text-dark border small">{{ st.stream_type|upper }} ({{ st.estimated_kg }}kg)</span>
+                            {% endfor %}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top small">
+                            <span class="text-muted">Bin Score: <strong class="text-success">{{ p.bin_score }}/100</strong></span>
+                            <a href="{{ url_for('manifest_page', pickup_id=p.id) }}" class="btn btn-sm btn-outline-dark py-0">
+                                <i class="fa-solid fa-qrcode me-1"></i> QR Manifest
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted small text-center my-3">No pickups booked yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Initialize Leaflet map for reporting
-    var defaultLat = 23.0225;
-    var defaultLon = 72.5714;
-    
-    var map = L.map('map').setView([defaultLat, defaultLon], 13);
+    // Leaflet map setup for booking
+    var defaultLat = 23.0375;
+    var defaultLng = 72.5520;
+
+    var map = L.map('map').setView([defaultLat, defaultLng], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    var marker = L.marker([defaultLat, defaultLon], { draggable: true }).addTo(map);
+    var marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
 
     marker.on('dragend', function(e) {
         var coord = marker.getLatLng();
         document.getElementById('lat_display').value = coord.lat.toFixed(5);
-        document.getElementById('lon_display').value = coord.lng.toFixed(5);
+        document.getElementById('lng_display').value = coord.lng.toFixed(5);
     });
 
     map.on('click', function(e) {
         marker.setLatLng(e.latlng);
         document.getElementById('lat_display').value = e.latlng.lat.toFixed(5);
-        document.getElementById('lon_display').value = e.latlng.lng.toFixed(5);
+        document.getElementById('lng_display').value = e.latlng.lng.toFixed(5);
     });
 
     function getGPSLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
                 var lat = position.coords.latitude;
-                var lon = position.coords.longitude;
-                map.setView([lat, lon], 16);
-                marker.setLatLng([lat, lon]);
+                var lng = position.coords.longitude;
+                map.setView([lat, lng], 16);
+                marker.setLatLng([lat, lng]);
                 document.getElementById('lat_display').value = lat.toFixed(5);
-                document.getElementById('lon_display').value = lon.toFixed(5);
+                document.getElementById('lng_display').value = lng.toFixed(5);
             }, function(error) {
-                alert("Geolocation failed or denied. Using default Ahmedabad center.");
+                alert("Geolocation failed or denied. Using default Ahmedabad Ward coordinates.");
             });
         } else {
             alert("Geolocation is not supported by your browser.");
@@ -116,7 +315,13 @@
             output.src = reader.result;
             output.classList.remove('d-none');
         }
-        reader.readAsDataURL(event.target.files[0]);
+        if (event.target.files && event.target.files[0]) {
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    }
+
+    function updateEstimates() {
+        // Dynamic estimate refresh if needed
     }
 </script>
 {% endblock %}
