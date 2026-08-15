@@ -1,376 +1,508 @@
 {% extends "base.html" %}
-{% block title %}Admin Command Center - SwachhLoop 4R{% endblock %}
+{% block title %}Municipal Command Center — SwachhLoop 4R{% endblock %}
 
 {% block content %}
-<style>
-    .admin-body { background-color: #12161f; color: #e2e8f0; }
-    .admin-card { background-color: #1a202c; border: 1px solid #2d3748; color: #fff; border-radius: 12px; }
-    .kpi-card { transition: transform 0.2s, box-shadow 0.2s; border-radius: 12px; }
-    .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-    .nav-pills .nav-link { color: #a0aec0; background-color: #2d3748; border-radius: 8px; font-weight: 600; }
-    .nav-pills .nav-link.active { background-color: #198754; color: #fff; }
-    .zone-badge-1 { background-color: #198754; color: #fff; }
-    .zone-badge-2 { background-color: #0dcaf0; color: #000; }
-    .zone-badge-3 { background-color: #ffc107; color: #000; }
-    .zone-badge-4 { background-color: #fd7e14; color: #fff; }
-    .zone-badge-5 { background-color: #d63384; color: #fff; }
-</style>
-
-<div class="admin-body rounded-4 p-4 shadow-lg">
-
-    <!-- Top Command Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+<!-- Top Header Bar -->
+<div class="admin-header-bar">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
-                <h2 class="fw-bold text-white mb-0"><i class="fa-solid fa-satellite-dish text-success me-2"></i> 4R Command Center</h2>
-                <span class="badge bg-success text-white px-2 py-1 fs-7">LIVE SIMULATION</span>
+                <span class="brand-badge" style="width: 36px; height: 36px;"><i class="fa-solid fa-shield-halved fs-5 text-white"></i></span>
+                <h1 class="mb-0 fw-bold fs-2">Municipal Command Center</h1>
+                <span class="badge bg-success text-white px-2 py-1" style="font-size: 11px;">LIVE SIH MVP</span>
             </div>
-            <p class="text-muted mb-0 small">Ahmedabad Navrangpura Ward | AI-Clustered 4R Stream Logistics & Zero-Mixing Circular Chain</p>
+            <p class="text-secondary mb-0 small">Ahmedabad Navrangpura Ward • Monitor pickups, routes and circular-economy recovery.</p>
         </div>
-        <div class="text-end">
-            <span class="badge bg-dark border border-secondary p-2 px-3 text-info fw-mono">
-                <i class="fa-solid fa-circle text-success me-1 fa-beat-fade"></i> Auto-Sync: 5s
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#resetModal">
+                <i class="fa-solid fa-rotate-left me-1"></i> Reset Demo Data
+            </button>
+            <span class="badge bg-light text-dark border p-2 px-3 fw-bold">
+                <i class="fa-solid fa-circle text-success me-1 fa-beat-fade"></i> Live Auto-Sync: 5s
             </span>
         </div>
     </div>
+</div>
 
-    <!-- 7 Real KPI Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3 col-sm-6">
-            <div class="card admin-card kpi-card border-0 p-3 h-100">
-                <div class="text-muted small fw-semibold text-uppercase">Total Pickups</div>
-                <div class="d-flex justify-content-between align-items-end mt-1">
-                    <h2 class="fw-bold text-white mb-0">{{ total }}</h2>
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">40 Seeded</span>
-                </div>
-                <small class="text-secondary mt-1 d-block"><i class="fa-solid fa-map-pin me-1"></i> Single Ward Boundary</small>
+<!-- 6 High-Contrast KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="admin-kpi-box text-center">
+            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11px;">Total Pickups</div>
+            <div class="admin-kpi-val">{{ total }}</div>
+            <small class="text-muted fw-semibold">40 Seeded</small>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="admin-kpi-box text-center" style="border-top: 4px solid var(--status-pending);">
+            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11px;">Pending</div>
+            <div class="admin-kpi-val text-warning" id="kpi-pending">{{ pending }}</div>
+            <small class="text-muted fw-semibold">Awaiting Van</small>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="admin-kpi-box text-center" style="border-top: 4px solid var(--status-collected);">
+            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11px;">In Transit</div>
+            <div class="admin-kpi-val text-info" id="kpi-collected">{{ collected }}</div>
+            <small class="text-muted fw-semibold">Vans En Route</small>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="admin-kpi-box text-center" style="border-top: 4px solid var(--status-delivered);">
+            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11px;">Delivered</div>
+            <div class="admin-kpi-val text-success" id="kpi-delivered">{{ delivered }}</div>
+            <small class="text-muted fw-semibold">100% Circular</small>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="admin-kpi-box text-center">
+            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11px;">Estimated Diverted</div>
+            <div class="admin-kpi-val text-success">{{ total_kg_diverted }} <span class="fs-6 text-muted">kg</span></div>
+            <small class="text-muted fw-semibold">Zero Landfill</small>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-4 col-6">
+        <div class="admin-kpi-box text-center">
+            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11px;">Active Fleet</div>
+            <div class="admin-kpi-val text-primary">{{ active_vans }}</div>
+            <small class="text-muted fw-semibold">Collection Vans</small>
+        </div>
+    </div>
+</div>
+
+<!-- 4R Flow Visualization Banner -->
+<div class="surface-card p-3 mb-4 bg-light">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small text-uppercase fw-bold text-dark"><i class="fa-solid fa-arrows-split-up-and-left text-success me-1"></i> Circular Flow Architecture (Live Database Breakdown)</span>
+        <span class="estimate-badge">ZERO MIXING</span>
+    </div>
+    <div class="row g-2 text-center small">
+        <div class="col-md-3 col-6">
+            <div class="p-2 bg-white rounded-2 border">
+                <div class="fw-bold text-success">🌱 Wet Stream</div>
+                <div>{{ stream_counts.get('wet', {}).get('count', 0) }} Pickups • {{ stream_counts.get('wet', {}).get('kg', 0.0) }} kg</div>
+                <small class="text-muted">→ GreenCycle Bio-CNG</small>
             </div>
         </div>
-
-        <div class="col-md-3 col-sm-6">
-            <div class="card admin-card kpi-card border-0 p-3 h-100">
-                <div class="text-muted small fw-semibold text-uppercase">Pending Pickup</div>
-                <div class="d-flex justify-content-between align-items-end mt-1">
-                    <h2 class="fw-bold text-warning mb-0" id="kpi-pending">{{ pending }}</h2>
-                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Awaiting Van</span>
-                </div>
-                <small class="text-secondary mt-1 d-block"><i class="fa-solid fa-clock me-1"></i> In dispatch queue</small>
+        <div class="col-md-3 col-6">
+            <div class="p-2 bg-white rounded-2 border">
+                <div class="fw-bold text-info">♻ Dry Recyclables</div>
+                <div>{{ stream_counts.get('dry', {}).get('count', 0) }} Pickups • {{ stream_counts.get('dry', {}).get('kg', 0.0) }} kg</div>
+                <small class="text-muted">→ Ahmedabad Central MRF</small>
             </div>
         </div>
-
-        <div class="col-md-3 col-sm-6">
-            <div class="card admin-card kpi-card border-0 p-3 h-100">
-                <div class="text-muted small fw-semibold text-uppercase">Collected & En-Route</div>
-                <div class="d-flex justify-content-between align-items-end mt-1">
-                    <h2 class="fw-bold text-info mb-0" id="kpi-collected">{{ collected }}</h2>
-                    <span class="badge bg-info-subtle text-info border border-info-subtle">In Transit</span>
-                </div>
-                <small class="text-secondary mt-1 d-block"><i class="fa-solid fa-truck-fast me-1"></i> Zero-mixing segregation</small>
+        <div class="col-md-3 col-6">
+            <div class="p-2 bg-white rounded-2 border">
+                <div class="fw-bold text-warning">🔌 E-Waste Stream</div>
+                <div>{{ stream_counts.get('e_waste', {}).get('count', 0) }} Pickups • {{ stream_counts.get('e_waste', {}).get('kg', 0.0) }} kg</div>
+                <small class="text-muted">→ E-Clean CPCB Recycler</small>
             </div>
         </div>
-
-        <div class="col-md-3 col-sm-6">
-            <div class="card admin-card kpi-card border-0 p-3 h-100">
-                <div class="text-muted small fw-semibold text-uppercase">Delivered to Facilities</div>
-                <div class="d-flex justify-content-between align-items-end mt-1">
-                    <h2 class="fw-bold text-success mb-0" id="kpi-delivered">{{ delivered }}</h2>
-                    <span class="badge bg-success-subtle text-success border border-success-subtle">100% Circular</span>
-                </div>
-                <small class="text-secondary mt-1 d-block"><i class="fa-solid fa-check-double me-1"></i> At 4 destination hubs</small>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card admin-card kpi-card border-0 p-3 h-100 border-start border-success border-4">
-                <div class="text-muted small fw-semibold text-uppercase">Total Diverted Material</div>
-                <div class="d-flex justify-content-between align-items-end mt-1">
-                    <h2 class="fw-bold text-success mb-0">{{ total_kg_diverted }} <span class="fs-6">kg</span></h2>
-                    <span class="badge bg-success text-white">Zero Landfill</span>
-                </div>
-                <small class="text-secondary mt-1 d-block">Across all 4 segregated streams</small>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card admin-card kpi-card border-0 p-3 h-100 border-start border-warning border-4">
-                <div class="text-muted small fw-semibold text-uppercase">Green Points Awarded</div>
-                <div class="d-flex justify-content-between align-items-end mt-1">
-                    <h2 class="fw-bold text-warning mb-0">{{ total_green_points }} <span class="fs-6">pts</span></h2>
-                    <span class="badge bg-warning text-dark">Formula-Based</span>
-                </div>
-                <small class="text-secondary mt-1 d-block"><code>20 + floor(bin_score/10)</code></small>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card admin-card kpi-card border-0 p-3 h-100 border-start border-info border-4">
-                <div class="text-muted small fw-semibold text-uppercase">Active Fleet Vans</div>
-                <div class="d-flex justify-content-between align-items-end mt-1">
-                    <h2 class="fw-bold text-info mb-0">{{ active_vans }} <span class="fs-6">Vans</span></h2>
-                    <span class="badge bg-info text-dark">500kg Cap/Van</span>
-                </div>
-                <small class="text-secondary mt-1 d-block">Operating in Navrangpura Ward</small>
+        <div class="col-md-3 col-6">
+            <div class="p-2 bg-white rounded-2 border">
+                <div class="fw-bold text-danger">🔥 Residual RDF</div>
+                <div>{{ stream_counts.get('residual', {}).get('count', 0) }} Pickups • {{ stream_counts.get('residual', {}).get('kg', 0.0) }} kg</div>
+                <small class="text-muted">→ Ultratech Cement Kiln</small>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Facility Demand Board (Real Calculated Demand) -->
-    <div class="admin-card p-3 mb-4 border-emerald-subtle">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0 fw-bold text-white">
-                <i class="fa-solid fa-industry text-success me-2"></i> Facility Demand Board (Live Segregated Inflow)
-            </h5>
-            <span class="badge bg-secondary small">Calculated from pickup_streams.estimated_kg</span>
+<!-- Today's Route Plan (Automatic Recommendations) -->
+<div class="surface-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold fs-5 mb-0"><i class="fa-solid fa-route text-success me-2"></i> Today's Route Plan (Automatic Optimization)</h3>
+            <small class="text-muted">Nearest-neighbor heuristic recommendations grouped by stream and zone.</small>
         </div>
-        <div class="row g-3">
-            {% for d in demand %}
-            <div class="col-md-3 col-sm-6">
-                <div class="p-3 rounded-3 bg-dark border border-secondary h-100">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="badge 
-                            {% if d.stream_type == 'wet' %}bg-success
-                            {% elif d.stream_type == 'dry' %}bg-info text-dark
-                            {% elif d.stream_type == 'e_waste' %}bg-warning text-dark
-                            {% else %}bg-danger{% endif %} fw-bold">
-                            {{ d.stream_type|upper }} STREAM
-                        </span>
-                        <span class="fw-bold fs-5 text-white">{{ "%.1f"|format(d.total_demand_kg) }} kg</span>
-                    </div>
-                    <div class="fw-bold text-white small mb-1">→ {{ d.name }}</div>
-                    <div class="small text-muted" style="font-size: 11px;">{{ d.facility_type }}</div>
-                    <div class="small text-secondary mt-2 pt-2 border-top border-secondary" style="font-size: 10px;">
-                        <i class="fa-solid fa-box me-1"></i> {{ d.stream_count }} stream loads
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin_route_optimization', van_id=1) }}" class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3">
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Recommended Routes
+            </a>
+            <button class="btn btn-sm btn-outline-dark fw-bold rounded-pill px-3" onclick="location.reload()">
+                <i class="fa-solid fa-arrows-rotate me-1"></i> Re-optimize All
+            </button>
         </div>
     </div>
 
-    <!-- Main Navigation Tabs -->
-    <ul class="nav nav-pills mb-3 gap-2" id="adminTabs" role="tablist">
-        <li class="nav-item">
-            <button class="nav-link active" id="map-tab" data-bs-toggle="pill" data-bs-target="#map-pane">
-                <i class="fa-solid fa-map-location-dot me-1"></i> Live 4R Ward Map & KMeans Zones
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="queue-tab" data-bs-toggle="pill" data-bs-target="#queue-pane">
-                <i class="fa-solid fa-list-check me-1"></i> Pickup Dispatch Queue ({{ pickups|length }})
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="fleet-tab" data-bs-toggle="pill" data-bs-target="#fleet-pane">
-                <i class="fa-solid fa-truck me-1"></i> Fleet & Route Optimization
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="analytics-tab" data-bs-toggle="pill" data-bs-target="#analytics-pane">
-                <i class="fa-solid fa-chart-pie me-1"></i> Analytics & Ward Leaderboard
-            </button>
-        </li>
-    </ul>
-
-    <!-- Tab Contents -->
-    <div class="tab-content">
-
-        <!-- TAB 1: LIVE 4R MAP -->
-        <div class="tab-pane fade show active" id="map-pane">
-            <div class="admin-card p-3">
-                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                    <div>
-                        <span class="fw-bold text-white me-2"><i class="fa-solid fa-layer-group text-info me-1"></i> KMeans Pickup Zones (K=5):</span>
-                        <span class="badge zone-badge-1 me-1">Zone 1</span>
-                        <span class="badge zone-badge-2 me-1">Zone 2</span>
-                        <span class="badge zone-badge-3 me-1">Zone 3</span>
-                        <span class="badge zone-badge-4 me-1">Zone 4</span>
-                        <span class="badge zone-badge-5 me-1">Zone 5</span>
+    {% if recommended_routes %}
+    <div class="row g-3">
+        {% for r in recommended_routes %}
+        <div class="col-lg-3 col-md-6">
+            <div class="p-3 bg-light rounded-3 border h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-dark text-white"><i class="fa-solid fa-truck me-1"></i> {{ r.van_code }}</span>
+                        <span class="badge bg-secondary">Zone {{ r.pickup_zone }}</span>
                     </div>
-                    <div class="small text-muted">
-                        🚛 <strong>Vans</strong> | 🏭 <strong>4 Circular Facilities</strong> | 📍 <strong>Pickups</strong>
+                    <div class="fw-bold text-dark fs-6 mb-1">
+                        {% if r.stream_type == 'wet' %}🌱 Wet / Organic
+                        {% elif r.stream_type == 'dry' %}♻ Dry Recyclables
+                        {% elif r.stream_type == 'e_waste' %}🔌 E-Waste
+                        {% else %}🔥 Residual Combustibles{% endif %}
+                    </div>
+                    <div class="small text-muted mb-2">{{ r.stop_count }} pickups scheduled</div>
+
+                    <div class="p-2 bg-white rounded-2 border mb-2 small">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Naive Route:</span>
+                            <span class="text-warning fw-bold">{{ r.naive_dist_km }} km</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Optimized:</span>
+                            <span class="text-info fw-bold">{{ r.opt_dist_km }} km</span>
+                        </div>
+                        <div class="d-flex justify-content-between pt-1 border-top mt-1">
+                            <span class="fw-bold text-success">Distance Saved:</span>
+                            <span class="badge bg-success text-white">{{ r.saved_pct }}%</span>
+                        </div>
+                    </div>
+                    <div class="small text-secondary mb-3" style="font-size: 11px; line-height: 1.3;">
+                        {{ r.explanation }}
                     </div>
                 </div>
-                <div id="admin-map" style="height: 600px;" class="rounded-3 border border-secondary"></div>
-                <div class="mt-2 small text-muted d-flex justify-content-between">
-                    <span>Click any pickup pin to inspect Bin Score, Segregated Streams, and Destination Facilities.</span>
-                    <span>Ahmedabad Ward Coordinates: ~23.0375° N, 72.5520° E</span>
+
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('admin_route_optimization', van_id=r.van_id, stream=r.stream_type, zone=r.pickup_zone) }}" class="btn btn-sm btn-outline-dark w-100 fw-bold" style="font-size: 12px;">
+                        View Route
+                    </a>
                 </div>
             </div>
         </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-3 text-muted">
+        <p class="small mb-0">No pending pickups currently need routing.</p>
+    </div>
+    {% endif %}
+</div>
 
-        <!-- TAB 2: PICKUP QUEUE -->
-        <div class="tab-pane fade" id="queue-pane">
-            <div class="admin-card p-3">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0 fw-bold text-white"><i class="fa-solid fa-table-list text-primary me-2"></i> All 40 Seeded Ward Pickups</h5>
-                    <span class="badge bg-secondary">Real SQLite Records</span>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-dark table-hover align-middle mb-0 small">
-                        <thead>
-                            <tr class="text-secondary">
-                                <th>ID</th>
-                                <th>Household</th>
-                                <th>Bin Score</th>
-                                <th>Streams</th>
-                                <th>Zone</th>
-                                <th>Assigned Van</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for p in pickups %}
-                            <tr id="pickup-row-{{ p.id }}">
-                                <td><strong class="text-info">#{{ p.id }}</strong></td>
-                                <td>
-                                    <div class="fw-bold text-white">{{ p.household_code }} ({{ p.citizen_name }})</div>
-                                    <small class="text-muted">{{ p.street_segment }}</small>
-                                </td>
-                                <td>
-                                    <span class="badge 
-                                        {% if p.bin_score >= 90 %}bg-success
-                                        {% elif p.bin_score >= 75 %}bg-primary
-                                        {% elif p.bin_score >= 55 %}bg-info text-dark
-                                        {% elif p.bin_score >= 31 %}bg-warning text-dark
-                                        {% else %}bg-danger{% endif %}">
-                                        {{ p.bin_score }}/100
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="d-flex gap-1 flex-wrap">
-                                        {% for st in p.streams %}
-                                        <span class="badge 
-                                            {% if st.stream_type == 'wet' %}bg-success-subtle text-success border border-success-subtle
-                                            {% elif st.stream_type == 'dry' %}bg-info-subtle text-info border border-info-subtle
-                                            {% elif st.stream_type == 'e_waste' %}bg-warning-subtle text-warning border border-warning-subtle
-                                            {% else %}bg-danger-subtle text-danger border border-danger-subtle{% endif %}" style="font-size: 10px;">
-                                            {{ st.stream_type|upper }} ({{ st.estimated_kg }}k)
-                                        </span>
-                                        {% endfor %}
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge zone-badge-{{ p.pickup_zone }}">Zone {{ p.pickup_zone }}</span>
-                                </td>
-                                <td>
-                                    {% if p.van_code %}
-                                        <span class="text-info"><i class="fa-solid fa-truck-fast me-1"></i> {{ p.van_code }}</span>
-                                    {% else %}
-                                        <span class="text-muted">Unassigned</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <select class="form-select form-select-sm bg-dark text-white border-secondary" id="status-select-{{ p.id }}" onchange="updatePickupStatus({{ p.id }})">
-                                        <option value="pending" {% if p.status == 'pending' %}selected{% endif %}>Pending</option>
-                                        <option value="collected" {% if p.status == 'collected' %}selected{% endif %}>Collected</option>
-                                        <option value="delivered" {% if p.status == 'delivered' %}selected{% endif %}>Delivered</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-sm btn-outline-info" onclick="openAssignModal({{ p.id }})">
-                                            <i class="fa-solid fa-truck me-1"></i> Assign
-                                        </button>
-                                        <a href="{{ url_for('manifest_page', pickup_id=p.id) }}" class="btn btn-sm btn-outline-light" target="_blank">
-                                            <i class="fa-solid fa-qrcode"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+<!-- Main Area: Centerpiece Map with Interactive Filter Control & Inspector -->
+<div class="surface-card p-4 mb-4">
+    
+    <!-- Filter Control Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div class="filter-button-group" id="streamFilters">
+            <span class="small text-dark fw-bold me-1 align-self-center">FILTERS:</span>
+            <button class="filter-pill active" onclick="setMapFilter('all', this)">All Items</button>
+            <button class="filter-pill" onclick="setMapFilter('wet', this)">🌱 Wet</button>
+            <button class="filter-pill" onclick="setMapFilter('dry', this)">♻ Dry</button>
+            <button class="filter-pill" onclick="setMapFilter('e_waste', this)">🔌 E-Waste</button>
+            <button class="filter-pill" onclick="setMapFilter('residual', this)">🔥 Residual</button>
+            <button class="filter-pill" onclick="setMapFilter('vans', this)">🚚 Vans Only</button>
+            <button class="filter-pill" onclick="setMapFilter('facilities', this)">🏭 Facilities Only</button>
+        </div>
+
+        <div class="d-flex align-items-center gap-1">
+            <span class="small text-secondary fw-bold me-1">KMeans Zones:</span>
+            <span class="badge text-white" style="background-color:#15803d;">Z1</span>
+            <span class="badge text-white" style="background-color:#0284c7;">Z2</span>
+            <span class="badge text-dark" style="background-color:#fcd34d;">Z3</span>
+            <span class="badge text-white" style="background-color:#ea580c;">Z4</span>
+            <span class="badge text-white" style="background-color:#db2777;">Z5</span>
+        </div>
+    </div>
+
+    <!-- Map & Inspector Layout -->
+    <div class="row g-3">
+        <!-- Centerpiece Map -->
+        <div class="col-lg-8">
+            <div id="admin-map" style="height: 560px; border-radius: 12px;" class="border shadow-sm"></div>
+            <div class="small text-muted mt-2 d-flex justify-content-between">
+                <span><i class="fa-solid fa-hand-pointer me-1"></i> Tap any marker to inspect stream details or assign a collection van.</span>
+                <span>Ahmedabad Ward Coordinates: ~23.0375° N, 72.5520° E</span>
             </div>
         </div>
 
-        <!-- TAB 3: FLEET & ROUTING -->
-        <div class="tab-pane fade" id="fleet-pane">
-            <div class="row g-3">
-                {% for v in vans %}
-                <div class="col-md-4">
-                    <div class="admin-card p-4 h-100 border-top border-info border-4">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <h4 class="fw-bold text-info mb-0">{{ v.van_code }}</h4>
-                                <small class="text-muted">Driver: <strong class="text-white">{{ v.driver_name }}</strong></small>
-                            </div>
-                            <span class="badge 
-                                {% if v.status == 'idle' %}bg-secondary
-                                {% elif v.status == 'en_route' %}bg-primary
-                                {% else %}bg-warning text-dark{% endif %} px-2 py-1">
-                                {{ v.status|upper }}
-                            </span>
-                        </div>
+        <!-- Selected Pickup / Van Inspector Side Panel -->
+        <div class="col-lg-4">
+            <div class="p-3 bg-light rounded-3 border h-100 d-flex flex-column justify-content-between" id="inspector-panel">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                        <h4 class="fw-bold fs-6 mb-0 text-dark" id="inspect-title">Quick Dispatch Inspector</h4>
+                        <span class="badge bg-secondary" id="inspect-zone">Select a Pickup</span>
+                    </div>
 
-                        <div class="p-3 bg-dark rounded-3 border border-secondary mb-3 small">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="text-muted">Capacity:</span>
-                                <span class="fw-bold text-white">{{ v.capacity_kg }} kg</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="text-muted">Live Location:</span>
-                                <code>{{ "%.4f"|format(v.lat) }}, {{ "%.4f"|format(v.lng) }}</code>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span class="text-muted">Operating Zone:</span>
-                                <span class="text-success fw-bold">Navrangpura Hub</span>
-                            </div>
-                        </div>
+                    <div id="inspect-body">
+                        <p class="text-muted small my-3 text-center">
+                            <i class="fa-solid fa-map-pin fs-2 text-muted mb-2 d-block"></i>
+                            Click any pickup marker on the map to view household segregation, bin score, and perform one-tap van dispatch.
+                        </p>
+                    </div>
+                </div>
 
-                        <a href="{{ url_for('admin_route_optimization', van_id=v.id) }}" class="btn btn-success w-100 fw-bold">
-                            <i class="fa-solid fa-route me-1"></i> Stream-Wise Route Optimization
+                <div class="pt-3 border-top" id="inspect-footer">
+                    <div class="small text-secondary fw-semibold mb-2"><i class="fa-solid fa-route text-success me-1"></i> Automatic Route Optimization:</div>
+                    <div class="d-flex gap-1 flex-wrap">
+                        {% for v in vans %}
+                        <a href="{{ url_for('admin_route_optimization', van_id=v.id) }}" class="btn btn-sm btn-outline-dark" style="font-size: 11.5px;">
+                            {{ v.van_code }} (Optimize)
                         </a>
+                        {% endfor %}
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- 4 Destination Facilities Real Demand Board -->
+<div class="surface-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-industry text-success fs-5"></i>
+            <h3 class="fw-bold mb-0 fs-5">Facility Demand Board (Real Segregated Inflow)</h3>
+        </div>
+        <span class="estimate-badge">Calculated from pickup_streams.estimated_kg</span>
+    </div>
+
+    <div class="row g-3">
+        {% for d in demand %}
+        <div class="col-md-3 col-sm-6">
+            <div class="p-3 rounded-3 border h-100 
+                {% if d.stream_type == 'wet' %}bg-success-subtle border-success
+                {% elif d.stream_type == 'dry' %}bg-info-subtle border-info
+                {% elif d.stream_type == 'e_waste' %}bg-warning-subtle border-warning
+                {% else %}bg-danger-subtle border-danger{% endif %}">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge 
+                        {% if d.stream_type == 'wet' %}bg-success
+                        {% elif d.stream_type == 'dry' %}bg-info text-dark
+                        {% elif d.stream_type == 'e_waste' %}bg-warning text-dark
+                        {% else %}bg-danger{% endif %} fw-bold">
+                        {{ d.stream_type|upper }}
+                    </span>
+                    <span class="fw-bold fs-4 text-dark">{{ "%.1f"|format(d.total_demand_kg) }} kg</span>
+                </div>
+                <div class="fw-bold text-dark fs-6 mb-1">{{ d.name }}</div>
+                <div class="text-secondary small mb-2" style="font-size: 11.5px;">{{ d.facility_type }}</div>
+                
+                <!-- Capacity Usage Bar -->
+                <div class="small fw-semibold text-muted d-flex justify-content-between">
+                    <span>Est. Usage:</span>
+                    <span>{{ d.usage_pct }}%</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    <div class="progress-bar bg-dark" role="progressbar" style="width: {{ d.usage_pct }}%;"></div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Bottom Grid: Recent Activity, Queue Controller & Leaderboard -->
+<div class="ro    <!-- Operational Summary & Dedicated Dispatch Center Link -->
+    <div class="col-lg-6">
+        <div class="surface-card p-4 h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                    <h3 class="fw-bold fs-5 mb-0 text-dark"><i class="fa-solid fa-truck-ramp-box text-primary me-2"></i> Pickup Operations Overview</h3>
+                    <span class="badge bg-primary text-white">LIVE FLEET</span>
+                </div>
+
+                <!-- 4 Quick Status Counters -->
+                <div class="row g-2 text-center mb-3">
+                    <div class="col-3">
+                        <div class="p-2 bg-light rounded-2 border">
+                            <div class="fs-4 fw-bold text-dark">{{ total }}</div>
+                            <small class="text-muted" style="font-size: 11px;">Total</small>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 bg-light rounded-2 border border-warning">
+                            <div class="fs-4 fw-bold text-warning">{{ pending }}</div>
+                            <small class="text-muted" style="font-size: 11px;">Pending</small>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 bg-light rounded-2 border border-info">
+                            <div class="fs-4 fw-bold text-info">{{ collected }}</div>
+                            <small class="text-muted" style="font-size: 11px;">In Transit</small>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 bg-light rounded-2 border border-success">
+                            <div class="fs-4 fw-bold text-success">{{ delivered }}</div>
+                            <small class="text-muted" style="font-size: 11px;">Delivered</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Fleet Van Batches Progress -->
+                <div class="small fw-bold text-secondary text-uppercase mb-2" style="font-size: 11px;">Active Fleet Route Batches:</div>
+                <div class="d-flex flex-column gap-2 mb-3">
+                    {% for vo in van_ops_summary %}
+                    <div class="p-2 bg-light rounded-2 border d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-dark text-white">{{ vo.van_code }}</span>
+                            <span class="fw-semibold text-dark small">{{ vo.driver_name }}</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="small fw-bold text-secondary">{{ vo.collected_count }} / {{ vo.assigned_count }} collected</span>
+                            <div class="progress" style="width: 70px; height: 8px;">
+                                <div class="progress-bar {% if vo.progress_pct == 100 %}bg-success{% else %}bg-primary{% endif %}" style="width: {{ vo.progress_pct }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Primary Dispatch Center Action -->
+            <div class="pt-3 border-top">
+                <a href="{{ url_for('admin_dispatch') }}" class="btn btn-primary-action w-100 py-3 fw-bold d-flex justify-content-between align-items-center px-4 shadow-sm">
+                    <span><i class="fa-solid fa-truck-fast me-2"></i> Open Dedicated Dispatch Center</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ward 12 Green Champions (Redesigned Civic Leaderboard) -->
+    <div class="col-lg-6">
+        <div class="surface-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom flex-wrap gap-2">
+                <div>
+                    <h3 class="fw-bold fs-5 mb-0 text-dark"><i class="fa-solid fa-trophy text-warning me-2"></i> Ward 12 Green Champions</h3>
+                    <small class="text-muted">Top contributing households leading circular segregation</small>
+                </div>
+                <span class="badge bg-warning text-dark px-2 py-1 fw-bold"><i class="fa-solid fa-leaf me-1"></i> {{ total_green_points }} Total Pts</span>
+            </div>
+
+            <!-- Leaderboard Summary Metric Bar -->
+            <div class="row g-2 mb-3 text-center small">
+                <div class="col-4">
+                    <div class="p-2 bg-light rounded-2 border">
+                        <div class="fw-bold text-success">{{ total_green_points }}</div>
+                        <small class="text-muted" style="font-size: 10px;">Total Points</small>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-2 bg-light rounded-2 border">
+                        <div class="fw-bold text-primary">{{ active_households_count }}</div>
+                        <small class="text-muted" style="font-size: 10px;">Active Households</small>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="p-2 bg-light rounded-2 border">
+                        <div class="fw-bold text-warning">{% if top_household %}{{ top_household.household_code }}{% else %}H001{% endif %}</div>
+                        <small class="text-muted" style="font-size: 10px;">Top Household</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 3 Podium Highlights -->
+            {% if leaderboard|length >= 3 %}
+            <div class="row g-2 mb-3 text-center">
+                <!-- 2nd Place -->
+                <div class="col-4">
+                    <div class="p-2 rounded-3 border h-100" style="background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%); border-top: 3px solid #94a3b8 !important;">
+                        <div class="fs-5 mb-1">🥈</div>
+                        <div class="fw-bold text-dark small">{{ leaderboard[1].name.split()[0] }}</div>
+                        <div class="small text-secondary" style="font-size: 10px;">{{ leaderboard[1].household_code }}</div>
+                        <span class="badge bg-dark text-white mt-1" style="font-size: 11px;">{{ leaderboard[1].total_points }} pts</span>
+                    </div>
+                </div>
+
+                <!-- 1st Place (Gold Highlight) -->
+                <div class="col-4">
+                    <div class="p-2 rounded-3 border h-100 shadow-sm" style="background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%); border-top: 3px solid #f59e0b !important;">
+                        <div class="fs-4 mb-1">🥇</div>
+                        <div class="fw-bold text-dark">{{ leaderboard[0].name.split()[0] }}</div>
+                        <div class="small text-secondary" style="font-size: 10px;">{{ leaderboard[0].household_code }}</div>
+                        <span class="badge bg-warning text-dark fw-bold mt-1" style="font-size: 11px;">{{ leaderboard[0].total_points }} pts</span>
+                    </div>
+                </div>
+
+                <!-- 3rd Place -->
+                <div class="col-4">
+                    <div class="p-2 rounded-3 border h-100" style="background: linear-gradient(180deg, #ffedd5 0%, #fed7aa 100%); border-top: 3px solid #d97706 !important;">
+                        <div class="fs-5 mb-1">🥉</div>
+                        <div class="fw-bold text-dark small">{{ leaderboard[2].name.split()[0] }}</div>
+                        <div class="small text-secondary" style="font-size: 10px;">{{ leaderboard[2].household_code }}</div>
+                        <span class="badge bg-dark text-white mt-1" style="font-size: 11px;">{{ leaderboard[2].total_points }} pts</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Ranks 4 to 8 Clean List -->
+            <div class="d-flex flex-column gap-1 mb-2" style="max-height: 180px; overflow-y: auto;">
+                {% for row in leaderboard[3:8] %}
+                <div class="p-2 rounded-2 bg-light border d-flex justify-content-between align-items-center small">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary rounded-circle" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px;">
+                            {{ loop.index + 3 }}
+                        </span>
+                        <div>
+                            <strong class="text-dark">{{ row.name }}</strong>
+                            <span class="text-muted" style="font-size: 11px;">({{ row.household_code }} • {{ row.street_segment }})</span>
+                        </div>
+                    </div>
+                    <span class="badge bg-success text-white">{{ row.total_points }} pts</span>
                 </div>
                 {% endfor %}
             </div>
+
         </div>
+    </div>
 
-        <!-- TAB 4: ANALYTICS & LEADERBOARD -->
-        <div class="tab-pane fade" id="analytics-pane">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="admin-card p-4">
-                        <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-chart-pie text-success me-2"></i> Waste Stream Inflow (kg)</h5>
-                        <canvas id="streamChart" style="max-height: 280px;"></canvas>
-                    </div>
-                </div>
+</div>
 
-                <div class="col-md-6">
-                    <div class="admin-card p-4">
-                        <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-chart-simple text-info me-2"></i> Ward Pickup Status Split</h5>
-                        <canvas id="statusChart" style="max-height: 280px;"></canvas>
-                    </div>
+<!-- Recent Activity Panel -->
+<div class="surface-card p-4">
+    <h3 class="fw-bold fs-5 mb-3"><i class="fa-solid fa-clock-rotate-left text-secondary me-2"></i> Recent Circular Chain-of-Custody Activity</h3>
+    <div class="row g-2">
+        {% for ev in recent_events %}
+        <div class="col-md-4 col-sm-6">
+            <div class="p-3 bg-light rounded-3 border small">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong>Pickup #{{ ev.pickup_id }} ({{ ev.household_code }})</strong>
+                    <span class="status-badge {{ ev.status }}" style="font-size: 10px;">{{ ev.status }}</span>
                 </div>
-
-                <div class="col-12">
-                    <div class="admin-card p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-trophy text-warning me-2"></i> Ward Leaderboard: Top Participating Households</h5>
-                            <span class="badge bg-secondary">Real points_ledger Data</span>
-                        </div>
-                        <canvas id="leaderboardChart" style="max-height: 320px;"></canvas>
-                    </div>
-                </div>
+                <div class="text-muted">{{ ev.citizen_name }} • {{ ev.street_segment }}</div>
+                {% if ev.van_code %}
+                <div class="text-primary mt-1 fw-semibold"><i class="fa-solid fa-truck me-1"></i> Handled by {{ ev.van_code }}</div>
+                {% endif %}
             </div>
         </div>
-
+        {% endfor %}
     </div>
 </div>
 
 <!-- Van Assign Modal -->
 <div class="modal fade" id="assignModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content bg-dark text-white border-secondary">
-            <div class="modal-header border-secondary">
-                <h5 class="modal-title">Assign Van to Pickup #<span id="modal-pickup-id"></span></h5>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Assign Van to Pickup #<span id="modal-pickup-id"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small">Select a van to dispatch for this pickup stop:</p>
+                <div id="van-selection-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Demo Reset Confirmation Modal -->
+<div class="modal fade" id="resetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i> Reset Demo Database?</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p class="text-muted small">Select a collection van to dispatch for this 4R segregated batch:</p>
-                <div id="van-selection-list"></div>
+                <p class="mb-2">Are you sure you want to reset the database? This will restore the clean <strong>40 seeded pickups</strong> and initial route states for the SIH 2026 jury demo.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger fw-bold" onclick="executeDemoReset()">Confirm & Reset</button>
             </div>
         </div>
     </div>
@@ -380,9 +512,7 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    // ============================================
-    // LEAFLET ADMIN MAP WITH KMEANS ZONES & FACILITIES
-    // ============================================
+    // Leaflet Admin Map Initialization
     var adminMap = L.map('admin-map').setView([23.0375, 72.5520], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
@@ -392,91 +522,62 @@
     var vanLayer = L.layerGroup().addTo(adminMap);
     var facilityLayer = L.layerGroup().addTo(adminMap);
 
+    var currentFilter = 'all';
+    var allPickupsData = [];
+    var allVansData = [];
+    var allFacilitiesData = [];
+
     var zoneColors = {
-        1: '#198754',
-        2: '#0dcaf0',
-        3: '#ffc107',
-        4: '#fd7e14',
-        5: '#d63384'
+        1: '#15803d',
+        2: '#0284c7',
+        3: '#d97706',
+        4: '#ea580c',
+        5: '#db2777'
     };
 
-    function loadFacilities() {
-        fetch('/api/facilities').then(r => r.json()).then(facilities => {
-            facilityLayer.clearLayers();
-            facilities.forEach(f => {
+    function setMapFilter(filterType, btnEl) {
+        currentFilter = filterType;
+        document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+        if (btnEl) btnEl.classList.add('active');
+        renderMapLayers();
+    }
+
+    function renderMapLayers() {
+        pickupLayer.clearLayers();
+        vanLayer.clearLayers();
+        facilityLayer.clearLayers();
+
+        // 1. Facilities
+        if (currentFilter === 'all' || currentFilter === 'facilities') {
+            allFacilitiesData.forEach(f => {
                 var facIcon = L.divIcon({
                     className: 'facility-icon',
-                    html: `<div style="background:#212529; border:2px solid #fff; border-radius:8px; padding:4px 6px; font-size:18px; box-shadow:0 2px 6px rgba(0,0,0,0.5); text-align:center;">🏭</div>`,
+                    html: `<div style="background:#ffffff; border:2px solid #15803d; border-radius:8px; padding:3px 6px; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.15); text-align:center;">🏭</div>`,
                     iconSize: [32, 32]
                 });
                 var m = L.marker([f.lat, f.lng], { icon: facIcon }).bindPopup(
-                    `<div style="color:#000;">` +
-                    `<span class="badge bg-dark mb-1">DESTINATION FACILITY</span><br>` +
+                    `<div style="color:#0f172a; font-family:Inter,sans-serif;">` +
+                    `<span class="badge bg-dark text-white mb-1">CIRCULAR DESTINATION</span><br>` +
                     `<b>${f.name}</b><br>` +
                     `<small class="text-muted">${f.facility_type}</small><br>` +
                     `<b>Stream:</b> ${f.stream_type.toUpperCase()}<br>` +
-                    `<small>${f.registration_note}</small>` +
+                    `<small class="text-success fw-bold">${f.registration_note}</small>` +
                     `</div>`
                 );
                 facilityLayer.addLayer(m);
             });
-        });
-    }
+        }
 
-    function refreshMapData() {
-        Promise.all([
-            fetch('/api/pickups').then(r => r.json()),
-            fetch('/api/vans').then(r => r.json())
-        ]).then(([pickups, vans]) => {
-            // Update Pickups
-            pickupLayer.clearLayers();
-            var pendingCount = 0, collectedCount = 0, deliveredCount = 0;
-
-            pickups.forEach(p => {
-                if (p.status === 'pending') pendingCount++;
-                if (p.status === 'collected') collectedCount++;
-                if (p.status === 'delivered') deliveredCount++;
-
-                var zColor = zoneColors[p.pickup_zone] || '#198754';
-                
-                var streamsHtml = p.streams.map(s => `• <b>${s.stream_type.toUpperCase()}</b> (${s.estimated_kg}kg) → ${s.facility_name}`).join('<br>');
-
-                var marker = L.circleMarker([p.lat, p.lng], {
-                    radius: 8,
-                    fillColor: zColor,
-                    color: p.status === 'delivered' ? '#198754' : '#ffffff',
-                    weight: 2,
-                    fillOpacity: 0.85
-                }).bindPopup(
-                    `<div style="color:#000; min-width:200px;">` +
-                    `<div class="d-flex justify-content-between align-items-center mb-1">` +
-                    `<b>Pickup #${p.id}</b>` +
-                    `<span class="badge" style="background:${zColor}; color:#fff;">Zone ${p.pickup_zone}</span>` +
-                    `</div>` +
-                    `<b>Household:</b> ${p.household_code} (${p.citizen_name})<br>` +
-                    `<b>Address:</b> ${p.street_segment}<br>` +
-                    `<b>Bin Score:</b> ${p.bin_score}/100<br>` +
-                    `<b>Status:</b> <span class="badge bg-secondary">${p.status.toUpperCase()}</span><br>` +
-                    `<hr style="margin:6px 0;">` +
-                    `<div class="small"><b>Segregated Streams:</b><br>${streamsHtml}</div>` +
-                    `<div class="mt-2 text-center">` +
-                    `<a href="/manifest/${p.id}" target="_blank" class="btn btn-sm btn-dark text-white" style="font-size:11px; padding:2px 8px;">View QR Manifest</a>` +
-                    `</div>` +
-                    `</div>`
-                );
-                pickupLayer.addLayer(marker);
-            });
-
-            // Update Vans
-            vanLayer.clearLayers();
-            vans.forEach(v => {
+        // 2. Vans
+        if (currentFilter === 'all' || currentFilter === 'vans') {
+            allVansData.forEach(v => {
                 var vanIcon = L.divIcon({
                     className: 'van-icon',
-                    html: `<div style="font-size:24px; text-shadow:0 0 4px #000;">🚛</div>`,
+                    html: `<div style="font-size:24px; text-shadow:0 1px 3px rgba(0,0,0,0.3);">🚛</div>`,
                     iconSize: [30, 30]
                 });
                 var vm = L.marker([v.lat, v.lng], { icon: vanIcon }).bindPopup(
-                    `<div style="color:#000;">` +
+                    `<div style="color:#0f172a; font-family:Inter,sans-serif;">` +
                     `<b>${v.van_code}</b><br>` +
                     `Driver: ${v.driver_name}<br>` +
                     `Status: <b>${v.status.toUpperCase()}</b><br>` +
@@ -486,8 +587,100 @@
                 );
                 vanLayer.addLayer(vm);
             });
+        }
 
-            // Update KPI badges
+        // 3. Pickups
+        if (currentFilter !== 'vans' && currentFilter !== 'facilities') {
+            allPickupsData.forEach(p => {
+                if (currentFilter !== 'all') {
+                    var hasStream = p.streams.some(s => s.stream_type === currentFilter);
+                    if (!hasStream) return;
+                }
+
+                var zColor = zoneColors[p.pickup_zone] || '#15803d';
+                var streamsHtml = p.streams.map(s => `• <b>${s.stream_type.toUpperCase()}</b> (${s.estimated_kg}kg) → ${s.facility_name}`).join('<br>');
+
+                var marker = L.circleMarker([p.lat, p.lng], {
+                    radius: 8,
+                    fillColor: zColor,
+                    color: '#ffffff',
+                    weight: 2,
+                    fillOpacity: 0.9
+                }).bindPopup(
+                    `<div style="color:#0f172a; font-family:Inter,sans-serif; min-width:200px;">` +
+                    `<div class="d-flex justify-content-between align-items-center mb-1">` +
+                    `<b>Pickup #${p.id}</b>` +
+                    `<span class="badge" style="background:${zColor}; color:#fff;">Zone ${p.pickup_zone}</span>` +
+                    `</div>` +
+                    `<b>Household:</b> ${p.household_code} (${p.citizen_name})<br>` +
+                    `<b>Address:</b> ${p.street_segment}<br>` +
+                    `<b>Bin Score:</b> <strong class="text-success">${p.bin_score}/100</strong><br>` +
+                    `<b>Status:</b> <span class="status-badge ${p.status}" style="font-size:10px;">${p.status.toUpperCase()}</span><br>` +
+                    `<hr style="margin:6px 0;">` +
+                    `<div class="small"><b>Segregated Streams:</b><br>${streamsHtml}</div>` +
+                    `<div class="mt-2 text-center">` +
+                    `<a href="/manifest/${p.id}" target="_blank" class="btn btn-sm btn-dark text-white rounded-pill" style="font-size:11px; padding:2px 10px;">View QR Manifest</a>` +
+                    `</div>` +
+                    `</div>`
+                );
+
+                marker.on('click', function() {
+                    inspectPickup(p);
+                });
+
+                pickupLayer.addLayer(marker);
+            });
+        }
+    }
+
+    function inspectPickup(p) {
+        document.getElementById('inspect-title').innerText = `Pickup #${p.id} (${p.household_code})`;
+        document.getElementById('inspect-zone').innerText = `Zone ${p.pickup_zone}`;
+        
+        var streamsListHtml = p.streams.map(s => `
+            <div class="p-2 bg-white rounded-2 border mb-1 d-flex justify-content-between align-items-center small">
+                <span><strong>${s.stream_type.toUpperCase()}</strong> (${s.estimated_kg}kg)</span>
+                <span class="badge bg-light text-dark border">→ ${s.facility_name}</span>
+            </div>
+        `).join('');
+
+        document.getElementById('inspect-body').innerHTML = `
+            <div class="mb-2">
+                <div class="fw-bold text-dark">${p.citizen_name}</div>
+                <small class="text-muted">${p.street_segment}, Navrangpura</small>
+            </div>
+            <div class="d-flex justify-content-between align-items-center my-2 p-2 bg-white rounded-2 border small">
+                <span>Bin Score: <strong class="text-success">${p.bin_score}/100</strong></span>
+                <span class="status-badge ${p.status}" style="font-size:10px;">${p.status}</span>
+            </div>
+            <div class="small fw-bold text-dark mb-1">Streams:</div>
+            ${streamsListHtml}
+            <div class="mt-3">
+                <button class="btn btn-sm btn-success w-100 fw-bold mb-2" onclick="openAssignModal(${p.id})">
+                    <i class="fa-solid fa-truck me-1"></i> Assign Van
+                </button>
+                <a href="/manifest/${p.id}" target="_blank" class="btn btn-sm btn-outline-dark w-100">
+                    <i class="fa-solid fa-qrcode me-1"></i> Open QR Manifest
+                </a>
+            </div>
+        `;
+    }
+
+    function refreshMapData() {
+        Promise.all([
+            fetch('/api/pickups').then(r => r.json()),
+            fetch('/api/vans').then(r => r.json()),
+            fetch('/api/facilities').then(r => r.json())
+        ]).then(([pickups, vans, facilities]) => {
+            allPickupsData = pickups;
+            allVansData = vans;
+            allFacilitiesData = facilities;
+            renderMapLayers();
+
+            var pendingCount = pickups.filter(p => p.status === 'pending').length;
+            var collectedCount = pickups.filter(p => p.status === 'collected').length;
+            var deliveredCount = pickups.filter(p => p.status === 'delivered').length;
+
             var elP = document.getElementById('kpi-pending');
             var elC = document.getElementById('kpi-collected');
             var elD = document.getElementById('kpi-delivered');
@@ -497,84 +690,33 @@
         });
     }
 
-    loadFacilities();
     refreshMapData();
-    setInterval(refreshMapData, 5000); // 5s Auto-refresh
+    setInterval(refreshMapData, 5000);
 
-    // ============================================
-    // CHARTS (Chart.js)
-    // ============================================
-    fetch('/api/charts').then(r => r.json()).then(data => {
-        // 1. Waste Stream Inflow Chart
-        new Chart(document.getElementById('streamChart'), {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(data.streams).map(s => s.toUpperCase() + ' (kg)'),
-                datasets: [{
-                    data: Object.values(data.streams),
-                    backgroundColor: ['#198754', '#0dcaf0', '#ffc107', '#dc3545'],
-                    borderWidth: 2,
-                    borderColor: '#1a202c'
-                }]
-            },
-            options: {
-                plugins: {
-                    legend: { labels: { color: '#e2e8f0' } }
-                }
-            }
-        });
-
-        // 2. Status Split Chart
-        new Chart(document.getElementById('statusChart'), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(data.statuses).map(s => s.toUpperCase()),
-                datasets: [{
-                    label: 'Pickups Count',
-                    data: Object.values(data.statuses),
-                    backgroundColor: ['#ffc107', '#0dcaf0', '#198754'],
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                scales: {
-                    x: { ticks: { color: '#e2e8f0' }, grid: { color: '#2d3748' } },
-                    y: { ticks: { color: '#e2e8f0' }, grid: { color: '#2d3748' } }
-                },
-                plugins: { legend: { display: false } }
-            }
-        });
-    });
-
-    // 3. Ward Leaderboard Bar Chart
+    // Leaderboard Chart
     fetch('/api/leaderboard').then(r => r.json()).then(data => {
         new Chart(document.getElementById('leaderboardChart'), {
             type: 'bar',
             data: {
-                labels: data.labels,
+                labels: data.labels.slice(0, 6),
                 datasets: [{
-                    label: 'Green Points Earned',
-                    data: data.points,
-                    backgroundColor: '#198754',
+                    label: 'Green Points',
+                    data: data.points.slice(0, 6),
+                    backgroundColor: '#15803d',
                     borderRadius: 6
                 }]
             },
             options: {
                 indexAxis: 'y',
                 scales: {
-                    x: { ticks: { color: '#e2e8f0' }, grid: { color: '#2d3748' } },
-                    y: { ticks: { color: '#e2e8f0' }, grid: { color: '#2d3748' } }
+                    x: { ticks: { color: '#475569', font: { family: 'Inter', weight: '600' } }, grid: { color: '#e2e8f0' } },
+                    y: { ticks: { color: '#0f172a', font: { family: 'Inter', weight: '600' } }, grid: { display: false } }
                 },
-                plugins: {
-                    legend: { labels: { color: '#e2e8f0' } }
-                }
+                plugins: { legend: { display: false } }
             }
         });
     });
 
-    // ============================================
-    // STATUS UPDATE & ASSIGN MODAL
-    // ============================================
     function updatePickupStatus(pickupId) {
         var status = document.getElementById('status-select-' + pickupId).value;
         fetch(`/api/status/${pickupId}`, {
@@ -594,10 +736,10 @@
         fetch('/api/vans').then(r => r.json()).then(vans => {
             var html = '<div class="list-group">';
             vans.forEach(v => {
-                html += `<button class="list-group-item list-group-item-action bg-dark text-white border-secondary mb-2 rounded-3 d-flex justify-content-between align-items-center" 
+                html += `<button class="list-group-item list-group-item-action border mb-2 rounded-3 d-flex justify-content-between align-items-center" 
                                 onclick="confirmAssign(${pickupId}, ${v.id}, '${v.van_code}')">
                             <div>
-                                <i class="fa-solid fa-truck text-info me-2"></i>
+                                <i class="fa-solid fa-truck text-success me-2"></i>
                                 <strong>${v.van_code}</strong> — Driver: ${v.driver_name}
                             </div>
                             <span class="badge bg-secondary">${v.status.toUpperCase()}</span>
@@ -617,6 +759,15 @@
             alert(`✅ Pickup #${pickupId} assigned to ${vanCode}`);
             location.reload();
         });
+    }
+
+    function executeDemoReset() {
+        fetch('/api/reset-demo', { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                alert("✅ " + d.message);
+                location.reload();
+            });
     }
 </script>
 {% endblock %}

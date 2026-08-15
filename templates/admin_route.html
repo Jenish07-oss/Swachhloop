@@ -1,136 +1,175 @@
 {% extends "base.html" %}
-{% block title %}Route Optimization - SwachhLoop 4R{% endblock %}
+{% block title %}Automatic Route Optimization Engine — SwachhLoop 4R{% endblock %}
 
 {% block content %}
-<style>
-    body { background-color: #12161f; color: #e2e8f0; }
-    .admin-card { background-color: #1a202c; border: 1px solid #2d3748; color: #fff; border-radius: 12px; }
-    .stat-box { background: linear-gradient(135deg, #1e2638, #161b26); border: 1px solid #2d3748; border-radius: 12px; padding: 1.25rem; text-align: center; }
-</style>
-
-<div class="row g-3">
-    <!-- Header -->
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-2 pb-3 border-bottom border-secondary">
-            <div>
-                <h2 class="fw-bold text-white mb-1">
-                    <i class="fa-solid fa-route text-success me-2"></i> Stream-Wise Route Optimization
-                </h2>
-                <p class="text-muted mb-0">
-                    Van: <strong class="text-info">{{ van.van_code }}</strong> (Driver: {{ van.driver_name }}) | Capacity: {{ van.capacity_kg }} kg
-                </p>
+<!-- Top Header Bar -->
+<div class="admin-header-bar">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="brand-badge" style="width: 36px; height: 36px;"><i class="fa-solid fa-route fs-5 text-white"></i></span>
+                <h1 class="mb-0 fw-bold fs-2">Automatic Route Optimization Engine</h1>
+                <span class="badge {% if route_status == 'applied' %}bg-success{% else %}bg-warning text-dark{% endif %} px-2 py-1" id="route-status-badge">
+                    {{ route_status|upper }}
+                </span>
             </div>
-            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light">
-                <i class="fa-solid fa-arrow-left me-1"></i> Back to Command Center
-            </a>
+            <p class="text-secondary mb-0 small">
+                Active Van: <strong class="text-dark">{{ van.van_code }}</strong> (Driver: {{ van.driver_name }}) • Capacity: {{ van.capacity_kg }} kg • Navrangpura Ward
+            </p>
         </div>
-
-        <!-- Stream Batch Filter Tabs -->
-        <div class="d-flex gap-2 flex-wrap mb-3 align-items-center">
-            <span class="small text-muted fw-bold me-1">STREAM BATCH:</span>
-            <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='all') }}" class="btn btn-sm {% if stream_filter == 'all' %}btn-success{% else %}btn-outline-secondary text-white{% endif %}">
-                All Assigned Stops
-            </a>
-            <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='wet') }}" class="btn btn-sm {% if stream_filter == 'wet' %}btn-success{% else %}btn-outline-secondary text-white{% endif %}">
-                <i class="fa-solid fa-apple-whole me-1"></i> Wet Batch (→ Compost)
-            </a>
-            <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='dry') }}" class="btn btn-sm {% if stream_filter == 'dry' %}btn-info{% else %}btn-outline-secondary text-white{% endif %}">
-                <i class="fa-solid fa-box-open me-1"></i> Dry Batch (→ MRF)
-            </a>
-            <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='e_waste') }}" class="btn btn-sm {% if stream_filter == 'e_waste' %}btn-warning text-dark{% else %}btn-outline-secondary text-white{% endif %}">
-                <i class="fa-solid fa-plug me-1"></i> E-Waste Batch (→ Recycler)
-            </a>
-            <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='residual') }}" class="btn btn-sm {% if stream_filter == 'residual' %}btn-danger{% else %}btn-outline-secondary text-white{% endif %}">
-                <i class="fa-solid fa-fire me-1"></i> Residual Batch (→ RDF Kiln)
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary-action py-2 px-3" onclick="applyCurrentRoute()" id="btn-apply-route">
+                <i class="fa-solid fa-check-circle me-1"></i> Apply Route Batch
+            </button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary-action">
+                <i class="fa-solid fa-arrow-left me-1"></i> Command Center
             </a>
         </div>
     </div>
+</div>
 
-    <!-- Algorithm KPI Proof Points -->
+<!-- Dynamic Explanation & Recommended Van Callout -->
+<div class="surface-card p-3 p-md-4 mb-4 border-start border-success border-5 bg-light">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <span class="badge bg-success text-white px-2 py-1 mb-1">AI ROUTE RECOMMENDATION</span>
+            <div class="fw-bold text-dark fs-6">{{ explanation }}</div>
+            <small class="text-muted">Nearest available van chosen based on proximity to the pickup cluster centroid. Route terminates at {% if facility %}{{ facility.name }}{% else %}Designated Circular Facility{% endif %}.</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="small fw-bold text-secondary">Switch Van:</span>
+            {% for v in all_vans %}
+            <a href="{{ url_for('admin_route_optimization', van_id=v.id, stream=stream_filter, zone=zone_filter) }}" 
+               class="btn btn-sm {% if v.id == van.id %}btn-dark text-white{% else %}btn-outline-secondary{% endif %} rounded-pill px-3" style="font-size: 12px;">
+                {{ v.van_code }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Stream & Zone Batch Filter Tabs -->
+<div class="d-flex gap-2 flex-wrap mb-4 align-items-center">
+    <span class="small text-dark fw-bold me-1">STREAM BATCH:</span>
+    <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='wet', zone=zone_filter) }}" class="btn btn-sm {% if stream_filter == 'wet' %}btn-success text-white{% else %}btn-outline-secondary{% endif %} rounded-pill px-3 fw-bold">
+        🌱 Wet Batch (→ Compost)
+    </a>
+    <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='dry', zone=zone_filter) }}" class="btn btn-sm {% if stream_filter == 'dry' %}btn-info text-white{% else %}btn-outline-secondary{% endif %} rounded-pill px-3 fw-bold">
+        ♻ Dry Batch (→ MRF)
+    </a>
+    <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='e_waste', zone=zone_filter) }}" class="btn btn-sm {% if stream_filter == 'e_waste' %}btn-warning text-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-3 fw-bold">
+        🔌 E-Waste Batch (→ Recycler)
+    </a>
+    <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream='residual', zone=zone_filter) }}" class="btn btn-sm {% if stream_filter == 'residual' %}btn-danger text-white{% else %}btn-outline-secondary{% endif %} rounded-pill px-3 fw-bold">
+        🔥 Residual Batch (→ RDF Kiln)
+    </a>
+
+    <span class="small text-dark fw-bold ms-3 me-1">ZONE:</span>
+    {% for z in ['all', '1', '2', '3', '4', '5'] %}
+    <a href="{{ url_for('admin_route_optimization', van_id=van.id, stream=stream_filter, zone=z) }}" class="btn btn-sm {% if zone_filter == z %}btn-dark text-white{% else %}btn-light border{% endif %} rounded-pill px-2" style="font-size: 11px;">
+        {% if z == 'all' %}All{% else %}Z{{ z }}{% endif %}
+    </a>
+    {% endfor %}
+</div>
+
+<!-- 3 Live Algorithm KPI Cards (Proof of Real Math) -->
+<div class="row g-3 mb-4">
     <div class="col-md-4">
-        <div class="stat-box">
-            <div class="text-muted small fw-semibold text-uppercase">Naive Route Distance</div>
-            <h2 class="fw-bold text-warning mb-0">{{ naive_dist }} <span class="fs-6">km</span></h2>
-            <small class="text-secondary">Sequential database / booking order</small>
+        <div class="surface-card p-4 text-center">
+            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11.5px;">Naive Route Distance</div>
+            <div class="display-5 fw-bold text-warning my-1"><span id="naive-dist-display">{{ naive_dist }}</span> <span class="fs-6 text-muted">km</span></div>
+            <small class="text-muted fw-semibold">Sequential un-optimized booking order</small>
         </div>
     </div>
 
     <div class="col-md-4">
-        <div class="stat-box">
-            <div class="text-muted small fw-semibold text-uppercase">Optimized Route Distance</div>
-            <h2 class="fw-bold text-info mb-0">{{ opt_dist }} <span class="fs-6">km</span></h2>
-            <small class="text-secondary">Nearest-Neighbour heuristic order</small>
+        <div class="surface-card p-4 text-center">
+            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11.5px;">Optimized Route Distance</div>
+            <div class="display-5 fw-bold text-info my-1"><span id="opt-dist-display">{{ opt_dist }}</span> <span class="fs-6 text-muted">km</span></div>
+            <small class="text-muted fw-semibold" id="opt-label-desc">Nearest-Neighbor heuristic ordering</small>
         </div>
     </div>
 
     <div class="col-md-4">
-        <div class="stat-box border-success">
-            <div class="text-muted small fw-semibold text-uppercase">Distance Saved %</div>
-            <h2 class="fw-bold text-success mb-0">{{ saved_pct }}%</h2>
-            <small class="badge bg-success-subtle text-success border border-success-subtle">
+        <div class="route-highlight-card">
+            <div class="text-success small fw-bold text-uppercase" style="font-size: 11.5px;">Distance Saved</div>
+            <div class="route-savings-number"><span id="savings-counter">{{ saved_pct }}</span>%</div>
+            <span class="badge bg-success text-white px-3 py-1 fw-bold" style="font-size: 11px;">
                 <i class="fa-solid fa-leaf me-1"></i> Nearest-neighbour estimate
-            </small>
+            </span>
         </div>
     </div>
+</div>
 
-    <!-- Leaflet Route Map -->
+<!-- Route Map & Sequence with Interactive Customization -->
+<div class="row g-4">
+    
+    <!-- Route Map -->
     <div class="col-lg-8">
-        <div class="admin-card p-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-bold text-white small"><i class="fa-solid fa-map me-1 text-success"></i> Optimized Trajectory & Stop Sequence</span>
-                <span class="badge bg-dark border border-secondary text-muted small">Green Line = Optimized Order</span>
+        <div class="surface-card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                <span class="fw-bold text-dark small"><i class="fa-solid fa-map text-success me-1"></i> Optimized Dispatch Trajectory (Ends at {{ facility.name }})</span>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-dark fw-bold rounded-pill px-3" onclick="location.reload()">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Re-optimize Route
+                    </button>
+                </div>
             </div>
-            <div id="route-map" style="height: 520px;" class="rounded-3 border border-secondary"></div>
+            <div id="route-map" style="height: 540px; border-radius: 12px;" class="border"></div>
         </div>
     </div>
 
-    <!-- Optimized Stops List -->
+    <!-- Stop Sequence List with Move Controls (Manual Override) -->
     <div class="col-lg-4">
-        <div class="admin-card p-3" style="max-height: 575px; overflow-y: auto;">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-list-ol text-info me-2"></i> Stop Sequence</h5>
-                <span class="badge bg-secondary">{{ stops|length }} stops</span>
+        <div class="surface-card p-4" style="max-height: 595px; overflow-y: auto;">
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                <h4 class="fw-bold fs-6 mb-0 text-dark"><i class="fa-solid fa-list-ol text-success me-2"></i> Stop Sequence & Customizer</h4>
+                <span class="badge bg-secondary" id="stop-count-badge">{{ stops|length }} stops</span>
             </div>
+            <p class="text-muted small mb-3">Use <strong>↑ / ↓</strong> to manually reorder stops. Metrics will instantly recalculate.</p>
 
             {% if stops %}
-                <div class="d-flex flex-column gap-2">
-                    <div class="p-2 bg-dark rounded-3 border border-secondary text-muted small d-flex align-items-center gap-2">
-                        <span class="badge bg-primary">START</span>
-                        <div><strong>Van Depot:</strong> {{ "%.4f"|format(van.lat) }}, {{ "%.4f"|format(van.lng) }}</div>
+                <div class="d-flex flex-column gap-2" id="stops-list-container">
+                    <!-- Start Point -->
+                    <div class="p-2 rounded-3 bg-primary-subtle border border-primary-subtle text-dark small d-flex align-items-center gap-2">
+                        <span class="badge bg-primary text-white">START</span>
+                        <div><strong>Depot Start:</strong> {{ "%.4f"|format(van.lat) }}, {{ "%.4f"|format(van.lng) }}</div>
                     </div>
 
+                    <!-- Stops -->
                     {% for s in stops %}
-                    <div class="p-3 bg-dark rounded-3 border border-secondary">
+                    <div class="p-3 rounded-3 bg-light border stop-card" id="stop-card-{{ s.id }}" data-id="{{ s.id }}" data-lat="{{ s.lat }}" data-lng="{{ s.lng }}" data-name="{{ s.name }}" data-household="{{ s.household_code }}" data-street="{{ s.street }}" data-streams="{{ s.streams }}">
                         <div class="d-flex justify-content-between align-items-start mb-1">
                             <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-success rounded-circle" style="width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">
+                                <span class="badge bg-success rounded-circle seq-badge" style="width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">
                                     {{ s.sequence }}
                                 </span>
-                                <div>
-                                    <strong class="text-white">Pickup #{{ s.id }}</strong> ({{ s.household_code }})
-                                </div>
+                                <strong class="text-dark">Pickup #{{ s.id }}</strong>
                             </div>
-                            <span class="badge bg-secondary" style="font-size:10px;">Zone {{ s.zone }}</span>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="moveStop({{ s.id }}, -1)" title="Move Up">↑</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="moveStop({{ s.id }}, 1)" title="Move Down">↓</button>
+                            </div>
                         </div>
-                        <div class="small text-muted mb-1">{{ s.street }}</div>
-                        <div class="small text-info fw-semibold">{{ s.streams }}</div>
-                        <div class="small text-secondary mt-1">Bin Score: <span class="text-success">{{ s.bin_score }}/100</span></div>
+                        <div class="small text-muted mb-1">{{ s.street }} ({{ s.name }})</div>
+                        <div class="small text-info fw-bold">{{ s.streams }}</div>
                     </div>
                     {% endfor %}
-                </div>
 
-                <div class="mt-3 p-2 bg-dark rounded-3 border border-secondary text-muted small" style="font-size:11px;">
-                    <i class="fa-solid fa-circle-info text-info me-1"></i>
-                    <strong>Proof Point:</strong> Greedy Nearest-Neighbour evaluates point-to-point Haversine matrices to reduce city deadhead mileage.
+                    <!-- Destination Facility Finish Point -->
+                    <div class="p-2 rounded-3 bg-success-subtle border border-success-subtle text-dark small d-flex align-items-center gap-2">
+                        <span class="badge bg-success text-white">FINISH</span>
+                        <div><strong>{% if facility %}{{ facility.name }}{% else %}Designated Facility{% endif %}</strong> ({% if facility %}{{ facility.facility_type }}{% else %}Circular Recovery{% endif %})</div>
+                    </div>
                 </div>
             {% else %}
                 <div class="text-center py-4 text-muted">
-                    <i class="fa-solid fa-box-open fa-2x mb-2"></i>
-                    <p class="mb-0">No stops found for this filter criteria.</p>
+                    <p class="small mb-0">No stops matching this stream and zone filter.</p>
                 </div>
             {% endif %}
         </div>
     </div>
+
 </div>
 {% endblock %}
 
@@ -141,41 +180,155 @@
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Van Start Pin
     var startIcon = L.divIcon({
         className: 'start-icon',
-        html: '<div style="font-size: 26px; text-shadow: 0 0 5px #000;">🚛</div>',
+        html: '<div style="font-size: 26px; text-shadow: 0 1px 4px rgba(0,0,0,0.3);">🚛</div>',
         iconSize: [32, 32]
     });
     L.marker([{{ van.lat }}, {{ van.lng }}], { icon: startIcon })
         .bindPopup('<b>Depot / Van Start</b><br>{{ van.van_code }} ({{ van.driver_name }})')
         .addTo(map);
 
-    var stops = {{ stops|tojson }};
-    var pathCoords = [[{{ van.lat }}, {{ van.lng }}]];
+    var facilityPos = [{% if facility %}{{ facility.lat }}, {{ facility.lng }}{% else %}{{ van.lat }}, {{ van.lng }}{% endif %}];
+    var facIcon = L.divIcon({
+        className: 'facility-icon',
+        html: '<div style="background:#ffffff; border:2px solid #15803d; border-radius:8px; padding:3px 6px; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.15); text-align:center;">🏭</div>',
+        iconSize: [32, 32]
+    });
+    L.marker(facilityPos, { icon: facIcon })
+        .bindPopup('<b>Destination Facility: {% if facility %}{{ facility.name }}{% else %}Designated Facility{% endif %}</b><br>{% if facility %}{{ facility.facility_type }}{% else %}Circular Recovery{% endif %}')
+        .addTo(map);
 
-    stops.forEach((s) => {
-        var numIcon = L.divIcon({
-            className: 'stop-num-icon',
-            html: `<div style="background:#198754; color:#fff; border:2px solid #fff; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; box-shadow:0 2px 5px rgba(0,0,0,0.5);">${s.sequence}</div>`,
-            iconSize: [26, 26]
+    var currentStops = {{ stops|tojson }};
+    var routePolyline = null;
+    var markersLayer = L.layerGroup().addTo(map);
+
+    function redrawRouteMap() {
+        markersLayer.clearLayers();
+        if (routePolyline) {
+            map.removeLayer(routePolyline);
+        }
+
+        var pathCoords = [[{{ van.lat }}, {{ van.lng }}]];
+
+        currentStops.forEach((s, idx) => {
+            var seq = idx + 1;
+            var numIcon = L.divIcon({
+                className: 'stop-num-icon',
+                html: `<div style="background:#15803d; color:#fff; border:2px solid #fff; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">${seq}</div>`,
+                iconSize: [26, 26]
+            });
+
+            var m = L.marker([s.lat, s.lng], { icon: numIcon })
+                .bindPopup(`<b>Stop ${seq}: Pickup #${s.id}</b><br>${s.household_code || ''} (${s.name || ''})<br>${s.street || ''}<br><small>${s.streams || ''}</small>`);
+            markersLayer.addLayer(m);
+
+            pathCoords.push([s.lat, s.lng]);
         });
 
-        L.marker([s.lat, s.lng], { icon: numIcon })
-            .bindPopup(`<b>Stop ${s.sequence}: Pickup #${s.id}</b><br>${s.household_code} (${s.name})<br>${s.street}<br><small>${s.streams}</small>`)
-            .addTo(map);
+        // Add destination facility as the final destination
+        pathCoords.push(facilityPos);
 
-        pathCoords.push([s.lat, s.lng]);
-    });
+        if (pathCoords.length > 1) {
+            routePolyline = L.polyline(pathCoords, {
+                color: '#15803d',
+                weight: 4,
+                opacity: 0.85,
+                dashArray: '8, 6'
+            }).addTo(map);
+            map.fitBounds(routePolyline.getBounds().pad(0.1));
+        }
+    }
 
-    if (pathCoords.length > 1) {
-        var polyline = L.polyline(pathCoords, {
-            color: '#198754',
-            weight: 4,
-            opacity: 0.85,
-            dashArray: '8, 6'
-        }).addTo(map);
-        map.fitBounds(polyline.getBounds().pad(0.1));
+    redrawRouteMap();
+
+    function moveStop(pickupId, direction) {
+        var container = document.getElementById('stops-list-container');
+        var cards = Array.from(container.querySelectorAll('.stop-card'));
+        var currentIndex = cards.findIndex(c => parseInt(c.getAttribute('data-id')) === pickupId);
+        if (currentIndex === -1) return;
+
+        var targetIndex = currentIndex + direction;
+        if (targetIndex < 0 || targetIndex >= cards.length) return;
+
+        // Swap in DOM
+        if (direction === -1) {
+            container.insertBefore(cards[currentIndex], cards[targetIndex]);
+        } else {
+            container.insertBefore(cards[targetIndex], cards[currentIndex]);
+        }
+
+        // Re-read current sequence from DOM
+        var updatedCards = Array.from(container.querySelectorAll('.stop-card'));
+        var newOrderedIds = [];
+        var newStopsList = [];
+
+        updatedCards.forEach((c, idx) => {
+            var seq = idx + 1;
+            c.querySelector('.seq-badge').innerText = seq;
+            var pid = parseInt(c.getAttribute('data-id'));
+            newOrderedIds.push(pid);
+
+            var existingStop = currentStops.find(s => s.id === pid);
+            if (existingStop) {
+                var sCopy = Object.assign({}, existingStop);
+                sCopy.sequence = seq;
+                newStopsList.push(sCopy);
+            }
+        });
+
+        currentStops = newStopsList;
+        redrawRouteMap();
+
+        // Mandatory live recalculation without stale metrics!
+        fetch('/api/route/recalculate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                van_id: {{ van.id }},
+                stream_type: '{{ stream_filter }}',
+                pickup_ids: newOrderedIds
+            })
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                document.getElementById('naive-dist-display').innerText = data.naive_dist_km;
+                document.getElementById('opt-dist-display').innerText = data.custom_dist_km;
+                document.getElementById('savings-counter').innerText = data.saved_pct;
+                document.getElementById('opt-label-desc').innerText = 'Recalculated customized ordering';
+                document.getElementById('route-status-badge').className = 'badge bg-info text-dark px-2 py-1';
+                document.getElementById('route-status-badge').innerText = 'CUSTOMIZED';
+            }
+        });
+    }
+
+    function applyCurrentRoute() {
+        var pickupIds = currentStops.map(s => s.id);
+        if (pickupIds.length === 0) {
+            alert("No stops to apply in this batch.");
+            return;
+        }
+
+        var naiveDist = parseFloat(document.getElementById('naive-dist-display').innerText) || 0.0;
+        var optDist = parseFloat(document.getElementById('opt-dist-display').innerText) || 0.0;
+        var savedPct = parseFloat(document.getElementById('savings-counter').innerText) || 0.0;
+
+        fetch('/api/route/apply', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                van_id: {{ van.id }},
+                stream_type: '{{ stream_filter }}',
+                zone: '{{ zone_filter }}',
+                pickup_ids: pickupIds,
+                naive_dist: naiveDist,
+                opt_dist: optDist,
+                saved_pct: savedPct
+            })
+        }).then(r => r.json()).then(d => {
+            alert(`✅ ${d.message}`);
+            document.getElementById('route-status-badge').className = 'badge bg-success px-2 py-1';
+            document.getElementById('route-status-badge').innerText = 'APPLIED';
+        });
     }
 </script>
 {% endblock %}

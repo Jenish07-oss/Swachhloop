@@ -1,116 +1,679 @@
-/* SwachhLoop 4R - Civic Tech Stylesheet (SIH 2026 PS 8-L) */
+/* ==========================================================================
+   SwachhLoop 4R — Civic Design System (SIH 2026 PS 8-L Final MVP)
+   Light Theme First • Ultra-High Contrast • Smooth Micro-Interactions
+   ========================================================================== */
 
 :root {
-    --emerald-primary: #198754;
-    --emerald-dark: #0f5132;
-    --emerald-light: #d1e7dd;
-    --dark-navy: #12161f;
-    --card-bg-dark: #1a202c;
-    --accent-amber: #ffc107;
-    --accent-blue: #0dcaf0;
-    --accent-red: #dc3545;
+    /* Primary Colors - Deep Eco Emerald */
+    --primary: #15803d;
+    --primary-dark: #14532d;
+    --primary-light: #f0fdf4;
+    --primary-border: #86efac;
+    --primary-glow: rgba(21, 128, 61, 0.25);
+
+    /* Backgrounds & Surfaces (Bright, Crisp Light Theme) */
+    --bg-page: #f6f9f7;
+    --bg-surface: #ffffff;
+    --bg-surface-soft: #edf4f0;
+    --bg-surface-muted: #f8fafc;
+    
+    /* High-Contrast Charcoal & Slate Typography (WCAG AAA Compliant) */
+    --text-heading: #0f172a;
+    --text-body: #1e293b;
+    --text-secondary: #334155;
+    --text-muted: #475569;
+
+    /* Borders & Dividers */
+    --border-light: #e2e8f0;
+    --border-card: #dce6df;
+    --border-strong: #94a3b8;
+
+    /* 4R Stream Specific Visual Tokens */
+    --stream-wet-primary: #15803d;
+    --stream-wet-bg: #f0fdf4;
+    --stream-wet-border: #86efac;
+    --stream-wet-text: #14532d;
+
+    --stream-dry-primary: #0284c7;
+    --stream-dry-bg: #f0f9ff;
+    --stream-dry-border: #7dd3fc;
+    --stream-dry-text: #0369a1;
+
+    --stream-ewaste-primary: #b45309;
+    --stream-ewaste-bg: #fffbeb;
+    --stream-ewaste-border: #fcd34d;
+    --stream-ewaste-text: #78350f;
+
+    --stream-residual-primary: #b91c1c;
+    --stream-residual-bg: #fef2f2;
+    --stream-residual-border: #fca5a5;
+    --stream-residual-text: #7f1d1d;
+
+    /* Status System */
+    --status-pending: #b45309;
+    --status-pending-bg: #fef3c7;
+    --status-collected: #0284c7;
+    --status-collected-bg: #e0f2fe;
+    --status-delivered: #15803d;
+    --status-delivered-bg: #dcfce7;
+
+    /* Design Tokens */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+
+    /* Elevation Shadows */
+    --shadow-subtle: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+    --shadow-card: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+    --shadow-hover: 0 12px 24px -4px rgba(15, 23, 42, 0.1), 0 4px 8px -2px rgba(15, 23, 42, 0.04);
+    --shadow-glow: 0 0 0 3px rgba(21, 128, 61, 0.2);
+}
+
+/* ==========================================================================
+   Base Styles & Accessibility
+   ========================================================================== */
+
+* {
+    box-sizing: border-box;
 }
 
 body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    background-color: #f4f6f9;
-    color: #1e293b;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-page);
+    color: var(--text-body);
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* Navbar */
-.bg-dark-emerald {
-    background-color: #0d3b26 !important;
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-heading);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
 }
 
-.brand-icon {
+h1 { font-size: 2.25rem; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.35rem; }
+h4 { font-size: 1.15rem; }
+
+p {
+    color: var(--text-body);
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+a:hover {
+    color: var(--primary-dark);
+}
+
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Navigation Bar (Clean, Crisp, Light Theme)
+   ========================================================================== */
+
+.site-navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--border-light);
+    box-shadow: var(--shadow-subtle);
+    padding: 0.75rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.brand-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: #198754;
-    color: #fff;
-    border-radius: 8px;
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, #15803d, #16a34a);
+    color: #ffffff;
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
 }
 
-.citizen-pill {
-    background-color: rgba(209, 231, 221, 0.2);
-    border: 1px solid rgba(25, 135, 84, 0.3);
+.nav-link-item {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-secondary);
+    padding: 0.5rem 0.9rem !important;
+    border-radius: var(--radius-md);
+    transition: all 0.15s ease-in-out;
 }
 
-/* Custom Colors & Utilities */
-.bg-emerald {
-    background-color: #198754 !important;
+.nav-link-item:hover {
+    color: var(--primary);
+    background-color: var(--primary-light);
 }
 
-.text-emerald {
-    color: #198754 !important;
+.nav-link-item.active {
+    color: var(--primary) !important;
+    background-color: var(--primary-light);
+    font-weight: 700;
 }
 
-.bg-emerald-subtle {
-    background-color: #d1e7dd !important;
+.green-points-pill {
+    background-color: var(--primary-light);
+    border: 1px solid var(--primary-border);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 14px;
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--radius-full);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: var(--shadow-subtle);
 }
 
-.border-emerald-subtle {
-    border-color: #badbcc !important;
+/* ==========================================================================
+   Surface Cards
+   ========================================================================== */
+
+.surface-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.btn-emerald {
-    background-color: #198754;
-    color: #fff;
-    border: none;
-    transition: all 0.2s;
+.surface-card.interactive:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
 }
 
-.btn-emerald:hover {
-    background-color: #146c43;
-    color: #fff;
-    transform: translateY(-1px);
+/* ==========================================================================
+   Hero Section & 4R Loop Visualizer
+   ========================================================================== */
+
+.hero-card {
+    background: linear-gradient(135deg, #0d3822 0%, #15803d 100%);
+    color: #ffffff;
+    border-radius: var(--radius-xl);
+    padding: 3rem 2.25rem;
+    box-shadow: 0 10px 30px rgba(13, 56, 34, 0.15);
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
 }
 
-/* Stream Cards */
+.hero-card h1 {
+    color: #ffffff;
+    font-size: 2.35rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+}
+
+.hero-card p {
+    color: #dcfce7;
+    font-size: 1.15rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+    max-width: 680px;
+}
+
+.loop-flow-box {
+    background: #ffffff;
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.25rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-subtle);
+}
+
+.flow-step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-heading);
+}
+
+.flow-step-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+/* ==========================================================================
+   4R Stream Cards (High Contrast, Large Selectable Controls - NO KG INPUTS)
+   ========================================================================== */
+
+.stream-card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
 .stream-card {
-    background-color: #ffffff;
-    transition: transform 0.15s, box-shadow 0.15s;
+    background-color: var(--bg-surface);
+    border: 2px solid var(--border-card);
+    border-radius: var(--radius-md);
+    padding: 1.5rem 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .stream-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--border-strong);
 }
 
-.stream-wet {
-    border-left: 4px solid #198754 !important;
+.stream-card .stream-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
 }
 
-.stream-dry {
-    border-left: 4px solid #0dcaf0 !important;
+.stream-card .stream-icon-box {
+    font-size: 2rem;
+    line-height: 1;
 }
 
-.stream-ewaste {
-    border-left: 4px solid #ffc107 !important;
+.stream-card .stream-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-heading);
+    margin-bottom: 0.35rem;
 }
 
-.stream-residual {
-    border-left: 4px solid #dc3545 !important;
+.stream-card .stream-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+    margin-bottom: 1rem;
 }
 
-/* Map Containers */
-#map, #admin-map, #route-map {
-    z-index: 1;
+.stream-destination-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--radius-sm);
+    background-color: #ffffff;
+    border: 1px solid var(--border-light);
 }
 
-.leaflet-container {
-    font-family: inherit;
+/* Stream Card Selected States */
+.stream-card.selected.wet {
+    background-color: var(--stream-wet-bg);
+    border-color: var(--stream-wet-primary);
+}
+.stream-card.selected.wet .stream-title { color: var(--stream-wet-text); }
+.stream-card.selected.wet .stream-destination-tag { border-color: var(--stream-wet-border); color: var(--stream-wet-text); }
+
+.stream-card.selected.dry {
+    background-color: var(--stream-dry-bg);
+    border-color: var(--stream-dry-primary);
+}
+.stream-card.selected.dry .stream-title { color: var(--stream-dry-text); }
+.stream-card.selected.dry .stream-destination-tag { border-color: var(--stream-dry-border); color: var(--stream-dry-text); }
+
+.stream-card.selected.ewaste {
+    background-color: var(--stream-ewaste-bg);
+    border-color: var(--stream-ewaste-primary);
+}
+.stream-card.selected.ewaste .stream-title { color: var(--stream-ewaste-text); }
+.stream-card.selected.ewaste .stream-destination-tag { border-color: var(--stream-ewaste-border); color: var(--stream-ewaste-text); }
+
+.stream-card.selected.residual {
+    background-color: var(--stream-residual-bg);
+    border-color: var(--stream-residual-primary);
+}
+.stream-card.selected.residual .stream-title { color: var(--stream-residual-text); }
+.stream-card.selected.residual .stream-destination-tag { border-color: var(--stream-residual-border); color: var(--stream-residual-text); }
+
+/* ==========================================================================
+   Step-by-Step Wizard
+   ========================================================================== */
+
+.step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
-/* Card hover animation */
-.card {
-    transition: transform 0.2s, box-shadow 0.2s;
+.step-number {
+    width: 32px;
+    height: 32px;
+    background-color: var(--primary);
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 15px;
+    box-shadow: 0 2px 6px rgba(21, 128, 61, 0.3);
 }
 
-/* Badges */
-.badge {
-    font-weight: 600;
-    letter-spacing: 0.2px;
+.step-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-heading);
+    margin: 0;
+}
+
+/* ==========================================================================
+   Bin Check Upload Dropzone
+   ========================================================================== */
+
+.bin-dropzone {
+    border: 2px dashed #94a3b8;
+    background-color: var(--bg-surface-soft);
+    border-radius: var(--radius-md);
+    padding: 2.25rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.bin-dropzone:hover {
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+}
+
+.bin-dropzone .camera-icon {
+    font-size: 2.5rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.bin-dropzone .upload-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin-bottom: 0.25rem;
+}
+
+.bin-dropzone .upload-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Buttons & CTAs
+   ========================================================================== */
+
+.btn-primary-action {
+    background-color: var(--primary);
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 16px;
+    padding: 0.85rem 1.75rem;
+    border-radius: var(--radius-md);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.25);
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-primary-action:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(21, 128, 61, 0.35);
+}
+
+.btn-primary-action:active {
+    transform: translateY(0);
+}
+
+.btn-secondary-action {
+    background-color: #ffffff;
+    color: var(--text-heading) !important;
+    border: 1px solid var(--border-strong);
+    font-weight: 700;
+    font-size: 15px;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-md);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.15s ease;
+}
+
+.btn-secondary-action:hover {
+    background-color: var(--bg-surface-soft);
+    border-color: var(--text-heading);
+}
+
+/* ==========================================================================
+   Impact Ledger Metrics & Score Indicators
+   ========================================================================== */
+
+.impact-metric-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--shadow-subtle);
+}
+
+.impact-metric-number {
+    font-size: 2.25rem;
+    font-weight: 900;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 0.35rem;
+}
+
+.impact-metric-label {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.estimate-badge {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+    font-weight: 800;
+    font-size: 11px;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    display: inline-block;
+    letter-spacing: 0.05em;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 800;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-full);
+}
+
+.status-badge.pending {
+    background-color: var(--status-pending-bg);
+    color: var(--status-pending);
+    border: 1px solid rgba(180, 83, 9, 0.25);
+}
+
+.status-badge.collected {
+    background-color: var(--status-collected-bg);
+    color: var(--status-collected);
+    border: 1px solid rgba(2, 132, 199, 0.25);
+}
+
+.status-badge.delivered {
+    background-color: var(--status-delivered-bg);
+    color: var(--status-delivered);
+    border: 1px solid rgba(21, 128, 61, 0.25);
+}
+
+/* ==========================================================================
+   Admin Municipal Command Center (Light & High-Contrast)
+   ========================================================================== */
+
+.admin-header-bar {
+    background: #ffffff;
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-subtle);
+}
+
+.admin-kpi-box {
+    background: #ffffff;
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-subtle);
+    transition: transform 0.15s ease;
+}
+
+.admin-kpi-box:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card);
+}
+
+.admin-kpi-val {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--text-heading);
+    line-height: 1;
+    margin: 0.25rem 0;
+}
+
+.filter-button-group {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.filter-pill {
+    background-color: #ffffff;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-strong);
+    font-weight: 700;
+    font-size: 13.5px;
+    padding: 0.45rem 0.9rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.filter-pill:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.filter-pill.active {
+    background-color: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);
+}
+
+/* Route Optimization Highlight Box */
+.route-highlight-card {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 2px solid var(--primary-border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    text-align: center;
+    box-shadow: var(--shadow-card);
+}
+
+.route-savings-number {
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--primary-dark);
+    line-height: 1;
+    margin: 0.5rem 0;
+}
+
+/* ==========================================================================
+   Motion System & Transitions
+   ========================================================================== */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Respect Reduced Motion Settings */
+@media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-card {
+        padding: 2rem 1.25rem;
+    }
+    .hero-card h1 {
+        font-size: 1.75rem;
+    }
+    .stream-card-container {
+        grid-template-columns: 1fr;
+    }
 }

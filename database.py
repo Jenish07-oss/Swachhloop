@@ -100,12 +100,54 @@ def init_db():
         )
     ''')
 
+    # 7. Routes table (Persistent Automatic & Approved Route Batches)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS routes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            van_id INTEGER NOT NULL,
+            stream_type TEXT NOT NULL,
+            pickup_zone INTEGER DEFAULT 1,
+            status TEXT DEFAULT 'recommended',
+            naive_dist_km REAL DEFAULT 0.0,
+            opt_dist_km REAL DEFAULT 0.0,
+            saved_pct REAL DEFAULT 0.0,
+            stop_order_json TEXT,
+            explanation TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            applied_at TIMESTAMP,
+            FOREIGN KEY (van_id) REFERENCES vans(id)
+        )
+    ''')
+
+    # 8. Audit Logs table (Status Transition History & Recovery Trail)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pickup_id INTEGER NOT NULL,
+            previous_status TEXT NOT NULL,
+            new_status TEXT NOT NULL,
+            action TEXT NOT NULL,
+            actor_type TEXT DEFAULT 'operator',
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (pickup_id) REFERENCES pickups(id) ON DELETE CASCADE
+        )
+    ''')
+
+    try:
+        cursor.execute("ALTER TABLE audit_logs ADD COLUMN actor_type TEXT DEFAULT 'operator'")
+    except Exception:
+        pass
+
     # Create helpful indexes
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickups_status ON pickups(status)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickups_zone ON pickups(pickup_zone)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickup_streams_pickup ON pickup_streams(pickup_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickup_streams_stream ON pickup_streams(stream_type)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_points_ledger_hh ON points_ledger(household_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_routes_status ON routes(status)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_routes_van ON routes(van_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_audit_pickup ON audit_logs(pickup_id)')
 
     conn.commit()
     conn.close()

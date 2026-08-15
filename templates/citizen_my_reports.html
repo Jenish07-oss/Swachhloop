@@ -1,121 +1,169 @@
 {% extends "base.html" %}
-{% block title %}My 4R Pickups - SwachhLoop 4R{% endblock %}
+{% block title %}My Pickups & Manifests — SwachhLoop 4R{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="p-4 bg-white rounded-4 shadow-sm border-start border-success border-5 d-flex justify-content-between align-items-center flex-wrap">
-            <div>
-                <h2 class="fw-bold mb-1"><i class="fa-solid fa-boxes-stacked text-success me-2"></i> My 4R Pickups & Manifests</h2>
-                <p class="text-muted mb-0">Track stream-wise collection, destination pathways, and QR verification logs.</p>
-            </div>
-            <div class="mt-3 mt-md-0 text-end">
-                <span class="badge bg-success p-3 fs-6 shadow-sm">
-                    <i class="fa-solid fa-leaf text-warning me-1"></i> {{ total_points }} Total Green Points
-                </span>
-                <a href="{{ url_for('citizen_home') }}" class="btn btn-outline-success ms-2">
-                    <i class="fa-solid fa-plus me-1"></i> Book New
-                </a>
-            </div>
+<!-- Page Header -->
+<div class="surface-card p-4 p-md-5 mb-4 border-start border-success border-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h1 class="fw-bold mb-1 fs-2"><i class="fa-solid fa-boxes-stacked text-success me-2"></i> My 4R Pickups & Manifests</h1>
+            <p class="text-muted mb-0">Track collection progress, chain-of-custody status, and verified facility deliveries.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="green-points-pill fs-6 px-3 py-2">
+                <i class="fa-solid fa-leaf text-success"></i> {{ total_points }} Total Points
+            </span>
+            <a href="{{ url_for('citizen_home') }}#booking-section" class="btn btn-primary-action py-2 px-3">
+                <i class="fa-solid fa-plus me-1"></i> Book New
+            </a>
         </div>
     </div>
 </div>
 
-<div class="row">
+<div class="row g-4">
     {% if pickups %}
         {% for p in pickups %}
-        <div class="col-md-6 col-lg-6 mb-4">
-            <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden">
-                <div class="card-header bg-light p-3 d-flex justify-content-between align-items-center border-bottom">
-                    <div>
-                        <span class="fw-bold fs-5 text-dark">Pickup #{{ p.id }}</span>
-                        <span class="badge bg-secondary ms-1">Zone {{ p.pickup_zone }}</span>
+        <div class="col-lg-6">
+            <div class="surface-card p-4 h-100 d-flex flex-column justify-content-between interactive">
+                
+                <div>
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <div>
+                            <span class="fw-bold fs-5 text-dark">Pickup #{{ p.id }}</span>
+                            <span class="badge bg-light text-secondary border ms-2">Zone {{ p.pickup_zone }}</span>
+                        </div>
+                        
+                        <!-- Status Badge -->
+                        <div>
+                            {% if p.status == 'delivered' %}
+                            <span class="badge bg-success text-white px-2 py-1"><i class="fa-solid fa-building-circle-check me-1"></i> Delivered ✓</span>
+                            {% elif p.status == 'collected' %}
+                            <span class="badge bg-success text-white px-2 py-1"><i class="fa-solid fa-check me-1"></i> Collection Confirmed ✓</span>
+                            {% elif p.status == 'collection_reported' %}
+                            <span class="badge bg-warning text-dark px-2 py-1"><i class="fa-solid fa-bell me-1"></i> Collection Reported</span>
+                            {% elif p.status == 'disputed' %}
+                            <span class="badge bg-danger text-white px-2 py-1"><i class="fa-solid fa-triangle-exclamation me-1"></i> Under Dispute Review</span>
+                            {% else %}
+                            <span class="badge bg-secondary text-white px-2 py-1">● Pending Van</span>
+                            {% endif %}
+                        </div>
                     </div>
-                    <span class="badge 
-                        {% if p.status == 'pending' %}bg-warning text-dark
-                        {% elif p.status == 'collected' %}bg-info text-dark
-                        {% else %}bg-success{% endif %} p-2 px-3 fs-7">
-                        {{ p.status|upper }}
-                    </span>
-                </div>
 
-                <div class="card-body p-4">
-                    <div class="row mb-3">
+                    <!-- Citizen Action: Collection Reported Verification Box -->
+                    {% if p.status == 'collection_reported' %}
+                    <div class="p-3 mb-3 rounded-3 bg-warning-subtle border border-warning text-dark shadow-sm">
+                        <div class="fw-bold mb-1 text-dark fs-6"><i class="fa-solid fa-clipboard-question text-warning me-1"></i> Was your waste actually collected?</div>
+                        <p class="small text-secondary mb-3">The collection van has reported that your segregated waste was picked up. Please verify to complete chain-of-custody.</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-sm btn-success fw-bold px-3 py-2" onclick="verifyCitizenPickup({{ p.id }}, 'confirm')">
+                                <i class="fa-solid fa-circle-check me-1"></i> Yes, it was collected
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger fw-bold px-3 py-2 bg-white" onclick="verifyCitizenPickup({{ p.id }}, 'dispute')">
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i> No, it was not collected
+                            </button>
+                        </div>
+                    </div>
+                    {% elif p.status == 'disputed' %}
+                    <div class="p-3 mb-3 rounded-3 bg-danger-subtle border border-danger-subtle text-danger small">
+                        <div class="fw-bold mb-1"><i class="fa-solid fa-shield-halved me-1"></i> Dispute Under Investigation</div>
+                        <div>Thanks for reporting. The municipal operations team is reviewing this pickup and will resolve it promptly.</div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Pickup Meta Info -->
+                    <div class="row g-3 mb-3">
                         <div class="col-sm-4 text-center">
-                            <img src="{{ p.photo_path }}" class="img-fluid rounded-3 border mb-2" alt="Bin Photo" style="height: 110px; width: 100%; object-fit: cover;">
-                            <div class="badge bg-emerald-subtle text-emerald border border-emerald-subtle w-100 py-1">
+                            <img src="{{ p.photo_path }}" class="img-fluid rounded-3 border mb-2 shadow-sm" alt="Bin Photo" style="height: 105px; width: 100%; object-fit: cover;">
+                            <div class="badge bg-success-subtle text-success border border-success-subtle w-100 py-1" style="font-size: 11.5px;">
                                 Bin Score: <strong>{{ p.bin_score }}/100</strong>
                             </div>
                         </div>
                         <div class="col-sm-8">
-                            <div class="small text-muted mb-1"><i class="fa-solid fa-location-dot text-danger me-1"></i> {{ p.street_segment }}</div>
+                            <div class="small text-muted mb-1"><i class="fa-solid fa-location-dot text-danger me-1"></i> {{ p.street_segment }}, Navrangpura</div>
                             <div class="small text-muted mb-2"><i class="fa-regular fa-clock me-1"></i> {{ p.created_at }}</div>
+                            
                             {% if p.van_code %}
                             <div class="small text-dark fw-semibold mb-2">
-                                <i class="fa-solid fa-truck text-primary me-1"></i> Assigned Van: {{ p.van_code }} ({{ p.driver_name }})
+                                <i class="fa-solid fa-truck-fast text-primary me-1"></i> <strong>Assigned Van:</strong> {{ p.van_code }} ({{ p.driver_name }})
                             </div>
                             {% endif %}
 
-                            <!-- Segregated Streams Breakdown -->
-                            <div class="mt-2">
-                                <span class="small fw-bold text-secondary text-uppercase d-block mb-1">Segregated Streams:</span>
-                                <div class="d-flex flex-column gap-1">
-                                    {% for st in p.streams %}
-                                    <div class="p-2 bg-light rounded-2 border small d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <span class="fw-bold 
-                                                {% if st.stream_type == 'wet' %}text-success
-                                                {% elif st.stream_type == 'dry' %}text-info
-                                                {% elif st.stream_type == 'e_waste' %}text-warning
-                                                {% else %}text-danger{% endif %}">
-                                                {{ st.stream_type|upper }}
-                                            </span>
-                                            <span class="text-muted">({{ st.estimated_kg }} kg)</span>
-                                        </div>
-                                        <span class="badge bg-white text-dark border small">→ {{ st.facility_name or 'Destination Hub' }}</span>
-                                    </div>
-                                    {% endfor %}
+                            <!-- Segregated Streams -->
+                            <div class="small fw-bold text-dark text-uppercase mb-1" style="font-size: 11px;">Segregated Streams:</div>
+                            <div class="d-flex flex-column gap-1">
+                                {% for st in p.streams %}
+                                <div class="p-2 bg-light rounded-2 border d-flex justify-content-between align-items-center small">
+                                    <span>
+                                        {% if st.stream_type == 'wet' %}🌱 <strong>Wet</strong>
+                                        {% elif st.stream_type == 'dry' %}♻ <strong>Dry</strong>
+                                        {% elif st.stream_type == 'e_waste' %}🔌 <strong>E-Waste</strong>
+                                        {% else %}🔥 <strong>Residual</strong>{% endif %}
+                                        ({{ st.estimated_kg }} kg Est.)
+                                    </span>
+                                    <span class="badge bg-white text-dark border" style="font-size: 11px;">→ {{ st.facility_name }}</span>
                                 </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
 
-                    <!-- Status Timeline -->
-                    <div class="border-top pt-3 mt-3">
-                        <div class="d-flex justify-content-between small text-center text-muted">
-                            <div class="{% if p.status in ['pending', 'collected', 'delivered'] %}text-success fw-bold{% endif %}">
-                                <i class="fa-solid fa-circle-check fs-5"></i><br>Booked
+                    <!-- 3-Step Progress Stepper -->
+                    <div class="p-3 bg-light rounded-3 border my-3">
+                        <div class="d-flex justify-content-between text-center small">
+                            <div class="{% if p.status in ['pending', 'collection_reported', 'disputed', 'collected', 'delivered'] %}text-success fw-bold{% else %}text-muted{% endif %}">
+                                <i class="fa-solid fa-circle-check fs-5 mb-1 d-block"></i> Booked
                             </div>
-                            <div class="{% if p.status in ['collected', 'delivered'] %}text-success fw-bold{% endif %}">
-                                <i class="fa-solid fa-truck fs-5"></i><br>Collected
+                            <div class="{% if p.status in ['collected', 'delivered'] %}text-success fw-bold{% elif p.status == 'collection_reported' %}text-warning fw-bold{% else %}text-muted{% endif %}">
+                                <i class="fa-solid fa-truck-fast fs-5 mb-1 d-block"></i> 
+                                {% if p.status == 'collection_reported' %}Reported{% else %}Collected{% endif %}
                             </div>
-                            <div class="{% if p.status == 'delivered' %}text-success fw-bold{% endif %}">
-                                <i class="fa-solid fa-industry fs-5"></i><br>Delivered to Facility
+                            <div class="{% if p.status == 'delivered' %}text-success fw-bold{% else %}text-muted{% endif %}">
+                                <i class="fa-solid fa-industry fs-5 mb-1 d-block"></i> Delivered
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card-footer bg-white p-3 border-top d-flex justify-content-between align-items-center">
-                    <span class="text-success small fw-semibold">
-                        <i class="fa-solid fa-leaf me-1"></i> Green Points Awarded
+                <!-- Footer Action -->
+                <div class="pt-3 border-top d-flex justify-content-between align-items-center mt-2">
+                    <span class="small text-success fw-semibold">
+                        <i class="fa-solid fa-leaf me-1"></i> Green Points Active
                     </span>
-                    <a href="{{ url_for('manifest_page', pickup_id=p.id) }}" class="btn btn-sm btn-dark px-3">
+                    <a href="{{ url_for('manifest_page', pickup_id=p.id) }}" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1 fw-bold">
                         <i class="fa-solid fa-qrcode me-1"></i> View QR Manifest
                     </a>
                 </div>
+
             </div>
         </div>
         {% endfor %}
     {% else %}
-        <div class="col-12 text-center py-5">
-            <div class="p-5 bg-white rounded-4 shadow-sm">
-                <i class="fa-solid fa-recycle text-muted fa-3x mb-3"></i>
-                <h4>No 4R Pickups Booked Yet</h4>
-                <p class="text-muted">Book your first segregated waste pickup to earn Green Points and generate your digital manifest.</p>
-                <a href="{{ url_for('citizen_home') }}" class="btn btn-success mt-2">Book 4R Pickup Now</a>
-            </div>
+        <div class="col-12 text-center py-5 text-muted">
+            <p class="fs-5">You haven't booked any 4R pickups yet.</p>
+            <a href="{{ url_for('citizen_home') }}#booking-section" class="btn btn-success">Book Your First Pickup</a>
         </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function verifyCitizenPickup(pickupId, action) {
+        fetch(`/api/citizen/verify/${pickupId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: action })
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert(data.message || 'Verification error.');
+            }
+        }).catch(err => {
+            alert('Network error during verification.');
+        });
+    }
+</script>
 {% endblock %}

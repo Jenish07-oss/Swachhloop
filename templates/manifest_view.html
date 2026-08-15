@@ -1,69 +1,60 @@
 {% extends "base.html" %}
-{% block title %}4R Digital Manifest #{{ pickup.id }} - SwachhLoop{% endblock %}
+{% block title %}Pickup #{{ pickup.id }} Manifest — SwachhLoop 4R{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
-        <div class="card shadow border-0 rounded-4 overflow-hidden">
+        <div class="surface-card overflow-hidden shadow">
             
             <!-- Manifest Header -->
-            <div class="card-header bg-dark text-white p-4 d-flex justify-content-between align-items-center">
+            <div class="p-4 bg-white border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="p-3 bg-success rounded-3 text-white">
-                        <i class="fa-solid fa-file-shield fa-2x"></i>
-                    </div>
-                    <div>
-                        <h4 class="mb-0 fw-bold">SwachhLoop 4R Digital Manifest</h4>
-                        <p class="mb-0 text-muted small">Verified Chain-of-Custody | Circular Economy PS 8-L</p>
-                    </div>
-                </div>
-                <div class="text-end">
-                    <span class="badge 
-                        {% if pickup.status == 'pending' %}bg-warning text-dark
-                        {% elif pickup.status == 'collected' %}bg-info text-dark
-                        {% else %}bg-success{% endif %} fs-6 px-3 py-2">
-                        {{ pickup.status|upper }}
+                    <span class="brand-badge" style="width: 44px; height: 44px;">
+                        <i class="fa-solid fa-file-shield fs-4 text-white"></i>
                     </span>
+                    <div>
+                        <h2 class="mb-0 fw-bold fs-3">Pickup #{{ pickup.id }} Manifest</h2>
+                        <small class="text-secondary fw-semibold">SwachhLoop 4R Digital Chain-of-Custody Pass</small>
+                    </div>
                 </div>
+                <span class="status-badge {{ pickup.status }} fs-6 px-3 py-2">
+                    {{ pickup.status }}
+                </span>
             </div>
 
-            <div class="card-body p-4 p-md-5">
+            <div class="p-4 p-md-5">
 
-                <!-- Meta Details & QR Code -->
-                <div class="row align-items-center mb-4 pb-4 border-bottom g-3">
+                <!-- Meta Details + Scannable QR Code -->
+                <div class="row align-items-center g-4 mb-4 pb-4 border-bottom">
                     <div class="col-md-8">
                         <table class="table table-borderless table-sm mb-0">
                             <tr>
-                                <td class="text-muted" style="width: 140px;">Pickup Token:</td>
+                                <td class="text-muted fw-semibold" style="width: 140px;">Pickup Token:</td>
                                 <td class="fw-bold fs-5 text-success">#SL-4R-{{ "%04d"|format(pickup.id) }}</td>
                             </tr>
                             <tr>
-                                <td class="text-muted">Household:</td>
-                                <td class="fw-semibold">{{ pickup.citizen_name }} ({{ pickup.household_code }})</td>
+                                <td class="text-muted fw-semibold">Household:</td>
+                                <td class="fw-bold text-dark">{{ pickup.citizen_name }} ({{ pickup.household_code }})</td>
                             </tr>
                             <tr>
-                                <td class="text-muted">Ward Location:</td>
-                                <td>{{ pickup.street_segment }}, Navrangpura</td>
+                                <td class="text-muted fw-semibold">Ward Location:</td>
+                                <td class="text-dark fw-semibold">{{ pickup.street_segment }}, Navrangpura Ward</td>
                             </tr>
                             <tr>
-                                <td class="text-muted">GPS Coordinates:</td>
-                                <td><code>{{ pickup.lat }}, {{ pickup.lng }}</code></td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted">Assigned Van:</td>
+                                <td class="text-muted fw-semibold">Assigned Van:</td>
                                 <td>
                                     {% if pickup.van_code %}
                                         <span class="badge bg-light text-dark border">{{ pickup.van_code }} (Driver: {{ pickup.driver_name }})</span>
                                     {% else %}
-                                        <span class="badge bg-light text-muted border">Awaiting Depot Assignment</span>
+                                        <span class="badge bg-light text-muted border">Awaiting Route Recommendation</span>
                                     {% endif %}
                                 </td>
                             </tr>
                             <tr>
-                                <td class="text-muted">Bin Score / Points:</td>
+                                <td class="text-muted fw-semibold">Quality & Score:</td>
                                 <td>
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle me-1">Bin Score: {{ pickup.bin_score }}/100</span>
-                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">+{{ points_earned }} Green Points</span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle me-1 fw-bold">Bin Score: {{ pickup.bin_score }}/100</span>
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle fw-bold">+{{ points_earned }} Green Points</span>
                                 </td>
                             </tr>
                         </table>
@@ -71,71 +62,73 @@
 
                     <div class="col-md-4 text-center">
                         <div class="p-3 bg-light rounded-3 border d-inline-block shadow-sm">
-                            <img src="{{ qr_data_uri }}" alt="Manifest QR" class="img-fluid rounded-2" style="max-width: 150px;">
-                            <div class="small text-muted mt-2 fw-bold">SCAN TO VERIFY</div>
+                            <img src="{{ qr_data_uri }}" alt="Manifest QR" class="img-fluid rounded-2" style="max-width: 140px;">
+                            <div class="small text-muted mt-2 fw-bold" style="font-size: 11px; letter-spacing: 0.05em;">SCAN TO VERIFY</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Segregated Streams Chain of Custody -->
-                <h5 class="fw-bold mb-3"><i class="fa-solid fa-arrows-split-up-and-left text-success me-2"></i> Segregated Streams & Destination Pathways</h5>
-                <p class="small text-muted mb-3">Each segregated stream is routed exclusively to its designated authorized recycling or processing facility (Zero-Mixing Rule).</p>
+                <!-- Segregated Streams List -->
+                <h3 class="fw-bold mb-2 fs-4"><i class="fa-solid fa-arrows-split-up-and-left text-success me-2"></i> Segregated Streams & Destinations</h3>
+                <p class="text-muted small mb-4">Each stream is collected separately and dispatched exclusively to its certified circular facility:</p>
 
-                <div class="table-responsive mb-4">
-                    <table class="table table-bordered align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Stream</th>
-                                <th>Est. Weight</th>
-                                <th>Destination Facility</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for st in streams %}
-                            <tr>
-                                <td>
-                                    <span class="fw-bold 
-                                        {% if st.stream_type == 'wet' %}text-success
-                                        {% elif st.stream_type == 'dry' %}text-info
-                                        {% elif st.stream_type == 'e_waste' %}text-warning
-                                        {% else %}text-danger{% endif %}">
-                                        <i class="fa-solid fa-circle-dot me-1"></i> {{ st.stream_type|upper }}
-                                    </span>
-                                </td>
-                                <td class="fw-semibold">{{ st.estimated_kg }} kg</td>
-                                <td>
-                                    <div class="fw-bold">{{ st.facility_name }}</div>
-                                    <small class="text-muted">{{ st.facility_type }}</small>
-                                    {% if st.registration_note %}
-                                    <div class="small text-secondary" style="font-size: 11px;"><i class="fa-solid fa-certificate text-success me-1"></i> {{ st.registration_note }}</div>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <span class="badge 
-                                        {% if st.status == 'pending' %}bg-warning text-dark
-                                        {% elif st.status == 'collected' %}bg-info text-dark
-                                        {% else %}bg-success{% endif %}">
-                                        {{ st.status|upper }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                            <tr class="table-light fw-bold">
-                                <td>Total Diverted</td>
-                                <td>{{ total_kg }} kg</td>
-                                <td colspan="2" class="text-end text-success">100% Circular Diversion Guaranteed</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="d-flex flex-column gap-3 mb-4">
+                    {% for st in streams %}
+                    <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <div class="fw-bold fs-6 text-dark mb-1">
+                                {% if st.stream_type == 'wet' %}🌱 Wet / Organic
+                                {% elif st.stream_type == 'dry' %}♻ Dry Recyclables
+                                {% elif st.stream_type == 'e_waste' %}🔌 E-Waste
+                                {% else %}🔥 Residual Combustibles{% endif %}
+                                <span class="badge bg-white text-dark border ms-2">{{ st.estimated_kg }} kg (Est.)</span>
+                            </div>
+                            <div class="text-muted small"><i class="fa-solid fa-arrow-right text-success me-1"></i> Destination: <strong>{{ st.facility_name }}</strong> ({{ st.facility_type }})</div>
+                            {% if st.registration_note %}
+                            <div class="small text-success mt-1" style="font-size: 11.5px;"><i class="fa-solid fa-certificate me-1"></i> {{ st.registration_note }}</div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="status-badge {{ st.status }}">{{ st.status }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                    <a href="{{ url_for('citizen_home') }}" class="btn btn-outline-secondary">
+                <!-- Summary Row -->
+                <div class="p-3 bg-success-subtle text-success rounded-3 d-flex justify-content-between align-items-center mb-4">
+                    <span class="fw-bold"><i class="fa-solid fa-scale-balanced me-2"></i> Total Estimated Diverted: {{ total_kg }} kg</span>
+                    <span class="fw-bold"><i class="fa-solid fa-shield-check me-1"></i> 100% Zero-Landfill Verified</span>
+                </div>
+
+                <!-- Audit Trail / Chain-of-Custody Timeline -->
+                {% if audit_trail %}
+                <div class="mt-4 pt-4 border-top">
+                    <h4 class="fw-bold mb-3 fs-5 text-dark"><i class="fa-solid fa-timeline text-primary me-2"></i> Verification & Custody Audit Trail</h4>
+                    <div class="d-flex flex-column gap-2">
+                        {% for log in audit_trail %}
+                        <div class="p-2 rounded bg-light border d-flex justify-content-between align-items-center small">
+                            <div>
+                                <span class="badge {% if log.actor_type == 'citizen' %}bg-info text-dark{% elif log.actor_type == 'admin' %}bg-danger text-white{% else %}bg-secondary text-white{% endif %} me-2">
+                                    {{ log.actor_type|upper }}
+                                </span>
+                                <strong>{{ log.notes }}</strong>
+                                <span class="text-muted ms-1">({{ log.previous_status }} → {{ log.new_status }})</span>
+                            </div>
+                            <span class="text-muted" style="font-size: 11px;">{{ log.created_at }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between align-items-center pt-4 border-top mt-4">
+                    <a href="{{ url_for('citizen_home') }}" class="btn btn-secondary-action">
                         <i class="fa-solid fa-arrow-left me-1"></i> Back to Portal
                     </a>
-                    <button class="btn btn-outline-dark" onclick="window.print()">
-                        <i class="fa-solid fa-print me-1"></i> Print Manifest
+                    <button class="btn btn-outline-dark fw-bold rounded-pill px-4" onclick="window.print()">
+                        <i class="fa-solid fa-print me-1"></i> Print Manifest Pass
                     </button>
                 </div>
 

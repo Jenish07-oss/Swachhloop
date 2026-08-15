@@ -18,7 +18,8 @@ def seed():
     conn = get_db()
     cursor = conn.cursor()
 
-    # Clear existing tables cleanly
+    cursor.execute("DELETE FROM audit_logs")
+    cursor.execute("DELETE FROM routes")
     cursor.execute("DELETE FROM points_ledger")
     cursor.execute("DELETE FROM pickup_streams")
     cursor.execute("DELETE FROM pickups")
@@ -165,9 +166,11 @@ def seed():
     random.shuffle(bin_scores)
 
     statuses = (
-        ["pending"] * 18 +
-        ["collected"] * 12 +
-        ["delivered"] * 10
+        ["pending"] * 16 +
+        ["collection_reported"] * 4 +
+        ["disputed"] * 2 +
+        ["collected"] * 10 +
+        ["delivered"] * 8
     )
     random.shuffle(statuses)
 
@@ -186,7 +189,7 @@ def seed():
         photo = sample_photos[(i - 1) % len(sample_photos)]
 
         # Assigned van logic
-        if status in ['collected', 'delivered']:
+        if status in ['collection_reported', 'disputed', 'collected', 'delivered']:
             assigned_van = (i % 3) + 1
         elif status == 'pending' and i % 2 == 0:
             assigned_van = (i % 3) + 1
