@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% block title %}Municipal Operations Summary Report — {{ BRAND }}{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .nl-nav, footer, .no-print, .btn, .nl-nav-controls {
+        display: none !important;
+    }
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+    .nl-card, .nl-panel-forest {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+    }
+    .print-break {
+        page-break-before: always;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="nl-fade-up">
+
+    <!-- Header Actions (Hidden in Print) -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 no-print">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-dark rounded-pill px-3 py-2 fw-bold d-inline-flex align-items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Back to Command Center
+        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin_export_csv') }}" class="btn btn-outline-success rounded-pill px-3 py-2 fw-bold d-inline-flex align-items-center gap-2">
+                <i class="fa-solid fa-file-csv"></i> Export Operations CSV
+            </a>
+            <button onclick="window.print()" class="btn-nl-lime d-inline-flex align-items-center gap-2" style="padding: 0.5rem 1.25rem;">
+                <i class="fa-solid fa-print"></i> Print Official Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Official Report Header Banner -->
+    <div class="p-4 rounded-4 mb-4" style="background: var(--forest); color: white; border: 2px solid var(--lime);">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 border-bottom pb-3 mb-3 border-white border-opacity-25">
+            <div>
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 bg-white text-dark rounded-pill small fw-bold mb-2">
+                    <i class="fa-solid fa-shield-halved text-success"></i> MUNICIPAL CIRCULAR AUDIT REPORT
+                </div>
+                <h1 class="text-white fs-2 fw-bold mb-1">{{ BRAND }} Municipal Waste Report</h1>
+                <p class="text-white-50 mb-0 small">Jurisdiction: {{ CITY }} Municipal Corporation • Navrangpura Ward Operations</p>
+            </div>
+            <div class="text-end">
+                <div class="small text-white-50">Report Generated:</div>
+                <strong class="text-white font-monospace">{{ generated_at }}</strong>
+                <div class="small text-success mt-1"><i class="fa-solid fa-circle-check"></i> Certified Circular Log</div>
+            </div>
+        </div>
+
+        <div class="row g-3 text-center">
+            <div class="col-md-3 col-6">
+                <div class="p-2 rounded-3 bg-white bg-opacity-10">
+                    <div class="fs-3 fw-bold text-white">{{ total }}</div>
+                    <small class="text-white-50 text-uppercase" style="font-size: 10px;">Total Pickups</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="p-2 rounded-3 bg-white bg-opacity-10">
+                    <div class="fs-3 fw-bold" style="color: var(--lime);">{{ total_kg }} kg</div>
+                    <small class="text-white-50 text-uppercase" style="font-size: 10px;">Waste Diverted</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="p-2 rounded-3 bg-white bg-opacity-10">
+                    <div class="fs-3 fw-bold text-info">{{ co2e_estimate }} kg</div>
+                    <small class="text-white-50 text-uppercase" style="font-size: 10px;">CO2e Avoided (ESTIMATE)</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="p-2 rounded-3 bg-white bg-opacity-10">
+                    <div class="fs-3 fw-bold text-warning">{{ success_rate }}%</div>
+                    <small class="text-white-50 text-uppercase" style="font-size: 10px;">Collection Success Rate</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. 4-Stream Waste Recovery Breakdown -->
+    <div class="nl-card mb-4">
+        <h3 class="fs-5 fw-bold text-dark mb-3 pb-2 border-bottom">
+            <i class="fa-solid fa-recycle text-success me-2"></i> 1. Segregated Stream Recovery & Circular Destinations
+        </h3>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0">
+                <thead class="table-light text-uppercase small" style="font-size: 11px;">
+                    <tr>
+                        <th>Waste Stream</th>
+                        <th>Designated Certified Facility</th>
+                        <th>Facility Method</th>
+                        <th class="text-end">Recovered (KG)</th>
+                        <th class="text-end">Share (%)</th>
+                        <th class="text-end">CO2e Offset (ESTIMATE)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong class="text-success">🟢 Wet / Organic</strong></td>
+                        <td>GreenCycle Compost & Bio-CNG</td>
+                        <td>Anaerobic Bio-Methanation</td>
+                        <td class="text-end fw-bold">{{ wet_kg }} kg</td>
+                        <td class="text-end">{{ ((wet_kg / (total_kg if total_kg > 0 else 1.0)) * 100)|round(1) }}%</td>
+                        <td class="text-end text-success fw-bold">≈ {{ (wet_kg * 0.50)|round(1) }} kg CO2e</td>
+                    </tr>
+                    <tr>
+                        <td><strong class="text-primary">🔵 Dry Recyclables</strong></td>
+                        <td>Central MRF & Baler Hub</td>
+                        <td>Mechanical Material Sorting & Baling</td>
+                        <td class="text-end fw-bold">{{ dry_kg }} kg</td>
+                        <td class="text-end">{{ ((dry_kg / (total_kg if total_kg > 0 else 1.0)) * 100)|round(1) }}%</td>
+                        <td class="text-end text-primary fw-bold">≈ {{ (dry_kg * 1.40)|round(1) }} kg CO2e</td>
+                    </tr>
+                    <tr>
+                        <td><strong class="text-warning">🟡 E-Waste</strong></td>
+                        <td>EcoVolt CPCB Recycler</td>
+                        <td>Hydrometallurgical Metal Extraction</td>
+                        <td class="text-end fw-bold">{{ ewaste_kg }} kg</td>
+                        <td class="text-end">{{ ((ewaste_kg / (total_kg if total_kg > 0 else 1.0)) * 100)|round(1) }}%</td>
+                        <td class="text-end text-warning fw-bold">≈ {{ (ewaste_kg * 2.80)|round(1) }} kg CO2e</td>
+                    </tr>
+                    <tr>
+                        <td><strong class="text-danger">🔴 Residual Non-Recyclable</strong></td>
+                        <td>Adani Cement RDF Facility</td>
+                        <td>Refuse-Derived Fuel Co-Processing</td>
+                        <td class="text-end fw-bold">{{ residual_kg }} kg</td>
+                        <td class="text-end">{{ ((residual_kg / (total_kg if total_kg > 0 else 1.0)) * 100)|round(1) }}%</td>
+                        <td class="text-end text-secondary fw-bold">≈ {{ (residual_kg * 0.30)|round(1) }} kg CO2e</td>
+                    </tr>
+                    <tr class="table-light fw-bold">
+                        <td colspan="3"><strong>TOTAL RECOVERED & DIVERTED</strong></td>
+                        <td class="text-end text-dark">{{ total_kg }} kg</td>
+                        <td class="text-end">100.0%</td>
+                        <td class="text-end text-success">≈ {{ co2e_estimate }} kg CO2e</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <small class="text-muted mt-2 d-block fst-italic">* All GHG CO2e avoidance figures are labeled as operational ESTIMATES based on standardized municipal solid waste diversion models.</small>
+    </div>
+
+    <!-- 2. Operational Performance & Quality Audit -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="nl-card h-100">
+                <h3 class="fs-5 fw-bold text-dark mb-3 pb-2 border-bottom">
+                    <i class="fa-solid fa-chart-pie text-success me-2"></i> 2. Collection Operations Metrics
+                </h3>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <span>Total Doorstep Requests:</span>
+                        <strong class="text-dark">{{ total }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <span>Successfully Completed (Collected/Delivered):</span>
+                        <strong class="text-success">{{ collected + delivered }} ({{ success_rate }}%)</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <span>Active En Route / In Progress:</span>
+                        <strong class="text-primary">{{ pending }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <span>Disputed Handover Tickets:</span>
+                        <strong class="text-danger">{{ disputed }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <span>Failed Stops (Access Issues):</span>
+                        <strong class="text-warning">{{ failed }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-2 bg-light">
+                        <span>Total Green Points Awarded:</span>
+                        <strong class="text-success">+{{ total_points }} Points</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="nl-card h-100">
+                <h3 class="fs-5 fw-bold text-dark mb-3 pb-2 border-bottom">
+                    <i class="fa-solid fa-industry text-success me-2"></i> 3. Destination Facility Load Audit
+                </h3>
+                <div class="d-flex flex-column gap-2">
+                    {% for f in facilities %}
+                    <div class="p-2 rounded-3 border bg-light small">
+                        <div class="d-flex justify-content-between fw-bold mb-1">
+                            <span>{{ f.name }}</span>
+                            <span class="badge {% if (f.current_load_kg or 0) >= (f.capacity_kg or 1000) %}bg-danger{% elif (f.current_load_kg or 0) >= ((f.capacity_kg or 1000) * 0.8) %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                {{ f.current_load_kg or 0 }} / {{ f.capacity_kg }} kg
+                            </span>
+                        </div>
+                        <div class="text-muted" style="font-size: 11px;">{{ f.facility_type }} • Stream: {{ f.stream_type|upper }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Problem & Dispute Log Summary -->
+    <div class="nl-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <h3 class="fs-5 fw-bold text-dark mb-0">
+                <i class="fa-solid fa-triangle-exclamation text-danger me-2"></i> 4. Operational Exceptions & Disputed Stops Log
+            </h3>
+            <span class="badge bg-danger rounded-pill">{{ issues|length }} Active Items</span>
+        </div>
+
+        {% if issues %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light text-uppercase" style="font-size: 11px;">
+                    <tr>
+                        <th>Pickup Ref</th>
+                        <th>Citizen / Entity</th>
+                        <th>Street Location</th>
+                        <th>Assigned Van</th>
+                        <th>Exception Status</th>
+                        <th>Problem Details / Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for issue in issues %}
+                    <tr>
+                        <td><strong class="text-dark">{{ issue.pickup_code or ('#' ~ issue.id) }}</strong></td>
+                        <td>{{ issue.citizen_name or issue.household_code or 'Citizen' }}</td>
+                        <td>{{ issue.street_segment or 'Navrangpura' }}</td>
+                        <td><span class="badge bg-dark">{{ issue.van_code or 'Unassigned' }}</span></td>
+                        <td>
+                            {% if issue.status == 'disputed' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1">Disputed Collection</span>
+                            {% elif issue.status == 'failed' %}
+                                <span class="badge bg-warning-subtle text-dark border border-warning px-2 py-1">Failed Stop</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ issue.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="text-dark fw-bold">{{ issue.problem_reason or 'No reason specified' }}</div>
+                            {% if issue.problem_notes %}
+                                <small class="text-muted">{{ issue.problem_notes }}</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+            <i class="fa-solid fa-circle-check fs-2 text-success mb-2 d-block"></i>
+            <p class="small mb-0">Zero disputed collections or unresolved failed stops.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Official Sign-off Strip -->
+    <div class="p-4 rounded-4 border bg-light text-center small text-muted">
+        <p class="mb-1 fw-bold text-dark">{{ BRAND }} Municipal Waste Platform • Municipal Solid Waste Management Standards</p>
+        <p class="mb-0">Zero-Mixing Segregated Stream Recovery System • Operational Jurisdiction: {{ CITY }} (Navrangpura Ward)</p>
+    </div>
+
+</div>
+{% endblock %}

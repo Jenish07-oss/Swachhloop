@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Completed Stops History — {{ BRAND }}{% endblock %}
+
+{% block content %}
+<div class="nl-fade-up" style="max-width: 880px; margin: 0 auto;">
+
+    <!-- Header Panel -->
+    <div class="nl-panel-forest mb-4 p-4 rounded-4 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="brand-badge" style="width: 52px; height: 52px; background: var(--lime); color: var(--forest); border-radius: 14px;">
+                    <i class="fa-solid fa-clipboard-check fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-uppercase small fw-bold text-white-50" style="letter-spacing: 0.08em; font-size: 11px;">MUNICIPAL DRIVER LOG</div>
+                    <h1 class="text-white fs-2 fw-bold mb-0">Completed Stops History</h1>
+                    <p class="text-white-50 mb-0 small">Van: <strong class="text-white">{{ van.van_code if van else 'SL-VAN-02' }}</strong> • Driver: <strong class="text-white">{{ van.driver_name if van else 'Vikram Rathod' }}</strong></p>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ url_for('driver_portal') }}" class="btn-nl-lime" style="min-height: 40px; font-size: 0.9rem; padding: 0.45rem 1.2rem;">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Active Driver Portal
+                </a>
+            </div>
+        </div>
+
+        <!-- History Summary KPI -->
+        <div class="row g-2 pt-3 mt-3 border-top border-secondary text-white text-center">
+            <div class="col-4">
+                <small class="text-white-50 d-block" style="font-size: 11px;">TOTAL COMPLETED</small>
+                <strong class="fs-5 text-success" style="color: var(--lime) !important;">{{ stops|length }} Stops</strong>
+            </div>
+            <div class="col-4">
+                <small class="text-white-50 d-block" style="font-size: 11px;">DIVERTED WASTE</small>
+                <strong class="fs-5">{{ total_kg }} kg</strong>
+            </div>
+            <div class="col-4">
+                <small class="text-white-50 d-block" style="font-size: 11px;">DISCHARGE STATUS</small>
+                <strong class="fs-5 text-white">MRF & Bio-CNG</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completed Pickups List Card -->
+    <div class="nl-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
+            <h3 class="fs-5 fw-bold mb-0 text-dark"><i class="fa-solid fa-list-check text-success me-2"></i> Verified Collection Log</h3>
+            <span class="badge bg-light text-dark border px-3 py-1">{{ stops|length }} Records</span>
+        </div>
+
+        {% if stops %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light text-uppercase" style="font-size: 11px;">
+                    <tr>
+                        <th>Pickup Ref</th>
+                        <th>Citizen / Society</th>
+                        <th>Street Address</th>
+                        <th>Streams Collected</th>
+                        <th>Total KG</th>
+                        <th>Status</th>
+                        <th class="text-end">Manifest</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in stops %}
+                    <tr>
+                        <td>
+                            <strong class="font-monospace text-dark">{{ s.pickup_code or format_pickup_code(s.id) }}</strong>
+                        </td>
+                        <td>
+                            <strong class="text-dark">{{ s.household_code or 'SOC-001' }} — {{ s.citizen_name or 'Citizen' }}</strong>
+                        </td>
+                        <td class="text-muted">
+                            <i class="fa-solid fa-map-pin text-danger me-1"></i> {{ s.street_segment }}
+                        </td>
+                        <td>
+                            {% if s.streams %}
+                                {% for st in s.streams %}
+                                    <span class="stream-tag {{ st.stream_type }}" style="font-size: 10px; padding: 2px 6px;">
+                                        {{ st.stream_type|upper }} ({{ st.estimated_kg }}k)
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="badge bg-light text-dark border">Segregated 4-Stream</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong class="text-dark">{{ s.total_kg or 0 }} kg</strong>
+                        </td>
+                        <td>
+                            {% if s.status == 'delivered' %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary px-2 py-1"><i class="fa-solid fa-truck-ramp-box me-1"></i> DELIVERED</span>
+                            {% else %}
+                                <span class="badge bg-success-subtle text-success border border-success px-2 py-1"><i class="fa-solid fa-circle-check me-1"></i> COLLECTED</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('manifest_page', pickup_id=s.id) }}" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1 fw-bold">
+                                <i class="fa-solid fa-qrcode me-1"></i> Pass
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fa-solid fa-box-open fs-1 text-secondary mb-3 d-block"></i>
+            <h5 class="text-dark fw-bold mb-1">No Completed Stops Yet</h5>
+            <p class="small text-muted mb-3">Stops collected during your shift will appear here once verified.</p>
+            <a href="{{ url_for('driver_portal') }}" class="btn-nl-lime">
+                <i class="fa-solid fa-truck me-1"></i> Return to Route
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

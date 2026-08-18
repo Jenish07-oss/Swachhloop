@@ -1,0 +1,669 @@
+{% extends "base.html" %}
+{% block title %}Dispatch Center — {{ BRAND }}{% endblock %}
+
+{% block content %}
+<!-- Top Header Bar -->
+<div class="admin-header-bar mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="brand-badge" style="width: 38px; height: 38px;"><i class="fa-solid fa-truck-fast fs-5 text-white"></i></span>
+                <h1 class="mb-0 fw-bold fs-2">Dispatch Center</h1>
+                <span class="badge bg-primary text-white px-2 py-1" style="font-size: 11px;">MUNICIPAL OPERATIONS</span>
+            </div>
+            <p class="text-secondary mb-0 small">
+                Manage fleet vans, pickup stops, collection reports, citizen verification, and dispute resolution.
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold">
+                <i class="fa-solid fa-shield-halved me-1"></i> Command Center
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3 fw-bold" onclick="location.reload()">
+                <i class="fa-solid fa-rotate me-1"></i> Refresh Live Feed
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Collection Issues & Disputes Review Section (If any disputes exist) -->
+{% if disputed_pickups %}
+<div class="surface-card p-4 mb-4 border-start border-danger border-5 bg-danger-subtle">
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-danger-subtle flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold fs-5 mb-0 text-danger">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i> Collection Issues & Disputes ({{ disputed_pickups|length }} Needs Review)
+            </h3>
+            <small class="text-secondary">Citizens have disputed collection. Review facts and choose resolution.</small>
+        </div>
+        <span class="badge bg-danger text-white">ACTION REQUIRED</span>
+    </div>
+
+    <div class="row g-3">
+        {% for dp in disputed_pickups %}
+        <div class="col-md-6">
+            <div class="p-3 bg-white rounded-3 border border-danger-subtle h-100 d-flex flex-column justify-content-between shadow-sm">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong class="text-danger">Pickup #{{ dp.id }} ({{ dp.household_code }})</strong>
+                        <span class="badge bg-dark text-white">{{ dp.van_code or 'Unassigned Van' }}</span>
+                    </div>
+                    <div class="text-dark fw-bold mb-1">{{ dp.citizen_name }} • {{ dp.street_segment }}</div>
+                    <div class="small text-muted mb-2">Streams: <span class="text-info fw-bold">{{ dp.streams }}</span></div>
+                    <div class="p-2 rounded bg-light border text-danger small mb-3">
+                        <i class="fa-solid fa-comment-dots me-1"></i> <strong>Citizen Response:</strong> Waste was NOT collected.
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-success fw-bold w-50 py-2" onclick="resolveDispute({{ dp.id }}, 'admin_confirm')">
+                        <i class="fa-solid fa-check-circle me-1"></i> Confirm Collection
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger fw-bold w-50 py-2" onclick="resolveDispute({{ dp.id }}, 'admin_reopen')">
+                        <i class="fa-solid fa-rotate-left me-1"></i> Return to Pending
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Fleet Active Batches Bar -->
+<div class="row g-3 mb-4">
+    {% for v_info in all_routes_overview %}
+    <div class="col-md-4">
+        <a href="{{ url_for('admin_dispatch', van_id=v_info.van_id) }}" class="text-decoration-none">
+            <div class="surface-card p-3 h-100 {% if v_info.van_id == selected_van.id %}border-primary border-2 shadow-sm bg-light{% endif %}">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge {% if v_info.van_id == selected_van.id %}bg-primary{% else %}bg-dark{% endif %} text-white p-2">
+                            <i class="fa-solid fa-truck me-1"></i> {{ v_info.van_code }}
+                        </span>
+                        <span class="fw-bold text-dark small">{{ v_info.driver_name }}</span>
+                    </div>
+                    <span class="badge {% if v_info.pct == 100 %}bg-success{% else %}bg-secondary{% endif %}">
+                        {{ v_info.collected }} / {{ v_info.total }} Verified
+                    </span>
+                </div>
+                <div class="progress mb-1" style="height: 6px;">
+                    <div class="progress-bar {% if v_info.pct == 100 %}bg-success{% else %}bg-primary{% endif %}" role="progressbar" style="width: {{ v_info.pct }}%;"></div>
+                </div>
+                <div class="d-flex justify-content-between text-muted" style="font-size: 11px;">
+                    <span>Status: <strong class="text-dark">{{ v_info.status|upper }}</strong></span>
+                    <span>{{ v_info.pct }}% Verified</span>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Active Route Batch Header & Progress -->
+<div class="surface-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 pb-2 border-bottom">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h3 class="fw-bold fs-5 mb-0 text-dark">
+                    <i class="fa-solid fa-route text-success me-2"></i> Active Batch: {{ selected_van.van_code }} (Driver: {{ selected_van.driver_name }})
+                </h3>
+                <span class="badge {% if is_route_complete %}bg-success{% else %}bg-primary{% endif %} text-white">
+                    {% if is_route_complete %}ROUTE COMPLETED{% else %}IN PROGRESS{% endif %}
+                </span>
+            </div>
+            <p class="text-muted small mb-0">
+                Destination Facility: <strong>{% if facility %}{{ facility.name }}{% else %}Circular Facility{% endif %}</strong> • Estimated Route: <strong>{{ opt_dist }} km</strong> (<strong>{{ saved_pct }}%</strong> distance saved)
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin_route_optimization', van_id=selected_van.id) }}" class="btn btn-sm btn-outline-dark fw-bold rounded-pill px-3">
+                <i class="fa-solid fa-sliders me-1"></i> Customize Route
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3" onclick="location.reload()">
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Re-optimize
+            </button>
+        </div>
+    </div>
+
+    <!-- Live Progress Bar -->
+    <div class="row align-items-center g-3">
+        <div class="col-md-4">
+            <div class="d-flex align-items-baseline gap-2">
+                <span class="display-6 fw-bold text-dark" id="collected-counter">{{ collected_stops }}</span>
+                <span class="fs-5 text-muted">/ {{ total_stops }} verified collected</span>
+            </div>
+            <div class="small text-secondary fw-semibold">
+                {% if is_route_complete %}
+                <span class="text-success fw-bold"><i class="fa-solid fa-check-double me-1"></i> All Stops Verified! Ready for facility delivery.</span>
+                {% else %}
+                <span><i class="fa-solid fa-spinner fa-spin text-primary me-1"></i> Route in progress</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+                <span class="fw-bold">Verified Collection Progress</span>
+                <span class="fw-bold text-dark" id="progress-pct-label">{{ progress_pct }}%</span>
+            </div>
+            <div class="progress" style="height: 12px; border-radius: 8px;">
+                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" id="main-progress-bar" role="progressbar" style="width: {{ progress_pct }}%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Primary Action: NEXT STOP CARD or ROUTE COMPLETE BANNER -->
+{% if is_route_complete %}
+<div class="surface-card p-4 mb-4 bg-success-subtle border-success border-2 text-center">
+    <div class="py-2">
+        <div class="display-6 text-success mb-2"><i class="fa-solid fa-circle-check"></i></div>
+        <h3 class="fw-bold text-dark fs-4 mb-1">All {{ total_stops }} Stops Verified & Collected!</h3>
+        <p class="text-secondary small mb-3">
+            The collection van is ready to deliver segregated streams to <strong>{% if facility %}{{ facility.name }}{% else %}Certified Circular Facility{% endif %}</strong>.
+        </p>
+        <button type="button" class="btn btn-success btn-lg px-4 py-2 fw-bold shadow-sm" onclick="openDeliverModal()">
+            <i class="fa-solid fa-building-circle-check me-2"></i> Mark Delivered to Circular Facility
+        </button>
+    </div>
+</div>
+{% elif next_stop %}
+<div class="surface-card p-4 mb-4 border-start border-primary border-5 bg-light" id="next-stop-banner">
+    <div class="row align-items-center g-3">
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="badge bg-primary text-white px-3 py-1 fw-bold fs-6">
+                    <i class="fa-solid fa-location-crosshairs me-1"></i> NEXT STOP: #{{ next_stop.id }}
+                </span>
+                <span class="badge bg-secondary">Zone {{ next_stop.zone }}</span>
+                <span class="badge bg-dark text-white">{{ next_stop.household_code }}</span>
+            </div>
+            <h3 class="fw-bold text-dark fs-4 mb-1">{{ next_stop.name }}</h3>
+            <p class="text-secondary small mb-2">
+                <i class="fa-solid fa-location-dot text-danger me-1"></i> <strong>{{ next_stop.street }}</strong> • Phone: {{ next_stop.phone }}
+            </p>
+            <div class="d-flex align-items-center gap-3 flex-wrap small">
+                <div><strong>Streams:</strong> <span class="text-info fw-bold">{{ next_stop.streams }}</span></div>
+                <div><strong>Bin Quality Score:</strong> <span class="badge bg-success">{{ next_stop.bin_score }} / 100</span></div>
+            </div>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <div class="d-flex flex-column gap-2">
+                <button type="button" class="btn btn-success btn-lg fw-bold py-3 px-4 shadow-sm report-collection-btn" data-pickup-id="{{ next_stop.id }}" onclick="openReportCollectModal({{ next_stop.id }})">
+                    <i class="fa-solid fa-truck-pickup me-2"></i> Report Collection
+                </button>
+                <button type="button" class="btn btn-outline-dark btn-sm rounded-pill" onclick="centerMapOnStop({{ next_stop.lat }}, {{ next_stop.lng }}, {{ next_stop.id }})">
+                    <i class="fa-solid fa-map-pin me-1"></i> Focus on Map
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Dispatch Map & Interactive Stops Sequence -->
+<div class="row g-4 mb-4">
+    <!-- Map Container -->
+    <div class="col-lg-7">
+        <div class="surface-card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold text-dark small"><i class="fa-solid fa-map-location-dot text-success me-1"></i> Live Dispatch Route Map</span>
+                <span class="badge bg-light text-dark border">● Green = Verified | ● Yellow = Reported | ● Red = Disputed</span>
+            </div>
+            <div id="dispatch-map" style="height: 520px; border-radius: 12px;" class="border"></div>
+        </div>
+    </div>
+
+    <!-- Stops Sequence Timeline -->
+    <div class="col-lg-5">
+        <div class="surface-card p-4" style="max-height: 575px; overflow-y: auto;">
+            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                <h4 class="fw-bold fs-6 mb-0 text-dark"><i class="fa-solid fa-list-check text-success me-2"></i> Route Stops Sequence</h4>
+                <span class="badge bg-secondary">{{ stops|length }} Total Stops</span>
+            </div>
+
+            {% if stops %}
+                <div class="d-flex flex-column gap-2" id="stops-list">
+                    <!-- Depot Start -->
+                    <div class="p-2 rounded-3 bg-primary-subtle border border-primary-subtle text-dark small d-flex align-items-center gap-2">
+                        <span class="badge bg-primary text-white">START</span>
+                        <div><strong>Depot:</strong> {{ selected_van.van_code }} ({{ "%.4f"|format(selected_van.lat) }}, {{ "%.4f"|format(selected_van.lng) }})</div>
+                    </div>
+
+                    {% for s in stops %}
+                    <div class="p-3 rounded-3 border stop-row-card {% if s.status == 'delivered' %}bg-success-subtle border-success{% elif s.status == 'collected' %}bg-success-subtle border-success-subtle{% elif s.status == 'disputed' %}bg-danger-subtle border-danger border-2{% elif s.status == 'collection_reported' %}bg-warning-subtle border-warning border-2{% elif next_stop and s.id == next_stop.id %}bg-primary-subtle border-primary border-2{% else %}bg-light{% endif %}" id="stop-row-{{ s.id }}">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge {% if s.status in ['collected', 'delivered'] %}bg-success{% elif s.status == 'disputed' %}bg-danger{% elif s.status == 'collection_reported' %}bg-warning text-dark{% elif next_stop and s.id == next_stop.id %}bg-primary{% else %}bg-secondary{% endif %} rounded-circle" style="width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">
+                                    {{ s.sequence }}
+                                </span>
+                                <strong class="text-dark">Pickup #{{ s.id }} ({{ s.household_code }})</strong>
+                            </div>
+                            
+                            <!-- State-Specific Actions & Reopen Controls -->
+                            <div class="d-flex align-items-center gap-1">
+                                {% if s.status == 'delivered' %}
+                                <span class="badge bg-success text-white py-1 px-2">
+                                    <i class="fa-solid fa-building-circle-check me-1"></i> Delivered
+                                </span>
+                                {% elif s.status == 'collected' %}
+                                <span class="badge bg-success text-white py-1 px-2">
+                                    <i class="fa-solid fa-check me-1"></i> Verified
+                                </span>
+                                <button type="button" class="btn btn-sm btn-outline-warning text-dark py-0 px-2 fw-semibold reopen-btn" data-pickup-id="{{ s.id }}" style="font-size: 11px;" onclick="openReopenModal({{ s.id }})">
+                                    <i class="fa-solid fa-rotate-left me-1"></i> Reopen
+                                </button>
+                                {% elif s.status == 'collection_reported' %}
+                                <span class="badge bg-warning text-dark py-1 px-2">
+                                    <i class="fa-solid fa-clock-rotate-left me-1"></i> Awaiting Citizen
+                                </span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 reopen-btn" data-pickup-id="{{ s.id }}" style="font-size: 11px;" onclick="openReopenModal({{ s.id }})">
+                                    Reopen
+                                </button>
+                                {% elif s.status == 'disputed' %}
+                                <span class="badge bg-danger text-white py-1 px-2">
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i> Disputed
+                                </span>
+                                <button type="button" class="btn btn-sm btn-danger py-0 px-2 fw-bold" onclick="resolveDispute({{ s.id }}, 'admin_confirm')">
+                                    Review
+                                </button>
+                                {% elif next_stop and s.id == next_stop.id %}
+                                <button type="button" class="btn btn-sm btn-primary py-0 px-2 fw-bold report-collection-btn" data-pickup-id="{{ s.id }}" onclick="openReportCollectModal({{ s.id }})">
+                                    Report Collection
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 report-collection-btn" data-pickup-id="{{ s.id }}" onclick="openReportCollectModal({{ s.id }})">
+                                    Report Collection
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="small text-muted mb-1">{{ s.street }} ({{ s.name }})</div>
+                        <div class="small text-info fw-bold">{{ s.streams }}</div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Destination Facility Finish -->
+                    <div class="p-2 rounded-3 bg-success-subtle border border-success-subtle text-dark small d-flex align-items-center gap-2">
+                        <span class="badge bg-success text-white">FINISH</span>
+                        <div><strong>{% if facility %}{{ facility.name }}{% else %}Circular Facility{% endif %}</strong></div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-4 text-muted">
+                    <p class="small mb-0">No stops scheduled for this van.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- SAFE STATUS WORKFLOW CONFIRMATION MODALS -->
+<!-- ========================================== -->
+
+<!-- 1. Report Collection Confirmation Modal -->
+<div class="modal fade" id="reportCollectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-truck-pickup me-2"></i> Report Waste Collection?</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="p-3 bg-light rounded-3 border mb-3">
+                    <div class="fw-bold fs-6 text-dark" id="modal-report-household"></div>
+                    <div class="text-secondary small" id="modal-report-street"></div>
+                </div>
+                <p class="small text-muted mb-0">
+                    Are you reporting that the waste was collected from this pickup point? The citizen will receive a prompt to verify collection.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btn-report-cancel">Cancel</button>
+                <button type="button" class="btn btn-primary fw-bold px-3" id="btn-report-confirm" onclick="executeReportCollection()">
+                    <i class="fa-solid fa-check me-1"></i> Report Collection
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Reopen Pickup Confirmation Modal (Accidental Collection Fix) -->
+<div class="modal fade" id="reopenConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-rotate-left me-2"></i> Reopen This Pickup?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="p-3 bg-light rounded-3 border mb-3">
+                    <div class="fw-bold fs-6 text-dark" id="modal-reopen-household"></div>
+                </div>
+                <p class="small text-danger fw-semibold mb-1">
+                    ⚠ Warning: This will return this pickup back to Pending status.
+                </p>
+                <p class="small text-muted mb-0">
+                    Route progress will decrease accordingly, and this pickup will become the active Next Stop.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btn-reopen-cancel">Cancel</button>
+                <button type="button" class="btn btn-warning fw-bold px-3 text-dark" id="btn-reopen-confirm" onclick="executeReopenPickup()">
+                    <i class="fa-solid fa-rotate-left me-1"></i> Reopen Pickup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Mark Delivered Confirmation Modal -->
+<div class="modal fade" id="deliverConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-building-circle-check me-2"></i> Confirm Facility Delivery?</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">
+                    Verify that <strong>{{ selected_van.van_code }}</strong> has arrived at <strong>{% if facility %}{{ facility.name }}{% else %}Circular Facility{% endif %}</strong> and all segregated streams have been safely delivered.
+                </p>
+                <div class="p-2 rounded bg-light border small text-muted">
+                    Total Stops in Batch: <strong>{{ total_stops }}</strong> • Circular Segregation: <strong>Verified</strong>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btn-deliver-cancel">Cancel</button>
+                <button type="button" class="btn btn-success fw-bold px-3" id="btn-deliver-confirm" onclick="executeMarkDelivered()">
+                    <i class="fa-solid fa-check-double me-1"></i> Confirm Delivered
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    var activePickupId = null;
+    var stopsData = {{ stops|tojson }};
+    var disputedData = {{ disputed_pickups|tojson }};
+    
+    // Unified Lookup Map for Safe Stop Retrieval
+    var allStopsMap = {};
+    if (Array.isArray(stopsData)) {
+        stopsData.forEach(function(s) { allStopsMap[s.id] = s; });
+    }
+    if (Array.isArray(disputedData)) {
+        disputedData.forEach(function(d) { allStopsMap[d.id] = d; });
+    }
+
+    // Modal Helper
+    function getModalInstance(id) {
+        var el = document.getElementById(id);
+        if (!el) return null;
+        return bootstrap.Modal.getOrCreateInstance(el);
+    }
+
+    // Leaflet Map Initialization
+    var map = L.map('dispatch-map').setView([{{ selected_van.lat }}, {{ selected_van.lng }}], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var vanIcon = L.divIcon({
+        className: 'van-icon',
+        html: '<div style="font-size: 26px; text-shadow: 0 1px 4px rgba(0,0,0,0.3);">🚚</div>',
+        iconSize: [32, 32]
+    });
+    L.marker([{{ selected_van.lat }}, {{ selected_van.lng }}], { icon: vanIcon })
+        .bindPopup('<b>{{ selected_van.van_code }}</b><br>Driver: {{ selected_van.driver_name }}')
+        .addTo(map);
+
+    var facPos = [{% if facility %}{{ facility.lat }}, {{ facility.lng }}{% else %}{{ selected_van.lat }}, {{ selected_van.lng }}{% endif %}];
+    var facIcon = L.divIcon({
+        className: 'fac-icon',
+        html: '<div style="background:#ffffff; border:2px solid #15803d; border-radius:8px; padding:3px 6px; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.15); text-align:center;">🏭</div>',
+        iconSize: [32, 32]
+    });
+    L.marker(facPos, { icon: facIcon })
+        .bindPopup('<b>Destination: {% if facility %}{{ facility.name }}{% else %}Circular Facility{% endif %}</b>')
+        .addTo(map);
+
+    var pathCoords = [[{{ selected_van.lat }}, {{ selected_van.lng }}]];
+    var stopMarkers = {};
+
+    stopsData.forEach(function(s) {
+        var isCollected = s.status === 'collected' || s.status === 'delivered';
+        var isDisputed = s.status === 'disputed';
+        var isReported = s.status === 'collection_reported';
+        var isNext = {% if next_stop %}{{ next_stop.id }} === s.id{% else %}false{% endif %};
+        
+        var bgColor = isCollected ? '#15803d' : (isDisputed ? '#dc2626' : (isReported ? '#d97706' : (isNext ? '#0284c7' : '#64748b')));
+        var badgeHtml = isCollected ? '✓' : (isDisputed ? '!' : (isReported ? '?' : s.sequence));
+
+        var numIcon = L.divIcon({
+            className: 'stop-map-icon',
+            html: `<div style="background:${bgColor}; color:#fff; border:2px solid #fff; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; box-shadow:0 2px 6px rgba(0,0,0,0.25);">${badgeHtml}</div>`,
+            iconSize: [28, 28]
+        });
+
+        var m = L.marker([s.lat, s.lng], { icon: numIcon })
+            .bindPopup(`<b>Stop ${s.sequence}: Pickup #${s.id}</b><br>${s.household_code} (${s.name})<br>${s.street}<br>Status: <strong>${s.status.toUpperCase()}</strong>`)
+            .addTo(map);
+
+        stopMarkers[s.id] = m;
+        pathCoords.push([s.lat, s.lng]);
+    });
+
+    pathCoords.push(facPos);
+
+    if (pathCoords.length > 1) {
+        var polyline = L.polyline(pathCoords, {
+            color: '#15803d',
+            weight: 4,
+            opacity: 0.8,
+            dashArray: '8, 6'
+        }).addTo(map);
+        map.fitBounds(polyline.getBounds().pad(0.1));
+    }
+
+    function centerMapOnStop(lat, lng, stopId) {
+        map.setView([lat, lng], 16);
+        if (stopMarkers[stopId]) {
+            stopMarkers[stopId].openPopup();
+        }
+    }
+
+    // Modal Trigger Handlers (Safe Integer ID Lookup)
+    function openReportCollectModal(pickupId) {
+        activePickupId = parseInt(pickupId, 10);
+        var s = allStopsMap[activePickupId];
+        var title = s ? `Pickup #${activePickupId} — ${s.household_code} (${s.name || s.citizen_name || 'Citizen'})` : `Pickup #${activePickupId}`;
+        var street = s ? `📍 ${s.street || s.street_segment || 'Navrangpura'}` : '';
+
+        var hElem = document.getElementById('modal-report-household');
+        var sElem = document.getElementById('modal-report-street');
+        if (hElem) hElem.innerText = title;
+        if (sElem) sElem.innerText = street;
+
+        var m = getModalInstance('reportCollectModal');
+        if (m) m.show();
+    }
+
+    function openReopenModal(pickupId) {
+        activePickupId = parseInt(pickupId, 10);
+        var s = allStopsMap[activePickupId];
+        var title = s ? `Pickup #${activePickupId} — ${s.household_code} (${s.name || s.citizen_name || 'Citizen'})` : `Pickup #${activePickupId}`;
+
+        var hElem = document.getElementById('modal-reopen-household');
+        if (hElem) hElem.innerText = title;
+
+        var m = getModalInstance('reopenConfirmModal');
+        if (m) m.show();
+    }
+
+    function openDeliverModal() {
+        var m = getModalInstance('deliverConfirmModal');
+        if (m) m.show();
+    }
+
+    // API Execution with Robust Error Handling & Button In-flight Protection
+    function executeReportCollection() {
+        if (!activePickupId) {
+            alert('No pickup selected.');
+            return;
+        }
+        var btn = document.getElementById('btn-report-confirm');
+        var cancelBtn = document.getElementById('btn-report-cancel');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Reporting...';
+        }
+        if (cancelBtn) cancelBtn.disabled = true;
+
+        fetch(`/api/status/${activePickupId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: 'report_collection' })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data && data.success) {
+                var m = getModalInstance('reportCollectModal');
+                if (m) m.hide();
+                location.reload();
+            } else {
+                alert(data && data.message ? data.message : 'Could not report collection.');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Report Collection';
+                }
+                if (cancelBtn) cancelBtn.disabled = false;
+            }
+        })
+        .catch(function(err) {
+            console.error('Fetch error:', err);
+            alert('Network error while reporting collection.');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Report Collection';
+            }
+            if (cancelBtn) cancelBtn.disabled = false;
+        });
+    }
+
+    function resolveDispute(pickupId, action) {
+        var s = allStopsMap[pickupId];
+        var label = s ? `Pickup #${pickupId} (${s.household_code || ''})` : `Pickup #${pickupId}`;
+        var actionText = action === 'admin_confirm' ? 'Confirm Collection for' : 'Return to Pending for';
+        if (!confirm(`Are you sure you want to ${actionText} ${label}?`)) {
+            return;
+        }
+
+        fetch(`/api/status/${pickupId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: action })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data && data.success) {
+                alert(`✅ ${data.message}`);
+                location.reload();
+            } else {
+                alert(data && data.message ? data.message : 'Error resolving dispute.');
+            }
+        })
+        .catch(function(err) {
+            console.error('Fetch error:', err);
+            alert('Network error while resolving dispute.');
+        });
+    }
+
+    function executeReopenPickup() {
+        if (!activePickupId) return;
+        var btn = document.getElementById('btn-reopen-confirm');
+        var cancelBtn = document.getElementById('btn-reopen-cancel');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Reopening...';
+        }
+        if (cancelBtn) cancelBtn.disabled = true;
+
+        fetch(`/api/status/${activePickupId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: 'reopen_pickup' })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data && data.success) {
+                var m = getModalInstance('reopenConfirmModal');
+                if (m) m.hide();
+                location.reload();
+            } else {
+                alert(data && data.message ? data.message : 'Could not reopen pickup.');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-rotate-left me-1"></i> Reopen Pickup';
+                }
+                if (cancelBtn) cancelBtn.disabled = false;
+            }
+        })
+        .catch(function(err) {
+            console.error('Fetch error:', err);
+            alert('Network error while reopening pickup.');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-rotate-left me-1"></i> Reopen Pickup';
+            }
+            if (cancelBtn) cancelBtn.disabled = false;
+        });
+    }
+
+    function executeMarkDelivered() {
+        var btn = document.getElementById('btn-deliver-confirm');
+        var cancelBtn = document.getElementById('btn-deliver-cancel');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Delivering...';
+        }
+        if (cancelBtn) cancelBtn.disabled = true;
+
+        var pickupIds = stopsData.map(function(s) { return s.id; });
+        fetch('/api/route/deliver', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ pickup_ids: pickupIds })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data && data.success) {
+                var m = getModalInstance('deliverConfirmModal');
+                if (m) m.hide();
+                location.reload();
+            } else {
+                alert(data && data.message ? data.message : 'Could not mark delivered.');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-check-double me-1"></i> Confirm Delivered';
+                }
+                if (cancelBtn) cancelBtn.disabled = false;
+            }
+        })
+        .catch(function(err) {
+            console.error('Fetch error:', err);
+            alert('Network error while marking delivered.');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check-double me-1"></i> Confirm Delivered';
+            }
+            if (cancelBtn) cancelBtn.disabled = false;
+        });
+    }
+</script>
+{% endblock %}

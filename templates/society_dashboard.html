@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}{{ society.name }} Dashboard — {{ BRAND }}{% endblock %}
+
+{% block content %}
+<div class="nl-fade-up">
+
+    <!-- Deep Forest Society Header -->
+    <div class="nl-panel-forest mb-4 p-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 bg-white text-dark rounded-pill small fw-bold mb-2 shadow-sm">
+                    <i class="fa-solid fa-building text-info"></i> Housing Society Portal
+                </div>
+                <h1 class="text-white fs-2 fw-bold mb-1">{{ society.name }}</h1>
+                <p class="text-white-50 mb-0 small">
+                    Code: <strong>{{ society.society_code }}</strong> • Manager: <strong>{{ society.manager_name }}</strong> • 📍 {{ society.address }}
+                </p>
+                <small class="text-white-50">Collection Point: <strong>{{ society.collection_point }}</strong></small>
+            </div>
+
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('society_booking') }}" class="btn-nl-lime" style="min-height: 44px; font-size: 0.95rem;">
+                    <i class="fa-solid fa-plus-circle me-1"></i> Book Bulk Collection
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4 Real Data KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="nl-card p-3 d-flex align-items-center gap-3">
+                <div class="p-3 rounded-4" style="background: var(--stream-wet-bg); color: var(--stream-wet);">
+                    <i class="fa-solid fa-coins fs-3 text-warning"></i>
+                </div>
+                <div>
+                    <div class="fs-3 fw-bold text-dark">{{ total_points }}</div>
+                    <div class="small text-secondary fw-bold text-uppercase" style="font-size: 11px;">Society Green Points</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="nl-card p-3 d-flex align-items-center gap-3">
+                <div class="p-3 rounded-4" style="background: var(--stream-dry-bg); color: var(--stream-dry);">
+                    <i class="fa-solid fa-recycle fs-3"></i>
+                </div>
+                <div>
+                    <div class="fs-3 fw-bold text-dark">{{ total_diverted }} <span class="fs-6 text-muted">kg</span></div>
+                    <div class="small text-secondary fw-bold text-uppercase" style="font-size: 11px;">Waste Diverted</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="nl-card p-3 d-flex align-items-center gap-3">
+                <div class="p-3 rounded-4" style="background: var(--stream-ewaste-bg); color: var(--stream-ewaste);">
+                    <i class="fa-solid fa-cloud-arrow-down fs-3"></i>
+                </div>
+                <div>
+                    <div class="fs-3 fw-bold text-dark">{{ co2_saved }} <span class="fs-6 text-muted">kg</span></div>
+                    <div class="small text-secondary fw-bold text-uppercase" style="font-size: 11px;">Est. CO2e Avoided</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="nl-card p-3 d-flex align-items-center gap-3">
+                <div class="p-3 rounded-4" style="background: var(--lime-subtle); color: var(--forest);">
+                    <i class="fa-solid fa-truck-ramp-box fs-3"></i>
+                </div>
+                <div>
+                    <div class="fs-3 fw-bold text-dark">{{ pickups|length }}</div>
+                    <div class="small text-secondary fw-bold text-uppercase" style="font-size: 11px;">Total Pickups</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Society Pickups Table & Repeat Booking -->
+    <div class="nl-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <div>
+                <h3 class="fs-5 fw-bold mb-0"><i class="fa-solid fa-list-check text-success me-2"></i> Society Collection History</h3>
+                <small class="text-muted">Real-time status tracking and chain-of-custody verification</small>
+            </div>
+            <a href="{{ url_for('society_booking') }}" class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3">
+                <i class="fa-solid fa-calendar-plus me-1"></i> New Request
+            </a>
+        </div>
+
+        {% if pickups %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light small text-uppercase">
+                        <tr>
+                            <th>Pickup Ref</th>
+                            <th>Date / Window</th>
+                            <th>Streams & Est. Quantity</th>
+                            <th>Status</th>
+                            <th>Van / Driver</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pickups %}
+                            <tr>
+                                <td>
+                                    <strong class="text-dark">{{ format_pickup_code(p.id) }}</strong>
+                                    {% if p.is_society %}
+                                        <span class="badge bg-info-subtle text-info border px-2 ms-1">Society Bulk</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="small fw-semibold text-dark">{{ p.created_at[:16] }}</div>
+                                    {% if p.rescheduled_date %}
+                                        <small class="text-warning fw-bold">Rescheduled: {{ p.rescheduled_date }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1 flex-wrap">
+                                        {% for s in p.streams %}
+                                            <span class="stream-tag {{ s.stream_type }}" style="font-size: 11px; padding: 2px 8px;">
+                                                {{ s.stream_type|upper }}: {{ s.estimated_kg }} kg
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted">Total: <strong>{{ p.total_kg or 0 }} kg</strong> • Score: <strong>{{ p.bin_score }}/100</strong></small>
+                                </td>
+                                <td>
+                                    {% if p.status == 'pending' %}
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-3 py-2 rounded-pill">
+                                            <i class="fa-solid fa-clock me-1"></i> Pending Van
+                                        </span>
+                                    {% elif p.status == 'collection_reported' %}
+                                        <span class="badge bg-info-subtle text-info-emphasis border border-info px-3 py-2 rounded-pill">
+                                            <i class="fa-solid fa-bell me-1"></i> Collection Reported
+                                        </span>
+                                    {% elif p.status == 'collected' %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-2 rounded-pill">
+                                            <i class="fa-solid fa-truck-fast me-1"></i> In Transit
+                                        </span>
+                                    {% elif p.status == 'delivered' %}
+                                        <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">
+                                            <i class="fa-solid fa-circle-check me-1"></i> Recovered (Delivered)
+                                        </span>
+                                    {% elif p.status == 'failed' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 rounded-pill">
+                                            <i class="fa-solid fa-triangle-exclamation me-1"></i> Issue: {{ p.problem_reason or 'Failed' }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary px-3 py-2 rounded-pill">{{ p.status|capitalize }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if p.van_code %}
+                                        <div class="small fw-bold text-dark">{{ p.van_code }}</div>
+                                        <small class="text-muted">{{ p.driver_name or 'Vikram' }}</small>
+                                    {% else %}
+                                        <span class="text-muted small">Auto-routing...</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <a href="{{ url_for('manifest_page', pickup_id=p.id) }}" class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                                            <i class="fa-solid fa-qrcode me-1"></i> Manifest
+                                        </a>
+                                        <a href="{{ url_for('society_booking', repeat_id=p.id) }}" class="btn btn-sm btn-nl-lime rounded-pill px-3" title="Repeat this pickup">
+                                            <i class="fa-solid fa-repeat me-1"></i> Book Again
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="fa-solid fa-truck-ramp-box fs-1 mb-2 d-block text-secondary"></i>
+                <p class="mb-3">No bulk collection history yet for {{ society.name }}.</p>
+                <a href="{{ url_for('society_booking') }}" class="btn-nl-lime px-4 py-2">
+                    <i class="fa-solid fa-plus-circle me-1"></i> Schedule First Society Pickup
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Society Management — Municipal Command Center — {{ BRAND }}{% endblock %}
+
+{% block content %}
+<div class="nl-fade-up">
+
+    <!-- Header Panel -->
+    <div class="nl-panel-forest mb-4 p-4 rounded-4 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 bg-white text-dark rounded-pill small fw-bold mb-2 shadow-sm">
+                    <i class="fa-solid fa-building text-success"></i> Municipal Society Operations
+                </div>
+                <h1 class="text-white fs-2 fw-bold mb-1">Registered Housing Societies</h1>
+                <p class="text-white-50 mb-0 small">{{ CITY }} Navrangpura Ward • Bulk 240L segregated collection, points ledger & impact monitoring.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light rounded-pill px-3 fw-bold" style="min-height: 40px;">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Command Center
+                </a>
+                <a href="{{ url_for('admin_dispatch') }}" class="btn-nl-lime" style="min-height: 40px; font-size: 0.9rem; padding: 0.4rem 1.2rem;">
+                    <i class="fa-solid fa-truck-fast me-1"></i> Open Dispatch
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Societies Overview Grid -->
+    <div class="row g-3 mb-4">
+        {% for s in societies %}
+        <div class="col-lg-6 col-12">
+            <div class="nl-card h-100 d-flex flex-column justify-content-between border shadow-sm p-4">
+                <div>
+                    <!-- Society Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-3 pb-2 border-bottom">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="brand-badge" style="width: 46px; height: 46px; background: var(--forest); color: var(--lime); border-radius: 12px;">
+                                <i class="fa-solid fa-building-flag fs-4"></i>
+                            </div>
+                            <div>
+                                <h3 class="fw-bold fs-5 mb-0 text-dark">{{ s.name }}</h3>
+                                <small class="text-muted font-monospace">{{ s.society_code }} • Ward: {{ s.ward }}</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-success-subtle text-success border border-success fw-bold px-3 py-2">
+                            <i class="fa-solid fa-leaf me-1"></i> {{ s.points }} Points
+                        </span>
+                    </div>
+
+                    <!-- Details List -->
+                    <div class="row g-2 mb-3 small">
+                        <div class="col-sm-6">
+                            <span class="text-muted d-block">Manager / Contact:</span>
+                            <strong class="text-dark"><i class="fa-solid fa-user-tie text-secondary me-1"></i> {{ s.manager_name }}</strong>
+                            <div class="text-muted"><i class="fa-solid fa-phone text-secondary me-1"></i> +91 {{ s.phone }}</div>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted d-block">Collection Bay:</span>
+                            <strong class="text-dark"><i class="fa-solid fa-location-dot text-danger me-1"></i> {{ s.collection_point }}</strong>
+                        </div>
+                        <div class="col-12">
+                            <span class="text-muted d-block">Locality Address:</span>
+                            <span class="text-dark">{{ s.address }}</span>
+                        </div>
+                    </div>
+
+                    <!-- KPI Strip -->
+                    <div class="p-3 bg-light rounded-3 border mb-3">
+                        <div class="row g-2 text-center">
+                            <div class="col-4">
+                                <small class="text-muted d-block" style="font-size: 11px;">Diverted Waste</small>
+                                <strong class="fs-6 text-dark">{{ s.total_kg }} kg</strong>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted d-block" style="font-size: 11px;">CO2e Saved</small>
+                                <strong class="fs-6 text-success">{{ s.co2e_saved }} kg</strong>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted d-block" style="font-size: 11px;">Pickups</small>
+                                <strong class="fs-6 text-dark">{{ s.completed_pickups }} / {{ s.total_pickups }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="text-end">
+                    <a href="{{ url_for('admin_society_detail', society_id=s.id) }}" class="btn btn-outline-dark rounded-pill px-3 py-2 fw-bold small w-100 d-flex align-items-center justify-content-center">
+                        <i class="fa-solid fa-chart-pie me-2 text-success"></i> View Operations, Streams & History
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

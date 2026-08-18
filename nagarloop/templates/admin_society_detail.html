@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block title %}{{ society.name }} — Society Management — {{ BRAND }}{% endblock %}
+
+{% block content %}
+<div class="nl-fade-up">
+
+    <!-- Top Header -->
+    <div class="nl-panel-forest mb-4 p-4 rounded-4 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="brand-badge" style="width: 52px; height: 52px; background: var(--lime); color: var(--forest); border-radius: 14px;">
+                    <i class="fa-solid fa-building-circle-check fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-uppercase small fw-bold text-white-50" style="letter-spacing: 0.08em; font-size: 11px;">HOUSING SOCIETY AUDIT & TELEMATICS</div>
+                    <h1 class="text-white fs-2 fw-bold mb-0">{{ society.name }}</h1>
+                    <p class="text-white-50 mb-0 small font-monospace">Code: {{ society.society_code }} • Ward: {{ society.ward }}</p>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ url_for('admin_societies') }}" class="btn btn-outline-light rounded-pill px-3 fw-bold" style="min-height: 40px;">
+                    <i class="fa-solid fa-arrow-left me-1"></i> All Societies
+                </a>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn-nl-lime" style="min-height: 40px; font-size: 0.9rem; padding: 0.4rem 1.2rem;">
+                    <i class="fa-solid fa-shield-halved me-1"></i> Command Center
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Society Overview Card -->
+    <div class="nl-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
+            <h3 class="fw-bold mb-0 fs-5 text-dark"><i class="fa-solid fa-address-card text-success me-2"></i> Society Operations Profile</h3>
+            <span class="badge bg-light text-dark border px-3 py-1 font-monospace">{{ society.society_code }}</span>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-3 col-sm-6">
+                <small class="text-muted d-block mb-1">Estate Manager</small>
+                <strong class="text-dark fs-6"><i class="fa-solid fa-user text-secondary me-1"></i> {{ society.manager_name }}</strong>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <small class="text-muted d-block mb-1">Manager Mobile</small>
+                <strong class="text-dark fs-6"><i class="fa-solid fa-phone text-secondary me-1"></i> +91 {{ society.phone }}</strong>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <small class="text-muted d-block mb-1">Designated Bin Bay</small>
+                <strong class="text-dark fs-6"><i class="fa-solid fa-location-dot text-danger me-1"></i> {{ society.collection_point }}</strong>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <small class="text-muted d-block mb-1">Registered Address</small>
+                <span class="text-dark small">{{ society.address }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lifetime KPIs Strip -->
+    <div class="row g-3 mb-4 text-center">
+        <div class="col-6 col-md-3">
+            <div class="nl-card p-3 h-100 border">
+                <div class="text-muted small mb-1">Green Points Balance</div>
+                <div class="fs-2 fw-bold text-success" style="color: var(--forest) !important;">
+                    <i class="fa-solid fa-leaf text-success me-1"></i> {{ points }}
+                </div>
+                <small class="text-muted">Proportional 4R ledger</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="nl-card p-3 h-100 border">
+                <div class="text-muted small mb-1">Total Diverted Waste</div>
+                <div class="fs-2 fw-bold text-dark">
+                    {{ total_diverted }} <span class="fs-6 text-muted">kg</span>
+                </div>
+                <small class="text-muted">Segregated streams</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="nl-card p-3 h-100 border">
+                <div class="text-muted small mb-1">CO2e Emissions Saved</div>
+                <div class="fs-2 fw-bold text-success">
+                    {{ co2e_saved }} <span class="fs-6 text-muted">kg</span>
+                </div>
+                <small class="text-muted">Clean diversion offset</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="nl-card p-3 h-100 border">
+                <div class="text-muted small mb-1">Total Collection Runs</div>
+                <div class="fs-2 fw-bold text-dark">
+                    {{ pickups|length }}
+                </div>
+                <small class="text-muted">Doorstep bulk 240L bins</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4-Stream Waste Breakdown -->
+    <div class="nl-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
+            <h3 class="fw-bold mb-0 fs-5 text-dark"><i class="fa-solid fa-recycle text-success me-2"></i> Segregated 4-Stream Breakdown</h3>
+            <span class="badge bg-light text-dark border px-3 py-1">Zero-Mixing Guaranteed</span>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-3 col-sm-6">
+                <div class="p-3 rounded-4 border bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="stream-tag wet" style="font-size: 11px;">WET WASTE</span>
+                        <strong class="text-dark">{{ wet_kg }} kg</strong>
+                    </div>
+                    <small class="text-muted d-block">Destination: Bio-CNG / Compost</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="p-3 rounded-4 border bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="stream-tag dry" style="font-size: 11px;">DRY RECYCLABLES</span>
+                        <strong class="text-dark">{{ dry_kg }} kg</strong>
+                    </div>
+                    <small class="text-muted d-block">Destination: Navrangpura MRF</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="p-3 rounded-4 border bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="stream-tag ewaste" style="font-size: 11px;">E-WASTE</span>
+                        <strong class="text-dark">{{ ewaste_kg }} kg</strong>
+                    </div>
+                    <small class="text-muted d-block">Destination: Certified Recycler</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="p-3 rounded-4 border bg-light">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="stream-tag residual" style="font-size: 11px;">RESIDUAL</span>
+                        <strong class="text-dark">{{ residual_kg }} kg</strong>
+                    </div>
+                    <small class="text-muted d-block">Destination: RDF / Cement Kiln</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Problems / Disputes Queue (if any) -->
+    {% if issues %}
+    <div class="nl-card mb-4 border-2 border-danger">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-danger fs-5"></i>
+                <h3 class="fw-bold mb-0 fs-5 text-dark">Logged Problems & Discrepancies</h3>
+            </div>
+            <span class="badge bg-danger text-white rounded-pill px-3 py-1">{{ issues|length }} Issues</span>
+        </div>
+
+        <div class="d-flex flex-column gap-2">
+            {% for issue in issues %}
+            <div class="p-3 bg-light rounded-3 border border-danger-subtle d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <strong class="text-dark">{{ issue.pickup_code or ('#' ~ issue.id) }}</strong>
+                    <span class="badge bg-danger-subtle text-danger border border-danger ms-2">{{ issue.problem_reason or issue.status|upper }}</span>
+                    {% if issue.problem_notes %}
+                        <div class="small text-muted mt-1">{{ issue.problem_notes }}</div>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('manifest_page', pickup_id=issue.id) }}" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                    View Manifest
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Society Pickup History Table -->
+    <div class="nl-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
+            <h3 class="fw-bold mb-0 fs-5 text-dark"><i class="fa-solid fa-boxes-packing text-success me-2"></i> Society Collection Manifests</h3>
+            <span class="badge bg-light text-dark border px-3 py-1">{{ pickups|length }} Runs</span>
+        </div>
+
+        {% if pickups %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light text-uppercase" style="font-size: 11px;">
+                    <tr>
+                        <th>Pickup Ref</th>
+                        <th>Date / Time</th>
+                        <th>Streams</th>
+                        <th>Est. KG</th>
+                        <th>Van</th>
+                        <th>Status</th>
+                        <th class="text-end">Manifest Pass</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pickups %}
+                    <tr>
+                        <td>
+                            <strong class="font-monospace text-dark">{{ p.pickup_code or format_pickup_code(p.id) }}</strong>
+                        </td>
+                        <td class="text-muted" style="white-space: nowrap;">
+                            {{ p.created_at[:16] if p.created_at else 'Today' }}
+                        </td>
+                        <td>
+                            {% if p.streams %}
+                                {% for s in p.streams %}
+                                    <span class="stream-tag {{ s.stream_type }}" style="font-size: 10px; padding: 2px 6px;">
+                                        {{ s.stream_type|upper }} ({{ s.estimated_kg }}k)
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td><strong class="text-dark">{{ p.total_kg or 0 }} kg</strong></td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ p.van_code or 'SL-VAN-01' }}</span>
+                        </td>
+                        <td>
+                            {% if p.status in ('collected', 'delivered') %}
+                                <span class="badge bg-success-subtle text-success border border-success px-2 py-1"><i class="fa-solid fa-check me-1"></i> {{ p.status|upper }}</span>
+                            {% elif p.status == 'collection_reported' %}
+                                <span class="badge bg-warning-subtle text-dark border border-warning px-2 py-1"><i class="fa-solid fa-clock me-1"></i> AWAITING CONFIRM</span>
+                            {% elif p.status == 'failed' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1"><i class="fa-solid fa-xmark me-1"></i> FAILED</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border px-2 py-1">{{ p.status|upper }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('manifest_page', pickup_id=p.id) }}" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1 fw-bold">
+                                <i class="fa-solid fa-qrcode me-1"></i> Manifest
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+            <i class="fa-solid fa-inbox fs-2 mb-2 d-block"></i>
+            <p class="small mb-0">No pickup collection records logged yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

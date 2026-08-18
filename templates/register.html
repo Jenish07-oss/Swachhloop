@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Create Account — {{ BRAND }}{% endblock %}
+
+{% block content %}
+<div class="nl-fade-up" style="max-width: 580px; margin: 2rem auto;">
+    <div class="nl-card p-4 p-md-5">
+        <div class="text-center mb-4">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 64px; height: 64px; background: var(--forest); color: var(--lime);">
+                <i class="fa-solid fa-user-plus fs-3"></i>
+            </span>
+            <h1 class="fs-3 fw-bold text-dark mb-1">Join {{ BRAND }}</h1>
+            <p class="text-secondary small mb-0">Create an account for door-to-door or society-wide circular collection</p>
+        </div>
+
+        <!-- Registration Role Tabs -->
+        <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-pill border" id="regTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill fw-bold {% if reg_type != 'society' %}active bg-dark text-white{% else %}text-muted{% endif %}" id="citizen-tab" data-bs-toggle="pill" data-bs-target="#citizen-reg" type="button" role="tab" aria-selected="true">
+                    <i class="fa-solid fa-house-chimney me-1"></i> Individual Citizen
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill fw-bold {% if reg_type == 'society' %}active bg-dark text-white{% else %}text-muted{% endif %}" id="society-tab" data-bs-toggle="pill" data-bs-target="#society-reg" type="button" role="tab" aria-selected="false">
+                    <i class="fa-solid fa-building me-1"></i> Housing Society
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="regTabContent">
+            <!-- Individual Citizen Form -->
+            <div class="tab-pane fade {% if reg_type != 'society' %}show active{% endif %}" id="citizen-reg" role="tabpanel">
+                <form action="{{ url_for('register') }}" method="POST">
+                    <input type="hidden" name="reg_type" value="citizen">
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Full Name</label>
+                        <input type="text" name="name" class="form-control rounded-3 py-2" placeholder="e.g. Jenish Patel" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Mobile Number (Login ID)</label>
+                        <input type="tel" name="phone" class="form-control rounded-3 py-2" placeholder="e.g. 9825012345" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Locality / Street Address</label>
+                        <input type="text" name="address" class="form-control rounded-3 py-2" placeholder="e.g. Mithakhali 2nd Avenue, Navrangpura" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-dark">Password</label>
+                        <input type="password" name="password" class="form-control rounded-3 py-2" placeholder="Create a secure password" required>
+                    </div>
+
+                    <button type="submit" class="btn-nl-lime w-100 fw-bold fs-6 py-3 shadow-sm">
+                        <i class="fa-solid fa-check-circle me-1"></i> Create Citizen Account
+                    </button>
+                </form>
+            </div>
+
+            <!-- Housing Society Manager Form -->
+            <div class="tab-pane fade {% if reg_type == 'society' %}show active{% endif %}" id="society-reg" role="tabpanel">
+                <form action="{{ url_for('register') }}" method="POST">
+                    <input type="hidden" name="reg_type" value="society">
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Society / Apartment Name</label>
+                        <input type="text" name="society_name" class="form-control rounded-3 py-2" placeholder="e.g. Shivalik Heights" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Manager / Secretary Name</label>
+                        <input type="text" name="manager_name" class="form-control rounded-3 py-2" placeholder="e.g. Rajesh Mehta" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Manager Mobile Number</label>
+                        <input type="tel" name="phone" class="form-control rounded-3 py-2" placeholder="e.g. 9825012346" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Society Full Address</label>
+                        <input type="text" name="address" class="form-control rounded-3 py-2" placeholder="e.g. Commerce Six Roads, Navrangpura" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Designated Collection Point</label>
+                        <input type="text" name="collection_point" class="form-control rounded-3 py-2" placeholder="e.g. Main Gate B Block Wheelie Bay">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-dark">Password</label>
+                        <input type="password" name="password" class="form-control rounded-3 py-2" placeholder="Create a secure password" required>
+                    </div>
+
+                    <button type="submit" class="btn-nl-lime w-100 fw-bold fs-6 py-3 shadow-sm">
+                        <i class="fa-solid fa-building-circle-check me-1"></i> Register Society Portal
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="text-center mt-4 pt-3 border-top">
+            <span class="small text-muted">Already have an account?</span>
+            <a href="{{ url_for('login_page', role='citizen') }}" class="small fw-bold text-success ms-1">Log in here</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
