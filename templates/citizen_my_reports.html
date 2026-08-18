@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}My Pickups & Manifests — SwachhLoop 4R{% endblock %}
+{% block title %}My Pickups & Manifests — {{ BRAND }}{% endblock %}
 
 {% block content %}
 <!-- Page Header -->
 <div class="surface-card p-4 p-md-5 mb-4 border-start border-success border-5">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
-            <h1 class="fw-bold mb-1 fs-2"><i class="fa-solid fa-boxes-stacked text-success me-2"></i> My 4R Pickups & Manifests</h1>
+            <h1 class="fw-bold mb-1 fs-2"><i class="fa-solid fa-boxes-stacked text-success me-2"></i> My Pickups & Manifests</h1>
             <p class="text-muted mb-0">Track collection progress, chain-of-custody status, and verified facility deliveries.</p>
         </div>
         <div class="d-flex align-items-center gap-2">
             <span class="green-points-pill fs-6 px-3 py-2">
                 <i class="fa-solid fa-leaf text-success"></i> {{ total_points }} Total Points
             </span>
-            <a href="{{ url_for('citizen_home') }}#booking-section" class="btn btn-primary-action py-2 px-3">
+            <a href="{{ url_for('citizen_booking') }}" class="btn btn-primary-action py-2 px-3">
                 <i class="fa-solid fa-plus me-1"></i> Book New
             </a>
         </div>

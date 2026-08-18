@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ BRAND }} — {{ tr('login') }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-5 col-lg-4">
+        <div class="nl-card shadow-md">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle text-success mb-2" style="width: 60px; height: 60px; font-size: 1.6rem;">
+                    {% if role == 'admin' %}
+                        <i class="fa-solid fa-shield-halved"></i>
+                    {% elif role == 'driver' %}
+                        <i class="fa-solid fa-truck-fast"></i>
+                    {% else %}
+                        <i class="fa-solid fa-user-check"></i>
+                    {% endif %}
+                </div>
+                <h2 class="fs-4 fw-bold text-dark mb-1">
+                    {% if role == 'admin' %}
+                        Municipal Admin Portal
+                    {% elif role == 'driver' %}
+                        Driver Route Portal
+                    {% else %}
+                        Citizen & Society Login
+                    {% endif %}
+                </h2>
+                <p class="small text-secondary mb-0">Sign in to access your {{ BRAND }} account</p>
+            </div>
+
+            <!-- Role Tabs -->
+            <div class="d-flex justify-content-center gap-1 p-1 bg-light rounded-3 mb-4 border">
+                <a href="{{ url_for('login_page', role='citizen') }}" class="btn btn-sm flex-fill fw-bold {% if role == 'citizen' %}btn-success text-white shadow-sm{% else %}btn-light text-muted{% endif %}">
+                    Citizen
+                </a>
+                <a href="{{ url_for('login_page', role='driver') }}" class="btn btn-sm flex-fill fw-bold {% if role == 'driver' %}btn-success text-white shadow-sm{% else %}btn-light text-muted{% endif %}">
+                    Driver
+                </a>
+                <a href="{{ url_for('login_page', role='admin') }}" class="btn btn-sm flex-fill fw-bold {% if role == 'admin' %}btn-success text-white shadow-sm{% else %}btn-light text-muted{% endif %}">
+                    Admin
+                </a>
+            </div>
+
+            <!-- Login Form -->
+            <form method="POST" action="{{ url_for('login_page', role=role) }}">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-dark">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fa-solid fa-user text-muted"></i></span>
+                        <input type="text" name="username" class="form-control" placeholder="Enter username" required autofocus>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-dark">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fa-solid fa-lock text-muted"></i></span>
+                        <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-nl-primary w-100 mb-3">
+                    <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Sign In
+                </button>
+            </form>
+
+            <!-- Demo Credentials Helper -->
+            <div class="p-3 bg-light rounded-3 border text-center small text-muted">
+                <div class="fw-bold text-dark mb-1"><i class="fa-solid fa-circle-info text-info me-1"></i> Demo Credentials</div>
+                <div>Citizen: <code>jenish</code> / <code>jenish123</code></div>
+                <div>Driver: <code>vikram</code> / <code>vikram123</code></div>
+                <div>Admin: <code>admin</code> / <code>admin123</code></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

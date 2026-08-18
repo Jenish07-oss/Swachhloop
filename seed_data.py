@@ -18,6 +18,8 @@ def seed():
     conn = get_db()
     cursor = conn.cursor()
 
+    cursor.execute("PRAGMA foreign_keys = OFF")
+    cursor.execute("DELETE FROM users")
     cursor.execute("DELETE FROM audit_logs")
     cursor.execute("DELETE FROM routes")
     cursor.execute("DELETE FROM points_ledger")
@@ -26,9 +28,8 @@ def seed():
     cursor.execute("DELETE FROM facilities")
     cursor.execute("DELETE FROM vans")
     cursor.execute("DELETE FROM households")
-
-    # Reset SQLite autoincrement sequences
     cursor.execute("DELETE FROM sqlite_sequence")
+    cursor.execute("PRAGMA foreign_keys = ON")
 
     # ----------------------------------------------------
     # 1. SEED 4 DESTINATION FACILITIES (Circular Economy)
@@ -321,16 +322,25 @@ def seed():
         VALUES (?, ?, ?, ?, ?)
     """, ledger_data)
 
+    cursor.execute('''
+        INSERT INTO users (username, password, name, role, household_id, van_id)
+        VALUES 
+            ('jenish', 'jenish123', 'Jenish Patel', 'citizen', 1, NULL),
+            ('vikram', 'vikram123', 'Vikram Thakor', 'driver', NULL, 1),
+            ('admin', 'admin123', 'Municipal Operations Admin', 'admin', NULL, NULL)
+    ''')
+
     conn.commit()
     conn.close()
 
-    print(f"Successfully seeded SwachhLoop 4R Database:")
+    print(f"Successfully seeded NagarLoop Database:")
     print(f"- 4 Destination Facilities (Wet, Dry, E-Waste, Residual)")
     print(f"- 3 Collection Vans")
     print(f"- 40 Households (Single Ward: Navrangpura, Ahmedabad)")
     print(f"- 40 Pickups clustered into 5 KMeans Zones")
     print(f"- {len(streams_data)} Segregated Stream records (UNIQUE per stream type)")
     print(f"- 40 Green Points Ledger records")
+    print(f"- 3 Default User Accounts (jenish, vikram, admin)")
 
 if __name__ == '__main__':
     seed()

@@ -6,20 +6,35 @@ import json
 import base64
 import threading
 import random
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_file
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_file, session
 from database import get_db, init_db
 from seed_data import seed as seed_database
+from brand import BRAND, SLOGAN, SUPPORT_EMAIL, CITY, T
 from sklearn.cluster import KMeans
 import numpy as np
 import qrcode
 
 app = Flask(__name__)
-app.secret_key = 'swachhloop-4r-sih-2026-secret-key'
+app.secret_key = 'nagarloop-municipal-ahmedabad-secret-key-2026'
 
 # Ensure uploads folder exists
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+@app.context_processor
+def inject_brand_and_i18n():
+    lang = session.get('lang', 'en')
+    def tr(key):
+        return T.get(lang, {}).get(key, T.get('en', {}).get(key, key))
+    return {
+        'lang': lang,
+        'tr': tr,
+        'BRAND': BRAND,
+        'CITY': CITY,
+        'SLOGAN': SLOGAN,
+        'SUPPORT_EMAIL': SUPPORT_EMAIL
+    }
 
 # ----------------------------------------------------
 # 4R FORMULAS & CALCULATION HELPERS
@@ -208,37 +223,57 @@ def generate_route_recommendations(conn):
     return recommendations
 
 # ----------------------------------------------------
-# CITIZEN ROUTES
+# NAGARLOOP PUBLIC & CITIZEN ROUTES
 # ----------------------------------------------------
 
 @app.route('/')
-def citizen_home():
+def home():
+    """Compact NagarLoop Product Landing Page"""
+    return render_template('home.html')
+
+@app.route('/set-lang', methods=['POST'])
+def set_lang():
+    """Toggle language between English and Gujarati"""
+    lang = request.form.get('lang', 'en')
+    if lang in ['en', 'gu']:
+        session['lang'] = lang
+    return redirect(request.referrer or url_for('home'))
+
+@app.route('/book')
+def citizen_booking():
+    """Citizen Doorstep & Society Segregated Booking Portal"""
     conn = get_db()
     
-    household = conn.execute("SELECT * FROM households WHERE id = 1").fetchone()
+    # Use logged in citizen household or fallback to household 1
+    user = session.get('user')
+    hh_id = user['household_id'] if user and user.get('household_id') else 1
+
+    household = conn.execute("SELECT * FROM households WHERE id = ?", (hh_id,)).fetchone()
+    if not household:
+        household = conn.execute("SELECT * FROM households WHERE id = 1").fetchone()
     if not household:
         conn.close()
         return "Database not initialized. Please run seed_data.py first.", 500
 
     total_points = conn.execute("""
-        SELECT COALESCE(SUM(points), 0) FROM points_ledger WHERE household_id = 1
-    """).fetchone()[0]
+        SELECT COALESCE(SUM(points), 0) FROM points_ledger WHERE household_id = ?
+    """, (household['id'],)).fetchone()[0]
 
     pickups = conn.execute("""
         SELECT p.*, h.household_code, h.name as citizen_name, h.street_segment
         FROM pickups p
         JOIN households h ON p.household_id = h.id
-        WHERE p.household_id = 1
+        WHERE p.household_id = ?
         ORDER BY p.id DESC
-    """).fetchall()
+    """, (household['id'],)).fetchall()
 
     citizen_streams = conn.execute("""
         SELECT ps.stream_type, COALESCE(SUM(ps.estimated_kg), 0) as total_kg
         FROM pickup_streams ps
         JOIN pickups p ON ps.pickup_id = p.id
-        WHERE p.household_id = 1
+        WHERE p.household_id = ?
         GROUP BY ps.stream_type
-    """).fetchall()
+    """, (household['id'],)).fetchall()
 
     streams_dict = {row['stream_type']: round(row['total_kg'], 1) for row in citizen_streams}
     wet_kg = streams_dict.get('wet', 0.0)
@@ -272,6 +307,126 @@ def citizen_home():
                            residual_kg=residual_kg,
                            co2_saved=co2_saved,
                            pickups=pickup_list)
+
+# ----------------------------------------------------
+# AUTHENTICATION ROUTES (3 ROLES)
+# ----------------------------------------------------
+
+@app.route('/login/<role>', methods=['GET', 'POST'])
+def login_page(role):
+    if role not in ['citizen', 'driver', 'admin']:
+        role = 'citizen'
+
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+
+        conn = get_db()
+        user = conn.execute("""
+            SELECT * FROM users WHERE username = ? AND password = ? AND role = ?
+        """, (username, password, role)).fetchone()
+        conn.close()
+
+        if user:
+            session['user'] = {
+                'id': user['id'],
+                'username': user['username'],
+                'name': user['name'],
+                'role': user['role'],
+                'household_id': user['household_id'],
+                'van_id': user['van_id']
+            }
+            flash(f"Welcome back, {user['name']}!", "success")
+            if user['role'] == 'admin':
+                return redirect(url_for('admin_dashboard'))
+            elif user['role'] == 'driver':
+                return redirect(url_for('driver_portal'))
+            else:
+                return redirect(url_for('citizen_booking'))
+        else:
+            flash("Invalid username or password for this role.", "danger")
+
+    return render_template('login.html', role=role)
+
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    flash("You have been signed out.", "info")
+    return redirect(url_for('home'))
+
+# ----------------------------------------------------
+# LEGAL, POLICIES & HELP ROUTES
+# ----------------------------------------------------
+
+@app.route('/privacy')
+def privacy_page():
+    return render_template('legal.html', page_type='privacy', page_title='Privacy Policy')
+
+@app.route('/rewards')
+def rewards_page():
+    return render_template('legal.html', page_type='rewards', page_title='Green Rewards & Points')
+
+@app.route('/help')
+def help_page():
+    return render_template('legal.html', page_type='help', page_title='Help & Support')
+
+# ----------------------------------------------------
+# DRIVER & PUBLIC LEADERBOARD ROUTES
+# ----------------------------------------------------
+
+@app.route('/driver')
+def driver_portal():
+    user = session.get('user')
+    van_id = user['van_id'] if user and user.get('van_id') else 1
+
+    conn = get_db()
+    van = conn.execute("SELECT * FROM vans WHERE id = ?", (van_id,)).fetchone()
+    stops = conn.execute("""
+        SELECT p.*, h.household_code, h.name as citizen_name, h.street_segment
+        FROM pickups p
+        JOIN households h ON p.household_id = h.id
+        WHERE p.assigned_van_id = ?
+        ORDER BY p.id ASC
+    """, (van_id,)).fetchall()
+    conn.close()
+
+    return render_template('driver_portal.html', van=van, stops=stops)
+
+@app.route('/driver/history')
+def driver_history():
+    user = session.get('user')
+    van_id = user['van_id'] if user and user.get('van_id') else 1
+
+    conn = get_db()
+    van = conn.execute("SELECT * FROM vans WHERE id = ?", (van_id,)).fetchone()
+    stops = conn.execute("""
+        SELECT p.*, h.household_code, h.name as citizen_name, h.street_segment
+        FROM pickups p
+        JOIN households h ON p.household_id = h.id
+        WHERE p.assigned_van_id = ? AND p.status IN ('collected', 'delivered')
+        ORDER BY p.id DESC
+    """, (van_id,)).fetchall()
+    conn.close()
+
+    return render_template('driver_portal.html', van=van, stops=stops)
+
+@app.route('/leaderboard')
+def public_leaderboard():
+    conn = get_db()
+    rows = conn.execute("""
+        SELECT h.id, h.household_code, h.name as citizen_name, h.street_segment,
+               COALESCE(SUM(pl.points), 0) as total_points,
+               COALESCE(AVG(p.bin_score), 75.0) as avg_bin_score,
+               COUNT(p.id) as total_pickups
+        FROM households h
+        LEFT JOIN points_ledger pl ON h.id = pl.household_id
+        LEFT JOIN pickups p ON h.id = p.household_id
+        GROUP BY h.id
+        ORDER BY total_points DESC
+        LIMIT 25
+    """).fetchall()
+    conn.close()
+    return render_template('leaderboard.html', leaderboard=rows)
 
 @app.route('/impact')
 def citizen_impact():
@@ -409,11 +564,11 @@ def book_pickup():
     conn.close()
 
     flash(f"🎉 4R Pickup #{pickup_id} booked successfully! Bin Score: {bin_score}/100 | +{green_points} Green Points earned! 🌿", "success")
-    return redirect(url_for('citizen_home'))
+    return redirect(url_for('citizen_booking'))
 
-@app.route('/my-reports')
-@app.route('/my-pickups')
-def my_reports():
+@app.route('/my-reports', endpoint='my_reports')
+@app.route('/my-pickups', endpoint='citizen_my_reports')
+def citizen_my_reports():
     conn = get_db()
     household = conn.execute("SELECT * FROM households WHERE id = 1").fetchone()
     

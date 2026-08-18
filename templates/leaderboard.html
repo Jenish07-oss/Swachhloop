@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}{{ tr('board') }} — {{ BRAND }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-warning text-dark fs-6 p-2"><i class="fa-solid fa-trophy"></i></span>
+                <h1 class="fs-3 fw-bold text-dark mb-0">Ward Green Champions</h1>
+            </div>
+            <p class="small text-secondary mb-0">Top ranked households & societies by verified Green Points in {{ CITY }}</p>
+        </div>
+        <a href="{{ url_for('citizen_booking') }}" class="btn btn-sm btn-success fw-bold rounded-pill px-3">
+            <i class="fa-solid fa-plus me-1"></i> Earn Green Points
+        </a>
+    </div>
+
+    <!-- Podium View (Top 3) -->
+    {% if leaderboard|length >= 3 %}
+    <div class="row g-3 mb-4 text-center">
+        <!-- Silver (2nd) -->
+        <div class="col-md-4 order-2 order-md-1">
+            <div class="nl-card border-secondary border-2 h-100 py-4 bg-light">
+                <div class="fs-1 mb-1">🥈</div>
+                <span class="badge bg-secondary text-white mb-2">RANK #2</span>
+                <h4 class="fs-5 fw-bold text-dark mb-1">{{ leaderboard[1].citizen_name }}</h4>
+                <div class="small text-muted mb-2">{{ leaderboard[1].household_code }} • {{ leaderboard[1].street_segment }}</div>
+                <div class="fs-4 fw-bold text-success">{{ leaderboard[1].total_points }} <small class="fs-6 text-muted">Pts</small></div>
+            </div>
+        </div>
+
+        <!-- Gold (1st) -->
+        <div class="col-md-4 order-1 order-md-2">
+            <div class="nl-card border-warning border-3 h-100 py-4 bg-warning-subtle shadow-sm">
+                <div class="fs-1 mb-1">🥇</div>
+                <span class="badge bg-warning text-dark mb-2 fw-bold">CHAMPION #1</span>
+                <h4 class="fs-4 fw-bold text-dark mb-1">{{ leaderboard[0].citizen_name }}</h4>
+                <div class="small text-muted mb-2">{{ leaderboard[0].household_code }} • {{ leaderboard[0].street_segment }}</div>
+                <div class="display-6 fw-bold text-success">{{ leaderboard[0].total_points }} <small class="fs-6 text-muted">Pts</small></div>
+            </div>
+        </div>
+
+        <!-- Bronze (3rd) -->
+        <div class="col-md-4 order-3">
+            <div class="nl-card border-danger-subtle border-2 h-100 py-4 bg-light">
+                <div class="fs-1 mb-1">🥉</div>
+                <span class="badge bg-dark text-white mb-2">RANK #3</span>
+                <h4 class="fs-5 fw-bold text-dark mb-1">{{ leaderboard[2].citizen_name }}</h4>
+                <div class="small text-muted mb-2">{{ leaderboard[2].household_code }} • {{ leaderboard[2].street_segment }}</div>
+                <div class="fs-4 fw-bold text-success">{{ leaderboard[2].total_points }} <small class="fs-6 text-muted">Pts</small></div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Full Table -->
+    <div class="nl-card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 70px;">Rank</th>
+                        <th>Household & Citizen</th>
+                        <th>Society / Street</th>
+                        <th>Avg Bin Score</th>
+                        <th class="text-end">Green Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in leaderboard %}
+                    <tr {% if loop.index <= 3 %}class="table-active fw-semibold"{% endif %}>
+                        <td>
+                            {% if loop.index == 1 %}🥇 1
+                            {% elif loop.index == 2 %}🥈 2
+                            {% elif loop.index == 3 %}🥉 3
+                            {% else %}<span class="badge bg-light text-dark border">{{ loop.index }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ h.citizen_name }}</strong>
+                            <div class="small text-muted">{{ h.household_code }}</div>
+                        </td>
+                        <td>{{ h.street_segment }}</td>
+                        <td><span class="badge bg-success-subtle text-success">{{ h.avg_bin_score|round(1) }} / 100</span></td>
+                        <td class="text-end">
+                            <span class="fw-bold text-success fs-6">{{ h.total_points }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

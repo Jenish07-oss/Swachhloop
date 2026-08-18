@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ BRAND }} — {{ tr('home') }}</title>
+<link rel="stylesheet" href="/static/css/nl.css">
+</head>
+<body>
+<nav><div class="nav-in">
+  <a class="logo" href="/">♻️ {{ BRAND }}</a>
+  <div class="nav-links">
+    {% if session.role == 'admin' %}
+      <a href="/admin">Command Center</a><a href="/admin/dispatch">Dispatch</a><a href="/leaderboard">{{ tr('board') }}</a>
+    {% elif session.role == 'driver' %}
+      <a href="/driver">My Route</a><a href="/driver/history">History</a>
+    {% elif session.role == 'citizen' %}
+      <a href="/book">{{ tr('book') }}</a><a href="/my-pickups">{{ tr('my_pickups') }}</a><a href="/impact">{{ tr('impact') }}</a><a href="/leaderboard">{{ tr('board') }}</a>
+    {% else %}
+      <a href="/#how">{{ tr('how') }}</a><a href="/rewards">{{ tr('rewards') }}</a>
+    {% endif %}
+    <a href="/help">{{ tr('help') }}</a>
+  </div>
+  <form method="post" action="/set-lang" style="margin:0">
+    <button class="lang" name="lang" value="{{ 'gu' if lang=='en' else 'en' }}">
+      {{ 'ગુજરાતી' if lang=='en' else 'English' }}</button>
+  </form>
+  {% if session.role %}
+    <a class="btn ghost" href="/logout" style="min-height:44px;padding:8px 16px">{{ tr('logout') }}</a>
+  {% else %}
+    <a class="btn" href="/login/citizen" style="min-height:44px;padding:8px 16px">{{ tr('login') }}</a>
+  {% endif %}
+</div></nav>
+
+<main class="wrap">{% block body %}{% endblock %}</main>
+
+<footer><div class="wrap f-in">
+  <div>© 2026 {{ BRAND }} • Serving {{ CITY }} societies<br>
+  <a href="/privacy">{{ tr('privacy') }}</a> • <a href="/rewards">{{ tr('rewards') }}</a> • <a href="/help">{{ tr('help') }}</a></div>
+  <div>✉️ {{ SUPPORT_EMAIL }}</div>
+</div></footer>
+
+<script>
+const io=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add('vis')),{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body></html>

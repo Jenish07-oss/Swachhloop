@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Driver Operations — {{ BRAND }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success text-white p-2 fs-6"><i class="fa-solid fa-truck"></i></span>
+                <h1 class="fs-3 fw-bold text-dark mb-0">Driver Portal — {{ van.van_code if van else 'Van #1' }}</h1>
+            </div>
+            <p class="small text-secondary mb-0">Driver: <strong>{{ van.driver_name if van else 'Vikram Thakor' }}</strong> • Navrangpura Ward, {{ CITY }}</p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('driver_portal') }}" class="btn btn-sm btn-success fw-bold rounded-pill px-3">
+                <i class="fa-solid fa-route me-1"></i> Active Route
+            </a>
+            <a href="{{ url_for('driver_history') }}" class="btn btn-sm btn-outline-secondary fw-bold rounded-pill px-3">
+                <i class="fa-solid fa-clock-rotate-left me-1"></i> History
+            </a>
+        </div>
+    </div>
+
+    <!-- Active Route Stops Card -->
+    <div class="nl-card shadow-sm mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <h3 class="fs-5 fw-bold text-dark mb-0"><i class="fa-solid fa-list-ol text-success me-2"></i> Assigned Route Stops</h3>
+            <span class="badge bg-primary text-white">{{ stops|length }} Scheduled Pickups</span>
+        </div>
+
+        {% if stops %}
+            <div class="d-flex flex-column gap-2">
+                {% for s in stops %}
+                    <div class="p-3 rounded-3 border d-flex justify-content-between align-items-center flex-wrap gap-2 {% if s.status == 'collected' %}bg-success-subtle border-success{% elif s.status == 'collection_reported' %}bg-warning-subtle border-warning{% else %}bg-light{% endif %}">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-dark text-white rounded-circle" style="width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">{{ loop.index }}</span>
+                                <strong class="text-dark">{{ s.household_code }} — {{ s.citizen_name }}</strong>
+                                <span class="badge {% if s.status == 'collected' %}bg-success{% elif s.status == 'collection_reported' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                    {{ s.status|upper }}
+                                </span>
+                            </div>
+                            <div class="small text-muted">📍 {{ s.street_segment }}</div>
+                        </div>
+
+                        <div>
+                            {% if s.status == 'pending' %}
+                                <form action="{{ url_for('api_update_status', pickup_id=s.id) }}" method="POST" class="d-inline" onsubmit="event.preventDefault(); reportFromDriver({{ s.id }});">
+                                    <button type="button" class="btn btn-sm btn-success fw-bold px-3" onclick="reportFromDriver({{ s.id }})">
+                                        <i class="fa-solid fa-check me-1"></i> Report Collected
+                                    </button>
+                                </form>
+                            {% elif s.status == 'collection_reported' %}
+                                <span class="badge bg-warning text-dark p-2"><i class="fa-solid fa-clock me-1"></i> Awaiting Citizen Verification</span>
+                            {% else %}
+                                <span class="badge bg-success p-2"><i class="fa-solid fa-check-double me-1"></i> Verified</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="fa-solid fa-circle-check fs-1 text-success mb-2"></i>
+                <p class="mb-0">No pending stops remaining on this route! Ready for destination facility delivery.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function reportFromDriver(pickupId) {
+    if (!confirm('Report waste collected for Pickup #' + pickupId + '?')) return;
+    fetch('/api/status/' + pickupId, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ action: 'report_collection' })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Error updating status');
+        }
+    })
+    .catch(err => alert('Network error'));
+}
+</script>
+{% endblock %}

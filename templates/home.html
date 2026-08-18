@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}{{ BRAND }} — {{ SLOGAN[lang] }}{% endblock %}
+
+{% block content %}
+<div class="nl-fade-up">
+    <!-- Hero Section -->
+    <section class="nl-hero-grid mb-4">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 bg-success-subtle border border-success-subtle text-success rounded-pill small fw-bold mb-3">
+                <i class="fa-solid fa-leaf"></i> {{ CITY }} Municipal Circular Loop
+            </div>
+            
+            <h1 class="nl-hero-slogan">
+                {{ SLOGAN[lang] }}
+            </h1>
+            
+            <p class="nl-hero-sub">
+                Connecting residential societies, smart collection fleets, and certified recycling facilities for 100% verified waste recovery.
+            </p>
+
+            <div class="nl-hero-ctas">
+                <a href="{{ url_for('citizen_booking') }}" class="btn-nl-primary">
+                    <i class="fa-solid fa-building-user me-1"></i> {{ tr('join') }}
+                </a>
+                <a href="{{ url_for('citizen_booking', mode='event') }}" class="btn-nl-outline">
+                    <i class="fa-solid fa-bullhorn me-1"></i> {{ tr('road') }}
+                </a>
+            </div>
+
+            <div class="nl-trust-line">
+                <i class="fa-solid fa-shield-check text-success"></i>
+                <span>{{ tr('trusted') }}</span>
+            </div>
+        </div>
+
+        <!-- Animated Circular Loop Graphic -->
+        <div class="nl-loop-container">
+            <svg class="nl-loop-svg" viewBox="0 0 340 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Circular Track -->
+                <circle cx="170" cy="170" r="120" stroke="#e2e8f0" stroke-width="8" stroke-dasharray="6 6"/>
+                <path id="loopTrack" d="M 170 50 A 120 120 0 1 1 169.9 50" stroke="#1e7e5a" stroke-width="4" fill="none"/>
+                
+                <!-- Moving Pulse Dot -->
+                <circle r="9" fill="#22c55e">
+                    <animateMotion dur="6s" repeatCount="indefinite">
+                        <mpath href="#loopTrack"/>
+                    </animateMotion>
+                </circle>
+
+                <!-- 4 Stage Nodes -->
+                <!-- 1. Top: Separate -->
+                <circle cx="170" cy="50" r="26" fill="#ffffff" stroke="#1e7e5a" stroke-width="3"/>
+                <text x="170" y="55" text-anchor="middle" font-size="16" font-family="Plus Jakarta Sans">🥬</text>
+                <text x="170" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#0f2438">{{ tr('separate') }}</text>
+
+                <!-- 2. Right: Book -->
+                <circle cx="290" cy="170" r="26" fill="#ffffff" stroke="#1e7e5a" stroke-width="3"/>
+                <text x="290" y="175" text-anchor="middle" font-size="16" font-family="Plus Jakarta Sans">📱</text>
+                <text x="290" y="215" text-anchor="middle" font-size="12" font-weight="700" fill="#0f2438">{{ tr('book_s') }}</text>
+
+                <!-- 3. Bottom: Collect -->
+                <circle cx="170" cy="290" r="26" fill="#ffffff" stroke="#1e7e5a" stroke-width="3"/>
+                <text x="170" y="295" text-anchor="middle" font-size="16" font-family="Plus Jakarta Sans">🚚</text>
+                <text x="170" y="332" text-anchor="middle" font-size="12" font-weight="700" fill="#0f2438">{{ tr('collect') }}</text>
+
+                <!-- 4. Left: Recover -->
+                <circle cx="50" cy="170" r="26" fill="#ffffff" stroke="#1e7e5a" stroke-width="3"/>
+                <text x="50" y="175" text-anchor="middle" font-size="16" font-family="Plus Jakarta Sans">🏭</text>
+                <text x="50" y="215" text-anchor="middle" font-size="12" font-weight="700" fill="#0f2438">{{ tr('recover') }}</text>
+
+                <!-- Center Brand Badge -->
+                <circle cx="170" cy="170" r="48" fill="#f6f8f7" stroke="#cbd5e1" stroke-width="2"/>
+                <text x="170" y="165" text-anchor="middle" font-size="14" font-weight="800" fill="#14532d">{{ BRAND }}</text>
+                <text x="170" y="182" text-anchor="middle" font-size="10" font-weight="600" fill="#64748b">CIRCULAR</text>
+            </svg>
+        </div>
+    </section>
+
+    <!-- 4-Step Process Section -->
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fs-4 fw-bold text-dark mb-0">{{ tr('how') }}</h2>
+            <a href="{{ url_for('citizen_booking') }}" class="small fw-bold text-success">{{ tr('start') }} <i class="fa-solid fa-arrow-right ms-1"></i></a>
+        </div>
+
+        <div class="nl-steps-grid">
+            <div class="nl-step-card">
+                <span class="nl-step-num">1</span>
+                <h4 class="fs-6 fw-bold mb-1">{{ tr('separate') }}</h4>
+                <p class="small text-secondary mb-0">Segregate into 4 streams: Wet, Dry, E-Waste, and Residual.</p>
+            </div>
+            <div class="nl-step-card">
+                <span class="nl-step-num">2</span>
+                <h4 class="fs-6 fw-bold mb-1">{{ tr('book_s') }}</h4>
+                <p class="small text-secondary mb-0">Schedule doorstep or bulk society pickup in under 30 seconds.</p>
+            </div>
+            <div class="nl-step-card">
+                <span class="nl-step-num">3</span>
+                <h4 class="fs-6 fw-bold mb-1">{{ tr('collect') }}</h4>
+                <p class="small text-secondary mb-0">Smart electric vans collect on time and verify physical receipt.</p>
+            </div>
+            <div class="nl-step-card">
+                <span class="nl-step-num">4</span>
+                <h4 class="fs-6 fw-bold mb-1">{{ tr('recover') }}</h4>
+                <p class="small text-secondary mb-0">Waste reaches certified recyclers; earn verifiable Green Points.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3 Audience Cards -->
+    <section class="nl-audience-grid">
+        <!-- 1. Housing Societies -->
+        <div class="nl-audience-card">
+            <div>
+                <div class="text-success fs-3 mb-2"><i class="fa-solid fa-city"></i></div>
+                <h3 class="fs-5 fw-bold text-dark">{{ tr('society') }}</h3>
+                <p class="small text-secondary mb-3">
+                    Bulk society bins, automated morning van routes, society green certification, and collective podium ranking.
+                </p>
+            </div>
+            <a href="{{ url_for('citizen_booking') }}" class="btn-nl-primary w-100">
+                {{ tr('start') }}
+            </a>
+        </div>
+
+        <!-- 2. Individual Homes -->
+        <div class="nl-audience-card">
+            <div>
+                <div class="text-primary fs-3 mb-2"><i class="fa-solid fa-house-user"></i></div>
+                <h3 class="fs-5 fw-bold text-dark">{{ tr('home_user') }}</h3>
+                <p class="small text-secondary mb-3">
+                    Doorstep segregated booking, instant digital QR manifests, and Green Points redeemable across Ahmedabad.
+                </p>
+            </div>
+            <a href="{{ url_for('citizen_booking') }}" class="btn-nl-outline w-100">
+                {{ tr('book') }}
+            </a>
+        </div>
+
+        <!-- 3. Active Citizens -->
+        <div class="nl-audience-card">
+            <div>
+                <div class="text-warning fs-3 mb-2"><i class="fa-solid fa-trophy"></i></div>
+                <h3 class="fs-5 fw-bold text-dark">{{ tr('citizen') }}</h3>
+                <p class="small text-secondary mb-3">
+                    Real-time verification portal, dispute protection, CO₂ emission tracking, and Ward Green Champions board.
+                </p>
+            </div>
+            <a href="{{ url_for('public_leaderboard') }}" class="btn-nl-secondary w-100">
+                {{ tr('board') }}
+            </a>
+        </div>
+    </section>
+</div>
+{% endblock %}

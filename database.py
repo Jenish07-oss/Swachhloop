@@ -134,6 +134,38 @@ def init_db():
         )
     ''')
 
+    # 9. Users table (NagarLoop 3-Role Authentication)
+    try:
+        cursor.execute("SELECT username FROM users LIMIT 1")
+    except Exception:
+        cursor.execute("DROP TABLE IF EXISTS users")
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            name TEXT NOT NULL,
+            role TEXT NOT NULL,
+            household_id INTEGER,
+            van_id INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (household_id) REFERENCES households(id),
+            FOREIGN KEY (van_id) REFERENCES vans(id)
+        )
+    ''')
+
+    # Auto-seed default 3 role users if empty
+    cursor.execute("SELECT COUNT(*) FROM users")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute('''
+            INSERT INTO users (username, password, name, role, household_id, van_id)
+            VALUES 
+                ('jenish', 'jenish123', 'Jenish Patel', 'citizen', 1, NULL),
+                ('vikram', 'vikram123', 'Vikram Thakor', 'driver', NULL, 1),
+                ('admin', 'admin123', 'Municipal Operations Admin', 'admin', NULL, NULL)
+        ''')
+
     try:
         cursor.execute("ALTER TABLE audit_logs ADD COLUMN actor_type TEXT DEFAULT 'operator'")
     except Exception:

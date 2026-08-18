@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Your 4R Circular Impact — SwachhLoop{% endblock %}
+{% block title %}Your Circular Impact — {{ BRAND }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -12,7 +12,7 @@
                     <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 fw-bold mb-2">
                         Household: {{ household.household_code }} ({{ household.name }})
                     </span>
-                    <h1 class="mb-1 fw-bold">Your 4R Impact Dashboard</h1>
+                    <h1 class="mb-1 fw-bold">Your Impact Dashboard</h1>
                     <p class="text-muted mb-0">Track your household's total diverted waste, stream allocations, and environmental contribution.</p>
                 </div>
                 <div class="text-end">
@@ -23,42 +23,65 @@
             </div>
         </div>
 
-        <!-- 2 Big Impact Metric Highlights -->
+        <!-- 3 Primary KPI Metric Cards -->
         <div class="row g-4 mb-4">
-            <div class="col-md-6">
-                <div class="surface-card p-4 text-center h-100">
-                    <div class="estimate-badge mb-2">ESTIMATE</div>
-                    <div class="display-4 fw-bold text-success my-2">{{ total_diverted }} <span class="fs-4 text-muted">kg</span></div>
-                    <div class="fw-bold text-dark fs-5">Estimated Waste Diverted from Landfills</div>
-                    <p class="small text-muted mb-0 mt-1">100% routed to certified composting, recycling & co-processing units.</p>
+            <!-- Total Diverted -->
+            <div class="col-md-4">
+                <div class="kpi-card text-center">
+                    <div class="d-flex justify-content-center mb-2">
+                        <div class="brand-badge" style="width: 48px; height: 48px; background: #e0f2fe;">
+                            <i class="fa-solid fa-recycle fs-4 text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value text-primary">{{ total_diverted }} <span class="fs-6 text-muted">kg</span></div>
+                    <div class="kpi-label">Total Diverted from Landfill</div>
+                    <small class="text-muted">100% Segregated at Source</small>
                 </div>
             </div>
 
-            <div class="col-md-6">
-                <div class="surface-card p-4 text-center h-100">
-                    <div class="estimate-badge mb-2">ESTIMATE</div>
-                    <div class="display-4 fw-bold text-primary my-2">{{ co2_saved }} <span class="fs-4 text-muted">kg</span></div>
-                    <div class="fw-bold text-dark fs-5">Estimated CO₂e Reduction</div>
-                    <p class="small text-muted mb-0 mt-1">Calculated using standard SIH circular lifecycle reduction factors.</p>
+            <!-- CO2 Saved -->
+            <div class="col-md-4">
+                <div class="kpi-card text-center">
+                    <div class="d-flex justify-content-center mb-2">
+                        <div class="brand-badge" style="width: 48px; height: 48px; background: #dcfce7;">
+                            <i class="fa-solid fa-cloud-arrow-down fs-4 text-success"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value text-success">{{ co2_saved }} <span class="fs-6 text-muted">kg</span></div>
+                    <div class="kpi-label">Estimated CO₂e Avoided</div>
+                    <small class="text-muted">Lifecycle emission reduction</small>
+                </div>
+            </div>
+
+            <!-- Green Points Balance -->
+            <div class="col-md-4">
+                <div class="kpi-card text-center">
+                    <div class="d-flex justify-content-center mb-2">
+                        <div class="brand-badge" style="width: 48px; height: 48px; background: #fef9c3;">
+                            <i class="fa-solid fa-coins fs-4 text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value text-warning">{{ total_points }}</div>
+                    <div class="kpi-label">Green Points Balance</div>
+                    <small class="text-muted">Earned for high bin quality</small>
                 </div>
             </div>
         </div>
 
-        <!-- Stream Breakdown & Destination Pathways -->
+        <!-- 4-Stream Breakdown Visualizer -->
         <div class="surface-card p-4 p-md-5 mb-4">
-            <h3 class="fw-bold mb-3"><i class="fa-solid fa-arrows-split-up-and-left text-success me-2"></i> Segregated Stream Allocation</h3>
-            <p class="text-muted mb-4 small">Here is where each stream from your household was delivered and processed:</p>
-
-            <div class="row g-3">
+            <h3 class="fw-bold mb-4 fs-4"><i class="fa-solid fa-diagram-project text-success me-2"></i> Household Stream Breakdown & Destinations</h3>
+            
+            <div class="row g-4">
                 <!-- Wet Stream -->
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded-3 border h-100">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold fs-6">🌱 Wet / Organic</span>
-                            <span class="badge bg-success text-white">{{ wet_kg }} kg (Est.)</span>
+                            <span class="fw-bold fs-6">🥬 Organic Wet Waste</span>
+                            <span class="badge bg-success">{{ wet_kg }} kg (Est.)</span>
                         </div>
-                        <div class="small text-muted mb-1">Kitchen scraps, fruit peels & organic solids</div>
-                        <div class="small text-success fw-semibold"><i class="fa-solid fa-arrow-right me-1"></i> Destination: GreenCycle Bio-CNG & Compost Plant</div>
+                        <div class="small text-muted mb-1">Kitchen scraps, fruit peels & compostables</div>
+                        <div class="small text-success fw-semibold"><i class="fa-solid fa-arrow-right me-1"></i> Destination: GreenCycle Compost & Bio-CNG Plant</div>
                     </div>
                 </div>
 
@@ -66,11 +89,11 @@
                 <div class="col-md-6">
                     <div class="p-3 bg-light rounded-3 border h-100">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold fs-6">♻ Dry Recyclables</span>
-                            <span class="badge bg-info text-dark">{{ dry_kg }} kg (Est.)</span>
+                            <span class="fw-bold fs-6">📦 Recyclable Dry Waste</span>
+                            <span class="badge bg-primary">{{ dry_kg }} kg (Est.)</span>
                         </div>
-                        <div class="small text-muted mb-1">Paper, cardboard boxes, plastics, glass & tins</div>
-                        <div class="small text-info fw-semibold"><i class="fa-solid fa-arrow-right me-1"></i> Destination: Ahmedabad Central MRF Facility</div>
+                        <div class="small text-muted mb-1">Paper, cardboard, plastics & metal cans</div>
+                        <div class="small text-primary fw-semibold"><i class="fa-solid fa-arrow-right me-1"></i> Destination: Ahmedabad Central MRF Baler</div>
                     </div>
                 </div>
 
@@ -101,7 +124,7 @@
 
             <div class="mt-4 p-3 bg-success-subtle text-success rounded-3 small">
                 <i class="fa-solid fa-circle-info me-1"></i>
-                <strong>Transparency Note:</strong> All environmental factors are simplified SIH MVP estimates (Wet: 0.85, Dry: 1.95, E-Waste: 3.20, RDF: 0.60 kg CO₂e/kg).
+                <strong>Transparency Note:</strong> All environmental factors are calculated based on municipal emission reduction benchmarks (Wet: 0.85, Dry: 1.95, E-Waste: 3.20, RDF: 0.60 kg CO₂e/kg).
             </div>
         </div>
 
