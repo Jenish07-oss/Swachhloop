@@ -35,44 +35,55 @@
 
         <!-- Animated Circular Loop Graphic -->
         <div class="nl-loop-container">
-            <svg class="nl-loop-svg" viewBox="0 0 340 340" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Circular Track -->
-                <circle cx="170" cy="170" r="120" stroke="#e2e8f0" stroke-width="8" stroke-dasharray="6 6"/>
-                <path id="loopTrack" d="M 170 50 A 120 120 0 1 1 169.9 50" stroke="#1e7e5a" stroke-width="4" fill="none"/>
-                
-                <!-- Moving Pulse Dot -->
-                <circle r="9" fill="#22c55e">
-                    <animateMotion dur="6s" repeatCount="indefinite">
-                        <mpath href="#loopTrack"/>
-                    </animateMotion>
-                </circle>
+            <svg viewBox="0 0 360 380" width="100%" class="nl-loop-svg" role="img" aria-label="NagarLoop circular process">
+                <defs><path id="loop" d="M180,70 a120,120 0 1,1 -0.1,0" fill="none"/></defs>
 
-                <!-- 4 Stage Nodes -->
-                <!-- 1. Top: Separate -->
-                <circle cx="170" cy="50" r="26" fill="#ffffff" stroke="#1e7e5a" stroke-width="3"/>
-                <text x="170" y="55" text-anchor="middle" font-size="16" font-family="Plus Jakarta Sans">🥬</text>
-                <text x="170" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#0f2438">{{ tr('separate') }}</text>
+                <!-- track + moving dashes show direction -->
+                <circle cx="180" cy="190" r="120" fill="none" stroke="#d8efe6" stroke-width="10"/>
+                <circle cx="180" cy="190" r="120" fill="none" stroke="#1e7e5a" stroke-width="3"
+                        stroke-dasharray="4 14" class="flow"/>
 
-                <!-- 2. Right: Book -->
-                <circle cx="290" cy="170" r="26" fill="#ffffff" stroke="#1e7e5a" stroke-width="3"/>
-                <text x="290" y="175" text-anchor="middle" font-size="16" font-family="Plus Jakarta Sans">📱</text>
-                <text x="290" y="215" text-anchor="middle" font-size="12" font-weight="700" fill="#0f2438">{{ tr('book_s') }}</text>
+                <!-- center brand with pulse ring -->
+                <circle cx="180" cy="190" r="52" fill="#eef7f2"/>
+                <circle cx="180" cy="190" r="52" fill="none" stroke="#1e7e5a" stroke-width="2" class="ring"/>
+                <text x="180" y="186" text-anchor="middle" font-size="17" font-weight="800" fill="#14532d">{{ BRAND }}</text>
+                <text x="180" y="206" text-anchor="middle" font-size="11" fill="#5b6b7a">CIRCULAR</text>
 
-                <!-- 3. Bottom: Collect -->
-                <circle cx="170" cy="290" r="26" fill="#ffffff" stroke="#1e7e5a" stroke-width="3"/>
-                <text x="170" y="295" text-anchor="middle" font-size="16" font-family="Plus Jakarta Sans">🚚</text>
-                <text x="170" y="332" text-anchor="middle" font-size="12" font-weight="700" fill="#0f2438">{{ tr('collect') }}</text>
+                <!-- 4 stations: title + icon + sub-label -->
+                <g text-anchor="middle" fill="#0f2438">
+                    <circle cx="180" cy="70"  r="28" fill="#fff" stroke="#1e7e5a" stroke-width="3"/>
+                    <circle cx="300" cy="190" r="28" fill="#fff" stroke="#1e7e5a" stroke-width="3"/>
+                    <circle cx="180" cy="310" r="28" fill="#fff" stroke="#1e7e5a" stroke-width="3"/>
+                    <circle cx="60"  cy="190" r="28" fill="#fff" stroke="#1e7e5a" stroke-width="3"/>
+                    <text x="180" y="76"  font-size="20">🗂️</text><text x="300" y="196" font-size="20">📅</text>
+                    <text x="180" y="316" font-size="20">🚛</text><text x="60"  y="196" font-size="20">♻️</text>
+                    <g font-size="13" font-weight="700">
+                        <text x="180" y="30">{{ tr('separate') }}</text><text x="300" y="150">{{ tr('book_s') }}</text>
+                        <text x="180" y="270">{{ tr('collect') }}</text><text x="60" y="150">{{ tr('recover') }}</text>
+                    </g>
+                    <g font-size="10" fill="#5b6b7a">
+                        <text x="180" y="112">4 streams at home</text><text x="300" y="232">kg + photo booking</text>
+                        <text x="180" y="352">van + SMS alerts</text><text x="60" y="232">points back to society</text>
+                    </g>
+                </g>
 
-                <!-- 4. Left: Recover -->
-                <circle cx="50" cy="170" r="26" fill="#ffffff" stroke="#1e7e5a" stroke-width="3"/>
-                <text x="50" y="175" text-anchor="middle" font-size="16" font-family="Plus Jakarta Sans">🏭</text>
-                <text x="50" y="215" text-anchor="middle" font-size="12" font-weight="700" fill="#0f2438">{{ tr('recover') }}</text>
+                <!-- reward chip pops when loop closes -->
+                <g class="chip">
+                    <rect x="86" y="112" width="128" height="26" rx="13" fill="#fff" stroke="#e0a800"/>
+                    <text x="150" y="129" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">🎉 +72 Green Points</text>
+                </g>
 
-                <!-- Center Brand Badge -->
-                <circle cx="170" cy="170" r="48" fill="#f6f8f7" stroke="#cbd5e1" stroke-width="2"/>
-                <text x="170" y="165" text-anchor="middle" font-size="14" font-weight="800" fill="#14532d">{{ BRAND }}</text>
-                <text x="170" y="182" text-anchor="middle" font-size="10" font-weight="600" fill="#64748b">CIRCULAR</text>
+                <!-- waste goes clockwise, rewards flow back -->
+                <text font-size="16">🚛<animateMotion dur="10s" repeatCount="indefinite"><mpath href="#loop"/></animateMotion></text>
+                <circle r="7" fill="#1e7e5a"><animateMotion dur="10s" begin="-5s" repeatCount="indefinite"><mpath href="#loop"/></animateMotion></circle>
+                <circle r="5" fill="#e0a800"><animateMotion dur="10s" repeatCount="indefinite"
+                        keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#loop"/></animateMotion></circle>
             </svg>
+
+            <!-- Badges Row -->
+            <div class="badges">
+                <span>🗂️ 4 streams</span><span>🚫 0 landfill</span><span>🪙 1 pt = ₹1 tax credit</span>
+            </div>
         </div>
     </section>
 

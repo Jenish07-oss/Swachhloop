@@ -1,0 +1,47 @@
+<svg viewBox="0 0 360 380" width="100%" role="img" aria-label="NagarLoop circular process">
+  <defs><path id="loop" d="M180,70 a120,120 0 1,1 -0.1,0" fill="none"/></defs>
+
+  <!-- track + moving dashes show direction -->
+  <circle cx="180" cy="190" r="120" fill="none" stroke="#d8efe6" stroke-width="10"/>
+  <circle cx="180" cy="190" r="120" fill="none" stroke="#1e7e5a" stroke-width="3"
+          stroke-dasharray="4 14" class="flow"/>
+
+  <!-- center brand with pulse ring -->
+  <circle cx="180" cy="190" r="52" fill="#eef7f2"/>
+  <circle cx="180" cy="190" r="52" fill="none" stroke="#1e7e5a" stroke-width="2" class="ring"/>
+  <text x="180" y="186" text-anchor="middle" font-size="17" font-weight="800" fill="#14532d">NagarLoop</text>
+  <text x="180" y="206" text-anchor="middle" font-size="11" fill="#5b6b7a">CIRCULAR</text>
+
+  <!-- 4 stations: title + icon + sub-label -->
+  <g text-anchor="middle" fill="#0f2438">
+    <circle cx="180" cy="70"  r="28" fill="#fff" stroke="#1e7e5a" stroke-width="3"/>
+    <circle cx="300" cy="190" r="28" fill="#fff" stroke="#1e7e5a" stroke-width="3"/>
+    <circle cx="180" cy="310" r="28" fill="#fff" stroke="#1e7e5a" stroke-width="3"/>
+    <circle cx="60"  cy="190" r="28" fill="#fff" stroke="#1e7e5a" stroke-width="3"/>
+    <text x="180" y="76"  font-size="20">🗂️</text><text x="300" y="196" font-size="20">📅</text>
+    <text x="180" y="316" font-size="20">🚛</text><text x="60"  y="196" font-size="20">♻️</text>
+    <g font-size="13" font-weight="700">
+      <text x="180" y="30">1. Separate</text><text x="300" y="150">2. Book</text>
+      <text x="180" y="270">3. Collect</text><text x="60" y="150">4. Recover</text>
+    </g>
+    <g font-size="10" fill="#5b6b7a">
+      <text x="180" y="112">4 streams at home</text><text x="300" y="232">kg + photo booking</text>
+      <text x="180" y="352">van + SMS alerts</text><text x="60" y="232">points back to society</text>
+    </g>
+  </g>
+
+  <!-- reward chip pops when loop closes -->
+  <g class="chip">
+    <rect x="86" y="112" width="128" height="26" rx="13" fill="#fff" stroke="#e0a800"/>
+    <text x="150" y="129" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">🎉 +72 Green Points</text>
+  </g>
+
+  <!-- waste goes clockwise, rewards flow back -->
+  <text font-size="16">🚛<animateMotion dur="10s" repeatCount="indefinite"><mpath href="#loop"/></animateMotion></text>
+  <circle r="7" fill="#1e7e5a"><animateMotion dur="10s" begin="-5s" repeatCount="indefinite"><mpath href="#loop"/></animateMotion></circle>
+  <circle r="5" fill="#e0a800"><animateMotion dur="10s" repeatCount="indefinite"
+          keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#loop"/></animateMotion></circle>
+</svg>
+<div class="badges">
+  <span>🗂️ 4 streams</span><span>🚫 0 landfill</span><span>🪙 1 pt = ₹1 tax credit</span>
+</div>

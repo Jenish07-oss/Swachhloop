@@ -15,7 +15,8 @@ class TestNagarLoopPhase1(unittest.TestCase):
         res = self.client.get('/')
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'NagarLoop', res.data)
-        self.assertIn(b'loopTrack', res.data)
+        self.assertIn(b'id="loop"', res.data)
+        self.assertIn(b'badges', res.data)
         self.assertIn(b'How It Works', res.data)
 
     def test_02_set_lang_toggle(self):
