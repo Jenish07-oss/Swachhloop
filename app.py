@@ -1340,6 +1340,105 @@ def api_reset_demo():
     seed_database()
     return jsonify({'success': True, 'message': 'Demo database successfully reset to initial 40 seeded pickups.'})
 
+@app.route('/api/project-summary')
+@app.route('/qwen-context')
+def api_project_summary():
+    """
+    Comprehensive Context API for Qwen/AI to read and understand the entire SwachhLoop 4R project.
+    """
+    conn = get_db()
+    
+    # Summary metrics
+    h_count = conn.execute("SELECT COUNT(*) as c FROM households").fetchone()['c']
+    p_count = conn.execute("SELECT COUNT(*) as c FROM pickups").fetchone()['c']
+    v_count = conn.execute("SELECT COUNT(*) as c FROM vans").fetchone()['c']
+    f_count = conn.execute("SELECT COUNT(*) as c FROM destination_facilities").fetchone()['c']
+    
+    status_counts = dict(conn.execute("SELECT status, COUNT(*) as c FROM pickups GROUP BY status").fetchall())
+    stream_counts = dict(conn.execute("SELECT stream_type, SUM(estimated_kg) as total_kg FROM pickup_streams GROUP BY stream_type").fetchall())
+    
+    conn.close()
+
+    summary_data = {
+        "project_name": "SwachhLoop 4R — Circular Economy Waste Management Platform",
+        "hackathon": "Smart India Hackathon 2026 (SIH 2026)",
+        "tech_stack": {
+            "backend": "Python 3, Flask, SQLite3, Scikit-Learn, NumPy, QRCode",
+            "frontend": "Jinja2 HTML Templates, Vanilla CSS, Bootstrap 5, FontAwesome 6, Leaflet.js Maps, Chart.js",
+            "algorithms": [
+                "K-Means Pickup Clustering (spatial zone grouping)",
+                "Nearest-Neighbor Traveling Salesperson TSP Route Optimization",
+                "Haversine Great Circle Distance & Fuel-Saving Calculation",
+                "Transparent Green Points Gamification Engine"
+            ]
+        },
+        "circular_streams": ["wet (Bio-CNG/Compost)", "dry (Recycling/MRF)", "e-waste (Certified E-Recycler)", "residual (Waste-to-Energy)"],
+        "lifecycle_states": {
+            "pending": "Citizen booked pickup, waiting for van arrival",
+            "collection_reported": "Van operator reported physical collection, awaiting citizen verification",
+            "disputed": "Citizen disputed collection (waste was not picked up)",
+            "collected": "Citizen confirmed collection or Admin resolved dispute",
+            "delivered": "Segregated waste safely delivered to certified destination facility"
+        },
+        "core_routes": {
+            "GET /": "Citizen Booking Portal & Live AI Bin Quality Scoring",
+            "POST /report": "Submit segregated waste collection booking",
+            "GET /my-pickups": "Citizen Verification Portal (interactive Yes/No collection verification)",
+            "GET /impact": "4R Environmental Impact, Green Points, and CO2 Savings Dashboard",
+            "GET /manifest/<id>": "Digital QR Manifest & Immutable Chain-of-Custody Audit Trail",
+            "GET /admin": "Executive Command Center & Civic Podium Leaderboard",
+            "GET /admin/dispatch": "Operations Dispatch Center with Live GPS Fleet Route Maps & Dispute Review Queue",
+            "GET /admin/route/<van_id>": "Interactive Route Optimizer with manual stop reordering & fuel-saving stats",
+            "POST /api/status/<id>": "Safe status transition API with audit logging",
+            "POST /api/citizen/verify/<id>": "Citizen collection verification API",
+            "POST /api/route/deliver": "Batch destination facility delivery confirmation API"
+        },
+        "live_database_stats": {
+            "registered_households": h_count,
+            "total_pickups": p_count,
+            "pickup_status_breakdown": status_counts,
+            "stream_kg_totals": stream_counts,
+            "active_fleet_vans": v_count,
+            "destination_facilities": f_count
+        }
+    }
+    
+    if request.args.get('format') == 'markdown' or 'text/html' in request.headers.get('Accept', ''):
+        md_text = f"""# SwachhLoop 4R — Project Blueprint for Qwen AI
+
+## 1. Project Overview
+- **Name:** SwachhLoop 4R (Smart India Hackathon 2026 MVP)
+- **Goal:** Traceable, segregated circular economy waste management connecting households, municipal collection fleets, and certified recycling facilities.
+
+## 2. Core Architecture & Tech Stack
+- **Backend:** Flask (Python 3), SQLite3 database, Scikit-learn (KMeans), NumPy, QR Code generation.
+- **Frontend:** HTML5, Vanilla CSS Design System, Leaflet.js interactive maps, Bootstrap 5 modals, Chart.js.
+- **AI/Math Algorithms:**
+  - **Spatial Clustering:** `sklearn.cluster.KMeans` divides urban pickups into optimized operational zones.
+  - **Route Optimization:** Nearest-Neighbor TSP algorithm minimizing total travel distance and diesel emissions.
+  - **Gamification Formula:** `Green Points = 20 + floor(bin_score / 10)` awarded to households.
+
+## 3. Pickup Lifecycle & Chain-of-Custody
+1. **PENDING:** Household books segregated waste collection.
+2. **COLLECTION REPORTED:** Van operator marks waste collected at household.
+3. **CITIZEN VERIFICATION:**
+   - Citizen confirms $\\rightarrow$ **COLLECTED**.
+   - Citizen disputes $\\rightarrow$ **DISPUTED** $\\rightarrow$ Admin reviews in Dispatch Center.
+4. **DELIVERED:** Van arrives at certified facility and marks batch delivered.
+
+## 4. Key Endpoints & Pages
+- `/` — Citizen Booking Portal
+- `/my-pickups` — Citizen Verification & Dispute Interface
+- `/admin/dispatch` — Dispatch Center (Next-Stop, Leaflet map, disputes queue)
+- `/admin` — Municipal Command Center & Leaderboard
+- `/manifest/<id>` — Digital QR Chain-of-Custody Manifest
+- `/impact` — Environmental Impact & CO2 Reduction Dashboard
+"""
+        return render_template('base.html', title="Project Context for Qwen AI"), 200 if request.args.get('format') != 'markdown' else (md_text, 200, {'Content-Type': 'text/plain; charset=utf-8'})
+
+    return jsonify(summary_data)
+
+
 # ----------------------------------------------------
 # BACKGROUND VAN SIMULATION
 # ----------------------------------------------------
