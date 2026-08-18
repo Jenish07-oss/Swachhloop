@@ -2,73 +2,76 @@
 {% block title %}Municipal Command Center — {{ BRAND }}{% endblock %}
 
 {% block content %}
-<!-- Top Header Bar -->
-<div class="admin-header-bar">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="brand-badge" style="width: 36px; height: 36px;"><i class="fa-solid fa-shield-halved fs-5 text-white"></i></span>
-                <h1 class="mb-0 fw-bold fs-2">Municipal Command Center</h1>
-                <span class="badge bg-success text-white px-2 py-1" style="font-size: 11px;">OPERATIONS ACTIVE</span>
-            </div>
-            <p class="text-secondary mb-0 small">Ahmedabad Navrangpura Ward • Monitor pickups, routes and circular-economy recovery.</p>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#resetModal">
-                <i class="fa-solid fa-rotate-left me-1"></i> Reset Demo Data
-            </button>
-            <span class="badge bg-light text-dark border p-2 px-3 fw-bold">
-                <i class="fa-solid fa-circle text-success me-1 fa-beat-fade"></i> Live Auto-Sync: 5s
-            </span>
-        </div>
-    </div>
-</div>
+<div class="nl-fade-up">
 
-<!-- 6 High-Contrast KPI Cards -->
-<div class="row g-3 mb-4">
-    <div class="col-md-2 col-sm-4 col-6">
-        <div class="admin-kpi-box text-center">
-            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11px;">Total Pickups</div>
-            <div class="admin-kpi-val">{{ total }}</div>
-            <small class="text-muted fw-semibold">40 Seeded</small>
+    <!-- Deep Forest Admin Header Bar -->
+    <div class="nl-panel-forest mb-4 p-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 bg-white text-dark rounded-pill small fw-bold mb-2 shadow-sm">
+                    <i class="fa-solid fa-shield-halved text-success"></i> Municipal Operations Command
+                </div>
+                <h1 class="text-white fs-2 fw-bold mb-1">Municipal Command Center</h1>
+                <p class="text-white-50 mb-0 small">Ahmedabad Navrangpura Ward • Real-time telematics, segregated stream recovery, and AI fleet routing.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ url_for('admin_dispatch') }}" class="btn-nl-lime" style="min-height: 42px; font-size: 0.9rem; padding: 0.5rem 1.3rem;">
+                    <i class="fa-solid fa-truck-fast me-1"></i> Open Dispatch Center
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#resetModal" style="min-height: 42px;">
+                    <i class="fa-solid fa-rotate-left me-1"></i> Reset Demo
+                </button>
+            </div>
         </div>
     </div>
-    <div class="col-md-2 col-sm-4 col-6">
-        <div class="admin-kpi-box text-center" style="border-top: 4px solid var(--status-pending);">
-            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11px;">Pending</div>
-            <div class="admin-kpi-val text-warning" id="kpi-pending">{{ pending }}</div>
-            <small class="text-muted fw-semibold">Awaiting Van</small>
+
+    <!-- 4 High-Contrast KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="nl-card p-3 d-flex align-items-center gap-3">
+                <div class="p-3 rounded-4" style="background: var(--stream-wet-bg); color: var(--stream-wet);">
+                    <i class="fa-solid fa-recycle fs-3"></i>
+                </div>
+                <div>
+                    <div class="fs-3 fw-bold text-dark">{{ total_kg_diverted }} <span class="fs-6 text-muted">kg</span></div>
+                    <div class="small text-secondary fw-bold text-uppercase" style="font-size: 11px;">Total Diverted</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="nl-card p-3 d-flex align-items-center gap-3">
+                <div class="p-3 rounded-4" style="background: var(--stream-dry-bg); color: var(--stream-dry);">
+                    <i class="fa-solid fa-truck-fast fs-3"></i>
+                </div>
+                <div>
+                    <div class="fs-3 fw-bold text-dark">{{ active_vans }}</div>
+                    <div class="small text-secondary fw-bold text-uppercase" style="font-size: 11px;">Active Fleet Vans</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="nl-card p-3 d-flex align-items-center gap-3">
+                <div class="p-3 rounded-4" style="background: var(--stream-ewaste-bg); color: var(--stream-ewaste);">
+                    <i class="fa-solid fa-hourglass-half fs-3"></i>
+                </div>
+                <div>
+                    <div class="fs-3 fw-bold text-dark" id="kpi-pending">{{ pending }}</div>
+                    <div class="small text-secondary fw-bold text-uppercase" style="font-size: 11px;">Pending Stops</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="nl-card p-3 d-flex align-items-center gap-3">
+                <div class="p-3 rounded-4" style="background: var(--lime-subtle); color: var(--forest);">
+                    <i class="fa-solid fa-circle-check fs-3"></i>
+                </div>
+                <div>
+                    <div class="fs-3 fw-bold text-dark" id="kpi-delivered">{{ delivered }}</div>
+                    <div class="small text-secondary fw-bold text-uppercase" style="font-size: 11px;">Delivered / Verified</div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-2 col-sm-4 col-6">
-        <div class="admin-kpi-box text-center" style="border-top: 4px solid var(--status-collected);">
-            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11px;">In Transit</div>
-            <div class="admin-kpi-val text-info" id="kpi-collected">{{ collected }}</div>
-            <small class="text-muted fw-semibold">Vans En Route</small>
-        </div>
-    </div>
-    <div class="col-md-2 col-sm-4 col-6">
-        <div class="admin-kpi-box text-center" style="border-top: 4px solid var(--status-delivered);">
-            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11px;">Delivered</div>
-            <div class="admin-kpi-val text-success" id="kpi-delivered">{{ delivered }}</div>
-            <small class="text-muted fw-semibold">100% Circular</small>
-        </div>
-    </div>
-    <div class="col-md-2 col-sm-4 col-6">
-        <div class="admin-kpi-box text-center">
-            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11px;">Estimated Diverted</div>
-            <div class="admin-kpi-val text-success">{{ total_kg_diverted }} <span class="fs-6 text-muted">kg</span></div>
-            <small class="text-muted fw-semibold">Zero Landfill</small>
-        </div>
-    </div>
-    <div class="col-md-2 col-sm-4 col-6">
-        <div class="admin-kpi-box text-center">
-            <div class="text-secondary small fw-bold text-uppercase" style="font-size: 11px;">Active Fleet</div>
-            <div class="admin-kpi-val text-primary">{{ active_vans }}</div>
-            <small class="text-muted fw-semibold">Collection Vans</small>
-        </div>
-    </div>
-</div>
 
 <!-- 4R Flow Visualization Banner -->
 <div class="surface-card p-3 mb-4 bg-light">

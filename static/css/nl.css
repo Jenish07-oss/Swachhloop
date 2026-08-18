@@ -1,22 +1,64 @@
-/* static/css/nl.css — NagarLoop Design System */
+/* ==========================================================================
+   NagarLoop Design System
+   Warm Cream (#FAF8F3) • Deep Forest Green (#0C3B2E) • Lime (#B5E048)
+   Typography: Manrope • Accessible Large Tap Targets • Modern Civic SaaS
+   ========================================================================== */
+
 :root {
-    --g: #1e7e5a;
-    --gd: #14532d;
-    --gl: #22c55e;
-    --ink: #0f2438;
-    --ink-light: #475569;
-    --bg: #f6f8f7;
-    --surface: #ffffff;
-    --border: #e2e8f0;
-    --border-strong: #cbd5e1;
-    --radius: 14px;
+    /* Primary Color Tokens */
+    --bg: #FAF8F3;                    /* Warm cream canvas */
+    --bg-alt: #F3EFE6;                /* Subtle secondary warm cream */
+    --forest: #0C3B2E;                /* Deep forest green for nav, hero, panels */
+    --forest-dark: #08281F;           /* Extra deep forest */
+    --forest-light: #165342;          /* Hover forest */
+    --forest-subtle: rgba(12, 59, 46, 0.08);
+
+    /* Accent Tokens */
+    --lime: #B5E048;                  /* Vibrant lime accent */
+    --lime-hover: #A2CF35;            /* Darker lime for hover */
+    --lime-subtle: rgba(181, 224, 72, 0.22);
+    
+    /* Text & Ink */
+    --ink: #0C1E17;                   /* Deep high-contrast dark text */
+    --ink-muted: #5C6E67;             /* Muted secondary body text */
+    --ink-light: #8E9F99;             /* Captions and subtle labels */
+    --ink-inverse: #FAF8F3;           /* Text on dark panels */
+
+    /* Surface & Borders */
+    --surface: #FFFFFF;               /* Card background */
+    --border: #E8E3D7;                /* Warm subtle border */
+    --border-focus: #0C3B2E;
+
+    /* Semantic Stream Tokens */
+    --stream-wet: #16A34A;
+    --stream-wet-bg: #E8F7EE;
+    --stream-dry: #2563EB;
+    --stream-dry-bg: #EBF2FE;
+    --stream-ewaste: #D97706;
+    --stream-ewaste-bg: #FEF3C7;
+    --stream-residual: #DC2626;
+    --stream-residual-bg: #FEE2E2;
+
+    /* Status Colors */
+    --status-success: #16A34A;
+    --status-warning: #D97706;
+    --status-info: #2563EB;
+    --status-danger: #DC2626;
+
+    /* Geometry & Elevation */
     --radius-sm: 8px;
-    --shadow-sm: 0 2px 8px rgba(15, 36, 56, 0.05);
-    --shadow-md: 0 8px 24px rgba(15, 36, 56, 0.08);
-    --shadow-lg: 0 16px 36px rgba(15, 36, 56, 0.12);
-    --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-2xl: 24px;
+    --radius-pill: 999px;
+
+    --shadow-sm: 0 2px 8px rgba(12, 59, 46, 0.04);
+    --shadow-md: 0 6px 20px rgba(12, 59, 46, 0.07);
+    --shadow-lg: 0 12px 36px rgba(12, 59, 46, 0.10);
+    --shadow-forest: 0 8px 30px rgba(12, 59, 46, 0.18);
 }
 
+/* Base Resets & Typography */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -24,44 +66,48 @@
 }
 
 body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 17px;
-    line-height: 1.6;
-    color: var(--ink);
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background-color: var(--bg);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    -webkit-font-smoothing: antialiased;
 }
 
-/* Base Typography & Headings */
+/* Typography Hierarchy */
 h1, h2, h3, h4, h5, h6 {
+    font-family: 'Manrope', sans-serif;
     color: var(--ink);
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1.25;
-    letter-spacing: -0.02em;
 }
 
 a {
-    color: var(--g);
+    color: var(--forest);
     text-decoration: none;
-    transition: var(--transition);
+    transition: color 0.18s ease;
 }
 
 a:hover {
-    color: var(--gd);
+    color: var(--forest-light);
 }
 
-/* Sticky Header & Nav */
+/* ==========================================================================
+   Navigation (Glassy Deep Forest)
+   ========================================================================== */
 .nl-nav {
     position: sticky;
     top: 0;
-    z-index: 1000;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
+    z-index: 1050;
+    background: rgba(12, 59, 46, 0.95);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding: 0.85rem 1.5rem;
+    box-shadow: var(--shadow-sm);
 }
 
 .nl-nav-inner {
@@ -76,359 +122,352 @@ a:hover {
 .nl-brand {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.65rem;
     font-weight: 800;
     font-size: 1.35rem;
-    color: var(--gd);
-    letter-spacing: -0.03em;
+    color: #FFFFFF !important;
+    text-decoration: none;
+    letter-spacing: -0.02em;
 }
 
 .nl-brand-icon {
-    width: 38px;
-    height: 38px;
-    background: linear-gradient(135deg, var(--g), var(--gd));
-    color: white;
-    border-radius: 10px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: var(--lime);
+    color: var(--forest);
+    border-radius: var(--radius-md);
     font-size: 1.15rem;
-    box-shadow: 0 4px 12px rgba(30, 126, 90, 0.25);
 }
 
 .nl-nav-links {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
     list-style: none;
+    gap: 0.5rem;
+    margin: 0;
 }
 
 .nl-nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1.1rem;
+    color: rgba(255, 255, 255, 0.85) !important;
     font-weight: 600;
     font-size: 0.95rem;
-    color: var(--ink-light);
-    padding: 0.4rem 0.75rem;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-pill);
+    text-decoration: none;
+    transition: all 0.2s ease;
 }
 
-.nl-nav-link:hover, .nl-nav-link.active {
-    color: var(--gd);
-    background-color: rgba(30, 126, 90, 0.08);
+.nl-nav-link:hover {
+    color: #FFFFFF !important;
+    background: rgba(255, 255, 255, 0.12);
 }
 
-/* Interactive Controls (Buttons with min-height: 50px) */
-.btn-nl, .btn-nl-primary, .btn-nl-outline, .btn-nl-secondary {
+.nl-nav-link.active {
+    color: var(--forest) !important;
+    background: var(--lime);
+    font-weight: 700;
+}
+
+.nl-role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.nl-role-badge.citizen {
+    background: rgba(181, 224, 72, 0.18);
+    color: var(--lime);
+    border: 1px solid var(--lime);
+}
+
+.nl-role-badge.driver {
+    background: rgba(245, 158, 11, 0.2);
+    color: #FCD34D;
+    border: 1px solid #F59E0B;
+}
+
+.nl-role-badge.admin {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93C5FD;
+    border: 1px solid #3B82F6;
+}
+
+/* ==========================================================================
+   Buttons & Interactive Elements (Accessible, Min 52px Target)
+   ========================================================================== */
+.btn-nl-lime {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    min-height: 50px;
-    padding: 0.75rem 1.5rem;
+    gap: 0.55rem;
+    min-height: 52px;
+    padding: 0.75rem 1.85rem;
+    background: var(--lime);
+    color: var(--forest) !important;
+    font-weight: 800;
     font-size: 1rem;
-    font-weight: 700;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
+    border-radius: var(--radius-pill);
     border: none;
-    transition: var(--transition);
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(181, 224, 72, 0.35);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none;
 }
 
-.btn-nl-primary {
-    background: linear-gradient(135deg, var(--g), var(--gd));
-    color: #ffffff !important;
-    box-shadow: 0 4px 14px rgba(30, 126, 90, 0.25);
+.btn-nl-lime:hover {
+    background: var(--lime-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(181, 224, 72, 0.45);
+    color: var(--forest-dark) !important;
 }
 
-.btn-nl-primary:hover {
-    background: linear-gradient(135deg, #186a4c, #0e3d21);
+.btn-nl-forest {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-height: 52px;
+    padding: 0.75rem 1.85rem;
+    background: var(--forest);
+    color: #FFFFFF !important;
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid transparent;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-nl-forest:hover {
+    background: var(--forest-light);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(30, 126, 90, 0.35);
+    color: #FFFFFF !important;
 }
 
 .btn-nl-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-height: 52px;
+    padding: 0.75rem 1.75rem;
     background: transparent;
-    color: var(--gd) !important;
-    border: 2px solid var(--g);
+    color: var(--forest) !important;
+    font-weight: 700;
+    font-size: 1rem;
+    border-radius: var(--radius-pill);
+    border: 2px solid var(--forest);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
 }
 
 .btn-nl-outline:hover {
-    background: rgba(30, 126, 90, 0.08);
+    background: var(--forest);
+    color: #FFFFFF !important;
     transform: translateY(-2px);
 }
 
-.btn-nl-secondary {
-    background: var(--surface);
-    color: var(--ink) !important;
-    border: 1px solid var(--border-strong);
-}
-
-.btn-nl-secondary:hover {
-    background: #f1f5f9;
-    border-color: var(--ink);
-}
-
-/* Lang Toggle Button */
-.lang-toggle-btn {
-    background: #f1f5f9;
-    border: 1px solid var(--border);
-    color: var(--ink);
+.btn-nl-outline-light {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-height: 52px;
+    padding: 0.75rem 1.75rem;
+    background: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF !important;
     font-weight: 700;
-    font-size: 0.85rem;
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
+    font-size: 1rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.2s ease;
+    text-decoration: none;
 }
 
-.lang-toggle-btn:hover {
-    background: var(--border-strong);
+.btn-nl-outline-light:hover {
+    background: #FFFFFF;
+    color: var(--forest) !important;
 }
 
-/* Main Container */
-.nl-main {
-    flex: 1;
-    max-width: 1240px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 2rem 1.5rem;
+.btn-nl-giant {
+    min-height: 62px;
+    font-size: 1.15rem;
+    padding: 1rem 2.2rem;
+    font-weight: 800;
 }
 
-/* Surface Cards */
+/* ==========================================================================
+   Cards & Panels (rounded-2xl, Warm Elevation)
+   ========================================================================== */
 .nl-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.75rem;
-    box-shadow: var(--shadow-sm);
-    transition: var(--transition);
+    border-radius: var(--radius-2xl);
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .nl-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.nl-panel-forest {
+    background: var(--forest);
+    color: var(--ink-inverse);
+    border-radius: var(--radius-2xl);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-forest);
+}
+
+.nl-panel-forest h1,
+.nl-panel-forest h2,
+.nl-panel-forest h3,
+.nl-panel-forest h4,
+.nl-panel-forest p {
+    color: #FFFFFF;
+}
+
+/* ==========================================================================
+   Semantic 4-Stream Cards (Wet, Dry, E-Waste, Residual)
+   ========================================================================== */
+.stream-card {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.4rem;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    user-select: none;
+}
+
+.stream-card:hover {
+    transform: translateY(-3px);
     box-shadow: var(--shadow-md);
 }
 
-/* Hero Section */
+.stream-card.selected {
+    border-width: 2.5px;
+}
+
+.stream-card.wet.selected {
+    border-color: var(--stream-wet);
+    background: var(--stream-wet-bg);
+}
+
+.stream-card.dry.selected {
+    border-color: var(--stream-dry);
+    background: var(--stream-dry-bg);
+}
+
+.stream-card.ewaste.selected {
+    border-color: var(--stream-ewaste);
+    background: var(--stream-ewaste-bg);
+}
+
+.stream-card.residual.selected {
+    border-color: var(--stream-residual);
+    background: var(--stream-residual-bg);
+}
+
+.stream-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 0.85rem;
+}
+
+.stream-card.wet .stream-icon-box { background: var(--stream-wet-bg); }
+.stream-card.dry .stream-icon-box { background: var(--stream-dry-bg); }
+.stream-card.ewaste .stream-icon-box { background: var(--stream-ewaste-bg); }
+.stream-card.residual .stream-icon-box { background: var(--stream-residual-bg); }
+
+.stream-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-pill);
+}
+
+.stream-tag.wet { background: var(--stream-wet-bg); color: var(--stream-wet); }
+.stream-tag.dry { background: var(--stream-dry-bg); color: var(--stream-dry); }
+.stream-tag.ewaste { background: var(--stream-ewaste-bg); color: var(--stream-ewaste); }
+.stream-tag.residual { background: var(--stream-residual-bg); color: var(--stream-residual); }
+
+/* ==========================================================================
+   Hero & Loop Graphic Section
+   ========================================================================== */
 .nl-hero-grid {
     display: grid;
     grid-template-columns: 1.15fr 0.85fr;
-    gap: 3rem;
+    gap: 2.5rem;
     align-items: center;
-    padding: 2.5rem 0;
+    padding: 3rem 0 2rem;
 }
 
 .nl-hero-slogan {
-    font-size: 2.85rem;
+    font-size: 3rem;
     font-weight: 800;
     color: var(--ink);
-    margin-bottom: 1rem;
     letter-spacing: -0.03em;
-}
-
-.nl-hero-slogan span {
-    color: var(--g);
+    line-height: 1.15;
+    margin-bottom: 1.25rem;
 }
 
 .nl-hero-sub {
-    font-size: 1.2rem;
-    color: var(--ink-light);
+    font-size: 1.15rem;
+    color: var(--ink-muted);
+    line-height: 1.6;
     margin-bottom: 2rem;
-    max-width: 580px;
+    max-width: 540px;
 }
 
 .nl-hero-ctas {
     display: flex;
+    align-items: center;
     gap: 1rem;
     flex-wrap: wrap;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
 }
 
-.nl-trust-line {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--ink-light);
-}
-
-/* Animated Circular Loop SVG */
 .nl-loop-container {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 24px;
+    border-radius: var(--radius-2xl);
     padding: 2rem;
     box-shadow: var(--shadow-md);
     text-align: center;
 }
 
 .nl-loop-svg {
-    width: 100%;
     max-width: 380px;
     height: auto;
 }
 
-/* 4-Step Process Section */
-.nl-steps-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.25rem;
-    margin: 3rem 0;
-}
-
-.nl-step-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    text-align: left;
-    position: relative;
-    box-shadow: var(--shadow-sm);
-}
-
-.nl-step-num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: rgba(30, 126, 90, 0.12);
-    color: var(--gd);
-    border-radius: 50%;
-    font-weight: 800;
-    font-size: 0.95rem;
-    margin-bottom: 1rem;
-}
-
-/* 3 Audience Cards */
-.nl-audience-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 3.5rem;
-}
-
-.nl-audience-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    box-shadow: var(--shadow-sm);
-}
-
-.nl-audience-card h3 {
-    margin-bottom: 0.75rem;
-}
-
-/* Product Footer */
-.nl-footer {
-    background: var(--ink);
-    color: #94a3b8;
-    padding: 3rem 1.5rem 2rem;
-    border-top: 1px solid #1e293b;
-    margin-top: auto;
-}
-
-.nl-footer-inner {
-    max-width: 1240px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-}
-
-.nl-footer-links {
-    display: flex;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-}
-
-.nl-footer-link {
-    color: #cbd5e1;
-    font-size: 0.95rem;
-    font-weight: 600;
-}
-
-.nl-footer-link:hover {
-    color: #ffffff;
-}
-
-/* Keyframes & Animations */
-@keyframes fadeUp {
-    from {
-        opacity: 0;
-        transform: translateY(18px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes pulseDot {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.3); opacity: 0.8; }
-}
-
-.nl-fade-up {
-    animation: fadeUp 0.6s ease-out forwards;
-}
-
-/* Prefers-reduced-motion accessibility off-switch */
-@media (prefers-reduced-motion: reduce) {
-    *, ::before, ::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
-}
-
-/* Mobile Breakpoints */
-@media (max-width: 992px) {
-    .nl-hero-grid {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-        text-align: center;
-    }
-    .nl-hero-sub {
-        margin-left: auto;
-        margin-right: auto;
-    }
-    .nl-hero-ctas {
-        justify-content: center;
-    }
-    .nl-trust-line {
-        justify-content: center;
-    }
-    .nl-steps-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .nl-audience-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 640px) {
-    .nl-hero-slogan {
-        font-size: 2rem;
-    }
-    .nl-nav-links {
-        display: none;
-    }
-    .nl-steps-grid {
-        grid-template-columns: 1fr;
-    }
-    .btn-nl, .btn-nl-primary, .btn-nl-outline {
-        width: 100%;
-    }
-}
-
-/* Richer Loop Animation & Badges */
+/* Animations for Richer Loop */
 .flow {
     animation: dash 1.2s linear infinite;
 }
@@ -465,11 +504,274 @@ a:hover {
 }
 
 .badges span {
-    background: #e6f4ef;
-    color: #14532d;
-    border-radius: 999px;
+    background: var(--bg-alt);
+    color: var(--forest);
+    border-radius: var(--radius-pill);
     padding: 6px 14px;
     font-weight: 700;
-    font-size: 14px;
-    border: 1px solid rgba(30, 126, 90, 0.15);
+    font-size: 13px;
+    border: 1px solid var(--border);
+}
+
+/* ==========================================================================
+   4-Step How It Works Grid
+   ========================================================================== */
+.nl-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    margin: 2rem 0 3rem;
+}
+
+.nl-step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.6rem 1.4rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.nl-step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--lime);
+    color: var(--forest);
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+/* ==========================================================================
+   KPI Metric Cards (Admin & Impact)
+   ========================================================================== */
+.kpi-card-nl {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.kpi-icon-nl {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.kpi-val-nl {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--forest);
+    line-height: 1.1;
+}
+
+.kpi-label-nl {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ==========================================================================
+   Driver Mobile Screen ("Next Stop" Hero Card)
+   ========================================================================== */
+.driver-hero-stop {
+    background: var(--surface);
+    border: 2px solid var(--forest);
+    border-radius: var(--radius-2xl);
+    padding: 2rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.driver-hero-stop::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: var(--lime);
+}
+
+.stop-sequence-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--forest);
+    color: #FFFFFF;
+    padding: 0.4rem 1rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* ==========================================================================
+   Status Timeline (Citizen My Pickups)
+   ========================================================================== */
+.nl-timeline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    margin: 2rem 0 1.5rem;
+}
+
+.nl-timeline::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 4%;
+    right: 4%;
+    height: 4px;
+    background: var(--border);
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.nl-timeline-step {
+    position: relative;
+    z-index: 2;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-align: center;
+}
+
+.nl-timeline-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-alt);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-light);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.nl-timeline-step.completed .nl-timeline-icon {
+    background: var(--forest);
+    border-color: var(--forest);
+    color: var(--lime);
+}
+
+.nl-timeline-step.active .nl-timeline-icon {
+    background: var(--lime);
+    border-color: var(--forest);
+    color: var(--forest);
+    box-shadow: 0 0 0 4px var(--lime-subtle);
+}
+
+.nl-timeline-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ink-muted);
+}
+
+.nl-timeline-step.completed .nl-timeline-label,
+.nl-timeline-step.active .nl-timeline-label {
+    color: var(--forest);
+    font-weight: 800;
+}
+
+/* ==========================================================================
+   Footer (Deep Forest)
+   ========================================================================== */
+.nl-footer {
+    margin-top: auto;
+    background: var(--forest);
+    color: #FFFFFF;
+    padding: 3rem 1.5rem 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nl-footer-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.nl-footer-links {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.nl-footer-link {
+    color: rgba(255, 255, 255, 0.75) !important;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.nl-footer-link:hover {
+    color: var(--lime) !important;
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+@media (max-width: 992px) {
+    .nl-hero-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 2rem;
+    }
+    .nl-hero-sub {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .nl-hero-ctas {
+        justify-content: center;
+    }
+    .nl-steps-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .nl-hero-slogan {
+        font-size: 2.15rem;
+    }
+    .nl-nav-links {
+        display: none;
+    }
+    .nl-steps-grid {
+        grid-template-columns: 1fr;
+    }
+    .btn-nl-lime, .btn-nl-forest, .btn-nl-outline {
+        width: 100%;
+    }
+    .nl-timeline {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .nl-timeline::before {
+        display: none;
+    }
 }

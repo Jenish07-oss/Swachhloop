@@ -1,187 +1,138 @@
 {% extends "base.html" %}
-{% block title %}{{ BRAND }} — One Pickup. Four Streams. One Cleaner Loop.{% endblock %}
+{% block title %}Book a Pickup — {{ BRAND }}{% endblock %}
 
 {% block content %}
+<div class="nl-fade-up">
 
-<!-- Hero Banner -->
-<section class="hero-card">
-    <div class="row align-items-center g-4">
+    <!-- Deep Forest Booking Hero Card -->
+    <div class="nl-panel-forest mb-4">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 bg-white text-dark rounded-pill small fw-bold mb-3 shadow-sm">
+                    <i class="fa-solid fa-leaf text-success"></i> {{ CITY }} Municipal Circular Platform
+                </div>
+                <h1 class="text-white display-6 fw-bold mb-2">Book a 4-Stream Collection</h1>
+                <p class="text-white-50 mb-4 fs-6" style="max-width: 600px;">
+                    Select your segregated streams ready for collection. Smart electric vans ensure zero-mixing delivery to certified recycling facilities.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="#booking-form" class="btn-nl-lime">
+                        <i class="fa-solid fa-calendar-check me-1"></i> Start Booking Below
+                    </a>
+                    <a href="{{ url_for('citizen_impact') }}" class="btn-nl-outline-light">
+                        <i class="fa-solid fa-chart-pie me-1"></i> View My Impact
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-4 text-center d-none d-lg-block">
+                <div class="p-4 bg-white text-dark rounded-4 shadow-lg d-inline-block border" style="min-width: 260px;">
+                    <div class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Your Green Balance</div>
+                    <div class="display-5 fw-bold text-success my-1">{{ total_points }}</div>
+                    <div class="small fw-semibold text-muted"><i class="fa-solid fa-coins text-warning me-1"></i> Green Points</div>
+                    <hr class="my-3">
+                    <div class="small text-muted text-start">
+                        <div>📍 <strong>{{ household.street_segment }}</strong></div>
+                        <div>🏠 Society Code: <strong>{{ household.household_code }}</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Form & Sidebar Grid -->
+    <div class="row g-4" id="booking-form">
+        <!-- Left Column: 4-Step Wizard -->
         <div class="col-lg-8">
-            <span class="badge bg-success-subtle text-success px-3 py-1 mb-3 fw-bold text-uppercase" style="font-size: 11.5px; letter-spacing: 0.05em;">
-                {{ CITY }} Municipal Circular Platform
-            </span>
-            <h1 class="text-white">One pickup. Four streams.<br>One cleaner loop.</h1>
-            <p>Separate your waste at home and help ensure every single stream reaches its authorized circular destination without mixing.</p>
-            
-            <div class="d-flex gap-3 flex-wrap">
-                <a href="#booking-section" class="btn btn-light text-success fw-bold px-4 py-3 shadow rounded-3">
-                    <i class="fa-solid fa-calendar-check me-2"></i> Book a Pickup
-                </a>
-                <a href="{{ url_for('citizen_impact') }}" class="btn btn-outline-light fw-bold px-4 py-3 rounded-3">
-                    <i class="fa-solid fa-chart-pie me-2"></i> See My Impact
-                </a>
-            </div>
-        </div>
-
-        <div class="col-lg-4 text-center d-none d-lg-block">
-            <div class="p-4 bg-white text-dark rounded-4 shadow-lg d-inline-block border" style="min-width: 260px;">
-                <div class="text-secondary small fw-bold text-uppercase" style="letter-spacing: 0.05em;">Your Green Balance</div>
-                <div class="display-5 fw-bold text-success my-1">{{ total_points }}</div>
-                <div class="small fw-semibold text-muted"><i class="fa-solid fa-leaf text-success me-1"></i> Green Points Earned</div>
-                <hr class="my-3">
-                <div class="small text-muted text-start">
-                    <div>📍 <strong>{{ household.street_segment }}</strong></div>
-                    <div>🏠 Household Code: <strong>{{ household.household_code }}</strong></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- 4R Circular Economy Visualizer -->
-<section class="loop-flow-box">
-    <div class="row g-3 text-center align-items-center">
-        <div class="col-md-3 col-6">
-            <div class="flow-step">
-                <div class="flow-step-icon"><i class="fa-solid fa-arrows-split-up-and-left"></i></div>
-                <div>1. Separate</div>
-            </div>
-            <small class="text-muted d-block mt-1">4 segregated streams at source</small>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="flow-step">
-                <div class="flow-step-icon"><i class="fa-solid fa-truck-pickup"></i></div>
-                <div>2. Collect</div>
-            </div>
-            <small class="text-muted d-block mt-1">Strict zero-mixing pickup</small>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="flow-step">
-                <div class="flow-step-icon"><i class="fa-solid fa-route"></i></div>
-                <div>3. Route</div>
-            </div>
-            <small class="text-muted d-block mt-1">AI-optimized transport</small>
-        </div>
-        <div class="col-md-3 col-6">
-            <div class="flow-step">
-                <div class="flow-step-icon"><i class="fa-solid fa-industry"></i></div>
-                <div>4. Recover</div>
-            </div>
-            <small class="text-muted d-block mt-1">100% circular facilities</small>
-        </div>
-    </div>
-</section>
-
-<!-- Main Grid: Booking Wizard + Impact Sidepanel -->
-<div class="row g-4" id="booking-section">
-
-    <!-- Left Column: 4-Step Booking Wizard -->
-    <div class="col-lg-7">
-        <div class="surface-card p-4 p-md-5">
-            
-            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                <div>
-                    <h2 class="mb-1 fw-bold">Book a 4R Pickup</h2>
-                    <p class="text-muted mb-0 small">Segregate at source to keep your city clean and earn Green Points.</p>
-                </div>
-                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-bold" style="font-size: 12px;">
-                    <i class="fa-solid fa-shield-check me-1"></i> Zero-Mixing
-                </span>
-            </div>
-
-            <form action="{{ url_for('book_pickup') }}" method="POST" enctype="multipart/form-data" id="pickupForm">
-                <input type="hidden" name="household_id" value="{{ household.id }}">
-
-                <!-- STEP 1: Choose Waste Streams (NO KG INPUTS!) -->
-                <div class="mb-4 pb-2">
-                    <div class="step-indicator">
-                        <span class="step-number">1</span>
-                        <h3 class="step-title">What would you like us to collect?</h3>
+            <div class="nl-card">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                    <div>
+                        <h2 class="fs-4 fw-bold mb-1">Pickup Details</h2>
+                        <p class="small text-secondary mb-0">Segregate at source to keep your city clean and earn Green Points.</p>
                     </div>
-                    <p class="text-muted small ms-4 ps-2 mb-3">Select the segregated streams ready for collection today:</p>
-
-                    <!-- Stream Selectable Cards Grid -->
-                    <div class="stream-card-container">
-                        
-                        <!-- 1. Wet Stream Card -->
-                        <div class="stream-card wet selected" id="card-wet" onclick="toggleStream('stream_wet', 'card-wet')">
-                            <div>
-                                <div class="stream-header">
-                                    <span class="stream-icon-box">🌱</span>
-                                    <input class="form-check-input fs-5" type="checkbox" name="stream_wet" id="stream_wet" checked onclick="event.stopPropagation()">
-                                </div>
-                                <div class="stream-title">Wet / Organic</div>
-                                <div class="stream-desc">Food leftovers, vegetable peels & kitchen organic waste.</div>
-                            </div>
-                            <div class="stream-destination-tag">
-                                <i class="fa-solid fa-arrow-right text-success"></i> Compost / Bio-CNG
-                            </div>
-                        </div>
-
-                        <!-- 2. Dry Recyclables Card -->
-                        <div class="stream-card dry selected" id="card-dry" onclick="toggleStream('stream_dry', 'card-dry')">
-                            <div>
-                                <div class="stream-header">
-                                    <span class="stream-icon-box">♻</span>
-                                    <input class="form-check-input fs-5" type="checkbox" name="stream_dry" id="stream_dry" checked onclick="event.stopPropagation()">
-                                </div>
-                                <div class="stream-title">Dry Recyclables</div>
-                                <div class="stream-desc">Paper, cardboard boxes, plastics, glass & aluminum tins.</div>
-                            </div>
-                            <div class="stream-destination-tag">
-                                <i class="fa-solid fa-arrow-right text-info"></i> Recovery Facility (MRF)
-                            </div>
-                        </div>
-
-                        <!-- 3. E-Waste Card -->
-                        <div class="stream-card ewaste" id="card-ewaste" onclick="toggleStream('stream_ewaste', 'card-ewaste')">
-                            <div>
-                                <div class="stream-header">
-                                    <span class="stream-icon-box">🔌</span>
-                                    <input class="form-check-input fs-5" type="checkbox" name="stream_ewaste" id="stream_ewaste" onclick="event.stopPropagation()">
-                                </div>
-                                <div class="stream-title">E-Waste</div>
-                                <div class="stream-desc">Cables, old chargers, batteries, electronics & small appliances.</div>
-                            </div>
-                            <div class="stream-destination-tag">
-                                <i class="fa-solid fa-arrow-right text-warning"></i> CPCB Recycler
-                            </div>
-                        </div>
-
-                        <!-- 4. Residual Combustibles Card -->
-                        <div class="stream-card residual" id="card-residual" onclick="toggleStream('stream_residual', 'card-residual')">
-                            <div>
-                                <div class="stream-header">
-                                    <span class="stream-icon-box">🔥</span>
-                                    <input class="form-check-input fs-5" type="checkbox" name="stream_residual" id="stream_residual" onclick="event.stopPropagation()">
-                                </div>
-                                <div class="stream-title">Residual Combustibles</div>
-                                <div class="stream-desc">Multi-layer plastic packaging & non-recyclables.</div>
-                            </div>
-                            <div class="stream-destination-tag">
-                                <i class="fa-solid fa-arrow-right text-danger"></i> RDF Cement Kiln
-                            </div>
-                        </div>
-
-                    </div>
+                    <span class="badge rounded-pill px-3 py-2 fw-bold" style="background: var(--stream-wet-bg); color: var(--stream-wet); font-size: 13px;">
+                        <i class="fa-solid fa-shield-check me-1"></i> Zero-Mixing Guarantee
+                    </span>
                 </div>
 
-                <!-- STEP 2: Location (User-Friendly GPS or Manual Fallback) -->
-                <div class="mb-4 pb-2">
-                    <div class="step-indicator">
-                        <span class="step-number">2</span>
-                        <h3 class="step-title">Pickup location</h3>
-                    </div>
-                    <p class="text-muted small ms-4 ps-2 mb-3">Choose how to confirm your pickup address:</p>
+                <form action="{{ url_for('book_pickup') }}" method="POST" enctype="multipart/form-data" id="pickupForm">
+                    <input type="hidden" name="household_id" value="{{ household.id }}">
 
-                    <div class="ms-1">
-                        <!-- Location Selection Buttons -->
+                    <!-- Step 1: 4 Stream Selection Cards -->
+                    <div class="mb-4 pb-3">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="nl-step-num mb-0" style="width: 32px; height: 32px; font-size: 0.85rem;">1</span>
+                            <h3 class="fs-5 fw-bold mb-0">Select Segregated Streams</h3>
+                        </div>
+
+                        <div class="row g-3">
+                            <!-- 1. Wet Stream Card -->
+                            <div class="col-md-6">
+                                <div class="stream-card wet selected" id="card-wet" onclick="toggleStream('stream_wet', 'card-wet')">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="stream-icon-box">🥬</span>
+                                        <input class="form-check-input fs-5" type="checkbox" name="stream_wet" id="stream_wet" checked onclick="event.stopPropagation()">
+                                    </div>
+                                    <h4 class="fs-6 fw-bold mb-1 text-dark">Wet / Organic Waste</h4>
+                                    <p class="small text-secondary mb-2">Kitchen scraps, fruit peels & compostables.</p>
+                                    <span class="stream-tag wet"><i class="fa-solid fa-arrow-right"></i> GreenCycle Compost Plant</span>
+                                </div>
+                            </div>
+
+                            <!-- 2. Dry Recyclables Card -->
+                            <div class="col-md-6">
+                                <div class="stream-card dry selected" id="card-dry" onclick="toggleStream('stream_dry', 'card-dry')">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="stream-icon-box">📦</span>
+                                        <input class="form-check-input fs-5" type="checkbox" name="stream_dry" id="stream_dry" checked onclick="event.stopPropagation()">
+                                    </div>
+                                    <h4 class="fs-6 fw-bold mb-1 text-dark">Dry Recyclables</h4>
+                                    <p class="small text-secondary mb-2">Paper, cardboard, plastics & metal cans.</p>
+                                    <span class="stream-tag dry"><i class="fa-solid fa-arrow-right"></i> Central MRF Baler</span>
+                                </div>
+                            </div>
+
+                            <!-- 3. E-Waste Card -->
+                            <div class="col-md-6">
+                                <div class="stream-card ewaste" id="card-ewaste" onclick="toggleStream('stream_ewaste', 'card-ewaste')">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="stream-icon-box">🔌</span>
+                                        <input class="form-check-input fs-5" type="checkbox" name="stream_ewaste" id="stream_ewaste" onclick="event.stopPropagation()">
+                                    </div>
+                                    <h4 class="fs-6 fw-bold mb-1 text-dark">E-Waste</h4>
+                                    <p class="small text-secondary mb-2">Cables, adapters, batteries & old electronics.</p>
+                                    <span class="stream-tag ewaste"><i class="fa-solid fa-arrow-right"></i> CPCB Recycler</span>
+                                </div>
+                            </div>
+
+                            <!-- 4. Residual Card -->
+                            <div class="col-md-6">
+                                <div class="stream-card residual" id="card-residual" onclick="toggleStream('stream_residual', 'card-residual')">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="stream-icon-box">🔥</span>
+                                        <input class="form-check-input fs-5" type="checkbox" name="stream_residual" id="stream_residual" onclick="event.stopPropagation()">
+                                    </div>
+                                    <h4 class="fs-6 fw-bold mb-1 text-dark">Residual Combustibles</h4>
+                                    <p class="small text-secondary mb-2">Multi-layer plastics & non-recyclables.</p>
+                                    <span class="stream-tag residual"><i class="fa-solid fa-arrow-right"></i> Ultratech RDF Kiln</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Location Map Pin -->
+                    <div class="mb-4 pb-3">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="nl-step-num mb-0" style="width: 32px; height: 32px; font-size: 0.85rem;">2</span>
+                            <h3 class="fs-5 fw-bold mb-0">Confirm Pickup Location</h3>
+                        </div>
+
                         <div class="d-flex gap-2 flex-wrap mb-3">
-                            <button type="button" class="btn btn-outline-success fw-bold px-3 py-2 rounded-3" onclick="getGPSLocation()">
-                                <i class="fa-solid fa-crosshairs me-1"></i> 📍 Use My Current Location
+                            <button type="button" class="btn btn-sm btn-outline-success fw-bold px-3 py-2 rounded-pill" onclick="getGPSLocation()">
+                                <i class="fa-solid fa-crosshairs me-1"></i> Use My Current Location
                             </button>
-                            <button type="button" class="btn btn-outline-secondary fw-bold px-3 py-2 rounded-3" onclick="showManualLocationInput()">
-                                <i class="fa-solid fa-house me-1"></i> 🏠 Enter Location Manually
+                            <button type="button" class="btn btn-sm btn-outline-secondary fw-bold px-3 py-2 rounded-pill" onclick="showManualLocationInput()">
+                                <i class="fa-solid fa-house me-1"></i> Enter Address Manually
                             </button>
                         </div>
 
@@ -194,240 +145,203 @@
                             </div>
                         </div>
 
-                        <!-- Hidden Lat/Lng for form submit (Not confusing ordinary users!) -->
+                        <!-- Hidden Lat/Lng for form submit -->
                         <input type="hidden" id="lat_display" name="lat" value="23.0375">
                         <input type="hidden" id="lng_display" name="lng" value="72.5520">
 
-                        <!-- Interactive Map for confirmation & adjustment -->
-                        <div id="map" style="height: 220px; border-radius: 12px;" class="border shadow-sm mb-2"></div>
-                        
-                        <!-- Confirmation Status -->
-                        <div class="p-2 bg-success-subtle text-success border border-success-subtle rounded-3 small fw-bold text-center" id="location-confirm-status">
+                        <!-- Interactive Leaflet Map -->
+                        <div id="map" style="height: 220px; border-radius: 16px;" class="border shadow-sm mb-2"></div>
+                        <div class="p-2 bg-success-subtle text-success rounded-3 small fw-bold text-center" id="location-confirm-status">
                             <i class="fa-solid fa-circle-check me-1"></i> Pickup location confirmed ✓ (Drag pin to adjust)
                         </div>
                     </div>
-                </div>
 
-                <!-- STEP 3: Show us your bin -->
-                <div class="mb-4 pb-2">
-                    <div class="step-indicator">
-                        <span class="step-number">3</span>
-                        <h3 class="step-title">Show us your bin</h3>
-                    </div>
-                    <p class="text-muted small ms-4 ps-2 mb-3">A quick photo helps record your segregation check.</p>
+                    <!-- Step 3: Photo Upload -->
+                    <div class="mb-4 pb-3">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="nl-step-num mb-0" style="width: 32px; height: 32px; font-size: 0.85rem;">3</span>
+                            <h3 class="fs-5 fw-bold mb-0">Show Us Your Bin (Optional)</h3>
+                        </div>
 
-                    <div class="ms-1">
-                        <div class="bin-dropzone" onclick="document.getElementById('photo').click()">
-                            <div class="camera-icon"><i class="fa-solid fa-camera"></i></div>
-                            <div class="upload-title">Show us your bin</div>
-                            <div class="upload-subtitle">Tap here to choose a photo or snap your separated waste bins.</div>
+                        <div class="p-4 border-2 border-dashed rounded-4 text-center cursor-pointer bg-light" onclick="document.getElementById('photo').click()" style="border: 2px dashed var(--border);">
+                            <div class="mb-2 fs-3 text-secondary"><i class="fa-solid fa-camera"></i></div>
+                            <div class="fw-bold text-dark mb-1">Upload Photo for AI Bin Quality Bonus</div>
+                            <p class="small text-secondary mb-0">Earn up to +10 extra Green Points for clean segregation.</p>
                             <input type="file" class="d-none" id="photo" name="photo" accept="image/*" onchange="previewImage(event)">
                         </div>
 
                         <div id="preview-container" class="mt-3 text-center d-none">
-                            <div class="p-2 bg-light border rounded-3 d-inline-block shadow-sm">
-                                <img id="preview" src="#" alt="Bin Preview" class="img-fluid rounded-2" style="max-height: 150px;">
-                                <div class="small text-success fw-bold mt-2"><i class="fa-solid fa-circle-check me-1"></i> Bin Photo Attached</div>
+                            <div class="p-2 bg-white border rounded-3 d-inline-block shadow-sm">
+                                <img id="preview" src="#" alt="Bin Preview" class="img-fluid rounded-2" style="max-height: 140px;">
+                                <div class="small text-success fw-bold mt-2"><i class="fa-solid fa-circle-check me-1"></i> Photo Attached</div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- STEP 4: Confirm & Points -->
-                <div class="pt-3 border-top">
-                    <div class="p-3 bg-light rounded-3 border mb-3 d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="fw-bold text-dark"><i class="fa-solid fa-award text-warning me-1"></i> Transparent Green Points Reward</div>
-                            <small class="text-muted"><code>Base (20) + floor(Bin Score / 10)</code></small>
+                    <!-- Step 4: Submission & Points Preview -->
+                    <div class="pt-3 border-top">
+                        <div class="p-3 bg-light rounded-3 border mb-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold text-dark"><i class="fa-solid fa-award text-warning me-1"></i> Green Points Reward</div>
+                                <small class="text-secondary">Base (20) + Segregation Bonus (up to +10)</small>
+                            </div>
+                            <span class="badge fs-6 rounded-pill px-3 py-2" style="background: var(--lime); color: var(--forest); font-weight: 800;">
+                                +28 pts
+                            </span>
                         </div>
-                        <span class="badge bg-success text-white px-3 py-2 fs-6 rounded-pill">+28 pts</span>
+
+                        <button type="submit" class="btn-nl-lime w-100 btn-nl-giant">
+                            <i class="fa-solid fa-circle-check fs-5 me-1"></i> Confirm & Book Pickup
+                        </button>
                     </div>
-
-                    <button type="submit" class="btn-primary-action w-100 py-3">
-                        <i class="fa-solid fa-check-circle fs-5"></i> Book Segregated 4R Pickup
-                    </button>
-                </div>
-
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <!-- Right Column: Personal Impact Ledger & Recent Pickups -->
-    <div class="col-lg-5">
-        
-        <!-- 4R Impact Ledger -->
-        <div class="surface-card p-4 mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="brand-badge" style="width: 32px; height: 32px;"><i class="fa-solid fa-leaf text-white small"></i></span>
-                    <h4 class="fw-bold mb-0">Your 4R Impact</h4>
-                </div>
-                <span class="estimate-badge">ESTIMATE</span>
-            </div>
-
-            <div class="row g-3 mb-3">
-                <div class="col-6">
-                    <div class="impact-metric-card">
-                        <div class="impact-metric-number text-success">{{ total_diverted }}</div>
-                        <div class="impact-metric-label">Estimated kg Diverted</div>
+        <!-- Right Column: Personal Impact Ledger & Recent Pickups -->
+        <div class="col-lg-4">
+            <!-- Impact Ledger -->
+            <div class="nl-card mb-4">
+                <h3 class="fs-5 fw-bold mb-3 pb-2 border-bottom">Household Impact</h3>
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: var(--stream-wet-bg);">
+                            <div class="fs-3 fw-bold text-success">{{ total_diverted }}</div>
+                            <div class="small text-secondary fw-semibold">kg Diverted</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 rounded-3 text-center" style="background: var(--stream-dry-bg);">
+                            <div class="fs-3 fw-bold text-primary">{{ co2_saved }}</div>
+                            <div class="small text-secondary fw-semibold">kg CO₂e Saved</div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-6">
-                    <div class="impact-metric-card">
-                        <div class="impact-metric-number text-primary">{{ co2_saved }}</div>
-                        <div class="impact-metric-label">Estimated kg CO₂e Saved</div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="p-3 bg-light rounded-3 border mb-3">
-                <div class="small fw-bold text-dark text-uppercase mb-2" style="font-size: 11px; letter-spacing: 0.05em;">Estimated Stream Breakdown:</div>
-                <div class="d-flex flex-column gap-2 small">
-                    <div class="d-flex justify-content-between">
-                        <span>🌱 <strong>Wet / Compost:</strong></span>
+                <div class="p-3 bg-light rounded-3 small">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>🥬 Organic Wet:</span>
                         <strong class="text-dark">{{ wet_kg }} kg</strong>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <span>♻ <strong>Dry / MRF:</strong></span>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>📦 Dry Recyclables:</span>
                         <strong class="text-dark">{{ dry_kg }} kg</strong>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <span>🔌 <strong>E-Waste Recycler:</strong></span>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>🔌 E-Waste:</span>
                         <strong class="text-dark">{{ ewaste_kg }} kg</strong>
                     </div>
                     <div class="d-flex justify-content-between">
-                        <span>🔥 <strong>Residual RDF Kiln:</strong></span>
+                        <span>🔥 Residual:</span>
                         <strong class="text-dark">{{ residual_kg }} kg</strong>
                     </div>
                 </div>
             </div>
 
-            <div class="p-2 bg-success-subtle text-success rounded-3 small text-center fw-semibold" style="font-size: 11.5px;">
-                <i class="fa-solid fa-shield-check me-1"></i> 100% Zero Landfill Verified Chain-of-Custody
-            </div>
-        </div>
+            <!-- Recent Pickups Sidebar -->
+            <div class="nl-card">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                    <h3 class="fs-5 fw-bold mb-0">Recent Pickups</h3>
+                    <a href="{{ url_for('citizen_my_reports') }}" class="small fw-bold text-success">View All</a>
+                </div>
 
-        <!-- Recent Pickups -->
-        <div class="surface-card p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                <h4 class="fw-bold mb-0"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i> Recent Pickups</h4>
-                <a href="{{ url_for('my_reports') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">View All</a>
-            </div>
-
-            {% if pickups %}
-                <div class="d-flex flex-column gap-3">
-                    {% for p in pickups[:3] %}
-                    <div class="p-3 bg-light rounded-3 border">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-dark fs-6">Pickup #{{ p.id }}</span>
-                            <span class="status-badge {{ p.status }}">{{ p.status }}</span>
+                {% if pickups %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for p in pickups[:3] %}
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-dark">Pickup #{{ p.id }}</span>
+                                <span class="badge bg-white border text-dark small">{{ p.status|upper }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center small">
+                                <span class="text-muted">Bin Score: <strong class="text-success">{{ p.bin_score }}/100</strong></span>
+                                <a href="{{ url_for('manifest_page', pickup_id=p.id) }}" class="btn btn-sm btn-dark rounded-pill px-3 py-1" style="font-size: 11px;">
+                                    <i class="fa-solid fa-qrcode me-1"></i> QR Pass
+                                </a>
+                            </div>
                         </div>
-
-                        <div class="d-flex gap-1 flex-wrap mb-2">
-                            {% for st in p.streams %}
-                                <span class="badge bg-white text-dark border small">{{ st.stream_type|upper }} ({{ st.estimated_kg }}kg)</span>
-                            {% endfor %}
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center pt-2 border-top small">
-                            <span class="text-muted">Bin Score: <strong class="text-success">{{ p.bin_score }}/100</strong></span>
-                            <a href="{{ url_for('manifest_page', pickup_id=p.id) }}" class="btn btn-sm btn-dark px-3 rounded-pill" style="font-size: 12px;">
-                                <i class="fa-solid fa-qrcode me-1"></i> QR Manifest
-                            </a>
-                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-4 text-muted">
-                    <p class="small mb-0">No pickups booked yet. Book your first pickup above!</p>
-                </div>
-            {% endif %}
+                {% else %}
+                    <p class="small text-secondary text-center py-3 mb-0">No pickups booked yet.</p>
+                {% endif %}
+            </div>
         </div>
-
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    // Leaflet Location Picker with Draggable Pin
-    var defaultLat = 23.0375;
-    var defaultLng = 72.5520;
-
-    var map = L.map('map').setView([defaultLat, defaultLng], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    var marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
-
-    marker.on('dragend', function(e) {
-        var coord = marker.getLatLng();
-        document.getElementById('lat_display').value = coord.lat.toFixed(5);
-        document.getElementById('lng_display').value = coord.lng.toFixed(5);
-        document.getElementById('location-confirm-status').innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Pickup location adjusted and confirmed ✓';
-    });
-
-    map.on('click', function(e) {
-        marker.setLatLng(e.latlng);
-        document.getElementById('lat_display').value = e.latlng.lat.toFixed(5);
-        document.getElementById('lng_display').value = e.latlng.lng.toFixed(5);
-        document.getElementById('location-confirm-status').innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Pickup location adjusted and confirmed ✓';
-    });
-
-    function getGPSLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                var lat = position.coords.latitude;
-                var lng = position.coords.longitude;
-                map.setView([lat, lng], 16);
-                marker.setLatLng([lat, lng]);
-                document.getElementById('lat_display').value = lat.toFixed(5);
-                document.getElementById('lng_display').value = lng.toFixed(5);
-                document.getElementById('location-confirm-status').innerHTML = '<i class="fa-solid fa-crosshairs me-1"></i> Current GPS location confirmed ✓';
-            }, function(error) {
-                alert("GPS permission was denied or unavailable. You can drag the pin on the map or enter location manually.");
-                showManualLocationInput();
-            });
-        } else {
-            alert("Geolocation is not supported by your browser. Please use manual location.");
-            showManualLocationInput();
-        }
-    }
-
-    function showManualLocationInput() {
-        document.getElementById('manual-location-box').classList.remove('d-none');
-    }
-
-    function applyManualAddress() {
-        var addr = document.getElementById('manual_address').value;
-        if (addr.trim() !== '') {
-            document.getElementById('location-confirm-status').innerHTML = '<i class="fa-solid fa-circle-check me-1"></i> Address confirmed: ' + addr + ' ✓';
-        }
-    }
-
     function toggleStream(checkboxId, cardId) {
-        var chk = document.getElementById(checkboxId);
-        var card = document.getElementById(cardId);
-        chk.checked = !chk.checked;
-        if (chk.checked) {
+        const cb = document.getElementById(checkboxId);
+        const card = document.getElementById(cardId);
+        cb.checked = !cb.checked;
+        if (cb.checked) {
             card.classList.add('selected');
         } else {
             card.classList.remove('selected');
         }
     }
 
-    function previewImage(event) {
-        var reader = new FileReader();
-        reader.onload = function() {
-            var output = document.getElementById('preview');
-            output.src = reader.result;
-            document.getElementById('preview-container').classList.remove('d-none');
-        }
-        if (event.target.files && event.target.files[0]) {
-            reader.readAsDataURL(event.target.files[0]);
+    let map, marker;
+    function initMap() {
+        const defaultLat = 23.0375;
+        const defaultLng = 72.5520;
+        map = L.map('map').setView([defaultLat, defaultLng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+        marker.on('dragend', function (e) {
+            const pos = marker.getLatLng();
+            document.getElementById('lat_display').value = pos.lat.toFixed(5);
+            document.getElementById('lng_display').value = pos.lng.toFixed(5);
+            document.getElementById('location-confirm-status').innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> Location pin adjusted (${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)})`;
+        });
+    }
+
+    function getGPSLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                map.setView([lat, lng], 16);
+                marker.setLatLng([lat, lng]);
+                document.getElementById('lat_display').value = lat.toFixed(5);
+                document.getElementById('lng_display').value = lng.toFixed(5);
+                document.getElementById('location-confirm-status').innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> GPS location updated ✓`;
+            }, function () {
+                alert("GPS location permission denied. Please drag the pin on the map.");
+            });
         }
     }
+
+    function showManualLocationInput() {
+        const box = document.getElementById('manual-location-box');
+        box.classList.toggle('d-none');
+    }
+
+    function applyManualAddress() {
+        const addr = document.getElementById('manual_address').value;
+        if (addr) {
+            document.getElementById('location-confirm-status').innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> Address set: ${addr}`;
+        }
+    }
+
+    function previewImage(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                document.getElementById('preview').src = evt.target.result;
+                document.getElementById('preview-container').classList.remove('d-none');
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', initMap);
 </script>
 {% endblock %}

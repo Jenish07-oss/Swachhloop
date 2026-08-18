@@ -137,7 +137,8 @@ class TestNagarLoopPhase1(unittest.TestCase):
     def test_16_css_static_file(self):
         res = self.client.get('/static/css/nl.css')
         self.assertEqual(res.status_code, 200)
-        self.assertIn(b'--g: #1e7e5a;', res.data)
+        self.assertIn(b'--forest: #0C3B2E;', res.data)
+        self.assertIn(b'--lime: #B5E048;', res.data)
 
 if __name__ == '__main__':
     unittest.main()

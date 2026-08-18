@@ -1,70 +1,145 @@
 {% extends "base.html" %}
-{% block title %}Driver Operations — {{ BRAND }}{% endblock %}
+{% block title %}Driver Portal — {{ BRAND }}{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-success text-white p-2 fs-6"><i class="fa-solid fa-truck"></i></span>
-                <h1 class="fs-3 fw-bold text-dark mb-0">Driver Portal — {{ van.van_code if van else 'Van #1' }}</h1>
+<div class="nl-fade-up" style="max-width: 860px; margin: 0 auto;">
+
+    <!-- Top Van & Driver Status Card -->
+    <div class="nl-panel-forest mb-4 p-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="brand-badge" style="width: 52px; height: 52px; background: var(--lime); color: var(--forest);">
+                    <i class="fa-solid fa-truck-fast fs-4"></i>
+                </div>
+                <div>
+                    <h1 class="text-white fs-3 fw-bold mb-0">Driver Portal — {{ van.van_code if van else 'Van #1' }}</h1>
+                    <p class="text-white-50 mb-0 small">Driver: <strong>{{ van.driver_name if van else 'Vikram Thakor' }}</strong> • Navrangpura Ward</p>
+                </div>
             </div>
-            <p class="small text-secondary mb-0">Driver: <strong>{{ van.driver_name if van else 'Vikram Thakor' }}</strong> • Navrangpura Ward, {{ CITY }}</p>
+            <div class="text-end">
+                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background: rgba(181, 224, 72, 0.2); color: var(--lime); border: 1px solid var(--lime); font-size: 13px;">
+                    <i class="fa-solid fa-signal me-1"></i> GPS Connected
+                </span>
+            </div>
         </div>
 
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('driver_portal') }}" class="btn btn-sm btn-success fw-bold rounded-pill px-3">
-                <i class="fa-solid fa-route me-1"></i> Active Route
-            </a>
-            <a href="{{ url_for('driver_history') }}" class="btn btn-sm btn-outline-secondary fw-bold rounded-pill px-3">
-                <i class="fa-solid fa-clock-rotate-left me-1"></i> History
-            </a>
+        <!-- Van Capacity Meter -->
+        <div class="mt-4 pt-3 border-top border-secondary">
+            <div class="d-flex justify-content-between align-items-center small text-white-50 mb-2">
+                <span>Payload Capacity</span>
+                <strong class="text-white">320 kg / 500 kg (64% Full)</strong>
+            </div>
+            <div class="progress rounded-pill" style="height: 10px; background: rgba(255, 255, 255, 0.15);">
+                <div class="progress-bar" role="progressbar" style="width: 64%; background: var(--lime);" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
         </div>
     </div>
 
-    <!-- Active Route Stops Card -->
-    <div class="nl-card shadow-sm mb-4">
+    <!-- Active Next Stop or Route Completion Card -->
+    {% if stops and stops|selectattr('status', 'equalto', 'pending')|list|length > 0 %}
+        {% set next_stop = (stops|selectattr('status', 'equalto', 'pending')|list)[0] %}
+        
+        <!-- Giant "Next Stop" Hero Card -->
+        <div class="driver-hero-stop mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="stop-sequence-badge">
+                    <i class="fa-solid fa-location-crosshairs"></i> NEXT STOP #{{ loop.index if loop is defined else '1' }}
+                </span>
+                <span class="badge bg-light text-secondary border px-3 py-1">Est. 4 mins</span>
+            </div>
+
+            <!-- Society & Citizen Details -->
+            <h2 class="fs-2 fw-bold text-dark mb-1">{{ next_stop.citizen_name }}</h2>
+            <div class="fs-5 text-secondary fw-semibold mb-3">
+                <i class="fa-solid fa-house-chimney text-success me-1"></i> Society Code: <strong class="text-dark">{{ next_stop.household_code }}</strong>
+            </div>
+
+            <div class="p-3 bg-light rounded-4 border mb-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="small text-muted mb-1">STREET ADDRESS</div>
+                        <div class="fw-bold text-dark fs-6"><i class="fa-solid fa-map-pin text-danger me-1"></i> {{ next_stop.street_segment }}, Navrangpura</div>
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ next_stop.lat if next_stop.lat else '23.0375' }},{{ next_stop.lng if next_stop.lng else '72.5520' }}" target="_blank" class="btn btn-outline-dark rounded-pill px-3 py-2 fw-bold">
+                        <i class="fa-solid fa-diamond-turn-right me-1"></i> Navigate
+                    </a>
+                </div>
+            </div>
+
+            <!-- Streams to Collect -->
+            <div class="mb-4">
+                <div class="small fw-bold text-dark text-uppercase mb-2" style="font-size: 11px; letter-spacing: 0.05em;">Streams to Collect:</div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <span class="stream-tag wet fs-6 py-2 px-3">🥬 Organic Wet Waste</span>
+                    <span class="stream-tag dry fs-6 py-2 px-3">📦 Dry Recyclables</span>
+                    <span class="stream-tag ewaste fs-6 py-2 px-3">🔌 E-Waste</span>
+                </div>
+            </div>
+
+            <!-- Giant 62px Action Button -->
+            <button type="button" class="btn-nl-lime btn-nl-giant w-100 shadow-lg" onclick="reportFromDriver({{ next_stop.id }})">
+                <i class="fa-solid fa-circle-check fs-4 me-2"></i> Report Collection Complete
+            </button>
+        </div>
+
+    {% elif stops and stops|selectattr('status', 'equalto', 'collection_reported')|list|length > 0 %}
+        <!-- Waiting Verification Card -->
+        <div class="nl-card text-center p-5 mb-4 border-2" style="border-color: var(--lime);">
+            <div class="mb-3 fs-1 text-warning"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <h2 class="fs-4 fw-bold mb-2">Awaiting Citizen Confirmation</h2>
+            <p class="text-secondary small mb-4">Collection reported for current stop. Verification notification dispatched to citizen app.</p>
+            <button class="btn btn-outline-secondary rounded-pill px-4 py-2" onclick="location.reload()">
+                <i class="fa-solid fa-rotate me-1"></i> Check Confirmation Status
+            </button>
+        </div>
+
+    {% else %}
+        <!-- Route All Clear / Finished Card -->
+        <div class="nl-card text-center p-5 mb-4">
+            <div class="mb-3 fs-1 text-success"><i class="fa-solid fa-circle-check"></i></div>
+            <h2 class="fs-4 fw-bold mb-2">All Assigned Stops Complete!</h2>
+            <p class="text-secondary small mb-4">Great job, Vikram! Ready to proceed to Ahmedabad Central MRF and Compost Facility for weighment.</p>
+            <a href="{{ url_for('driver_history') }}" class="btn-nl-forest">
+                <i class="fa-solid fa-list-check me-1"></i> View Route History
+            </a>
+        </div>
+    {% endif %}
+
+    <!-- Upcoming Queue List -->
+    <div class="nl-card">
         <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-            <h3 class="fs-5 fw-bold text-dark mb-0"><i class="fa-solid fa-list-ol text-success me-2"></i> Assigned Route Stops</h3>
-            <span class="badge bg-primary text-white">{{ stops|length }} Scheduled Pickups</span>
+            <h3 class="fs-5 fw-bold mb-0">Scheduled Route Queue</h3>
+            <span class="badge rounded-pill px-3 py-1 bg-light text-dark border">{{ stops|length }} Stops</span>
         </div>
 
         {% if stops %}
             <div class="d-flex flex-column gap-2">
                 {% for s in stops %}
-                    <div class="p-3 rounded-3 border d-flex justify-content-between align-items-center flex-wrap gap-2 {% if s.status == 'collected' %}bg-success-subtle border-success{% elif s.status == 'collection_reported' %}bg-warning-subtle border-warning{% else %}bg-light{% endif %}">
-                        <div>
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <span class="badge bg-dark text-white rounded-circle" style="width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">{{ loop.index }}</span>
-                                <strong class="text-dark">{{ s.household_code }} — {{ s.citizen_name }}</strong>
-                                <span class="badge {% if s.status == 'collected' %}bg-success{% elif s.status == 'collection_reported' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
-                                    {{ s.status|upper }}
-                                </span>
-                            </div>
-                            <div class="small text-muted">📍 {{ s.street_segment }}</div>
+                <div class="p-3 rounded-3 border d-flex justify-content-between align-items-center flex-wrap gap-2 {% if s.status == 'collected' %}bg-success-subtle border-success{% elif s.status == 'collection_reported' %}bg-warning-subtle border-warning{% else %}bg-light{% endif %}">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-dark text-white rounded-circle" style="width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">{{ loop.index }}</span>
+                            <strong class="text-dark">{{ s.household_code }} — {{ s.citizen_name }}</strong>
                         </div>
-
-                        <div>
-                            {% if s.status == 'pending' %}
-                                <form action="{{ url_for('api_update_status', pickup_id=s.id) }}" method="POST" class="d-inline" onsubmit="event.preventDefault(); reportFromDriver({{ s.id }});">
-                                    <button type="button" class="btn btn-sm btn-success fw-bold px-3" onclick="reportFromDriver({{ s.id }})">
-                                        <i class="fa-solid fa-check me-1"></i> Report Collected
-                                    </button>
-                                </form>
-                            {% elif s.status == 'collection_reported' %}
-                                <span class="badge bg-warning text-dark p-2"><i class="fa-solid fa-clock me-1"></i> Awaiting Citizen Verification</span>
-                            {% else %}
-                                <span class="badge bg-success p-2"><i class="fa-solid fa-check-double me-1"></i> Verified</span>
-                            {% endif %}
-                        </div>
+                        <div class="small text-muted">📍 {{ s.street_segment }}</div>
                     </div>
+
+                    <div>
+                        {% if s.status == 'pending' %}
+                            <button type="button" class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 py-1" onclick="reportFromDriver({{ s.id }})">
+                                Collect
+                            </button>
+                        {% elif s.status == 'collection_reported' %}
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2"><i class="fa-solid fa-clock me-1"></i> Awaiting Citizen</span>
+                        {% else %}
+                            <span class="badge bg-success rounded-pill px-3 py-2"><i class="fa-solid fa-check-double me-1"></i> Verified</span>
+                        {% endif %}
+                    </div>
+                </div>
                 {% endfor %}
             </div>
         {% else %}
-            <div class="text-center py-4 text-muted">
-                <i class="fa-solid fa-circle-check fs-1 text-success mb-2"></i>
-                <p class="mb-0">No pending stops remaining on this route! Ready for destination facility delivery.</p>
-            </div>
+            <p class="small text-secondary text-center py-3 mb-0">No stops scheduled for today.</p>
         {% endif %}
     </div>
 </div>

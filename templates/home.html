@@ -6,8 +6,8 @@
     <!-- Hero Section -->
     <section class="nl-hero-grid mb-4">
         <div>
-            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 bg-success-subtle border border-success-subtle text-success rounded-pill small fw-bold mb-3">
-                <i class="fa-solid fa-leaf"></i> {{ CITY }} Municipal Circular Loop
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 bg-white border text-dark rounded-pill small fw-bold mb-3 shadow-sm">
+                <i class="fa-solid fa-leaf text-success"></i> {{ CITY }} Municipal Circular Platform
             </div>
             
             <h1 class="nl-hero-slogan">
@@ -15,11 +15,11 @@
             </h1>
             
             <p class="nl-hero-sub">
-                Connecting residential societies, smart collection fleets, and certified recycling facilities for 100% verified waste recovery.
+                Connecting residential societies, smart collection fleets, and certified recycling facilities for 100% verified circular waste recovery.
             </p>
 
             <div class="nl-hero-ctas">
-                <a href="{{ url_for('citizen_booking') }}" class="btn-nl-primary">
+                <a href="{{ url_for('citizen_booking') }}" class="btn-nl-lime">
                     <i class="fa-solid fa-building-user me-1"></i> {{ tr('join') }}
                 </a>
                 <a href="{{ url_for('citizen_booking', mode='event') }}" class="btn-nl-outline">
@@ -27,8 +27,8 @@
                 </a>
             </div>
 
-            <div class="nl-trust-line">
-                <i class="fa-solid fa-shield-check text-success"></i>
+            <div class="d-flex align-items-center gap-2 text-muted small fw-semibold">
+                <i class="fa-solid fa-shield-check text-success fs-6"></i>
                 <span>{{ tr('trusted') }}</span>
             </div>
         </div>
@@ -46,31 +46,31 @@
                 <!-- center brand with pulse ring -->
                 <circle cx="180" cy="190" r="52" fill="#eef7f2"/>
                 <circle cx="180" cy="190" r="52" fill="none" stroke="#1e7e5a" stroke-width="2" class="ring"/>
-                <text x="180" y="186" text-anchor="middle" font-size="17" font-weight="800" fill="#14532d">{{ BRAND }}</text>
-                <text x="180" y="206" text-anchor="middle" font-size="11" fill="#5b6b7a">CIRCULAR</text>
+                <text x="180" y="186" text-anchor="middle" font-size="17" font-weight="800" fill="#0C3B2E">{{ BRAND }}</text>
+                <text x="180" y="206" text-anchor="middle" font-size="11" font-weight="700" fill="#5C6E67">CIRCULAR</text>
 
                 <!-- 4 stations: title + icon + sub-label -->
-                <g text-anchor="middle" fill="#0f2438">
+                <g text-anchor="middle" fill="#0C1E17">
                     <circle cx="180" cy="70"  r="28" fill="#fff" stroke="#1e7e5a" stroke-width="3"/>
                     <circle cx="300" cy="190" r="28" fill="#fff" stroke="#1e7e5a" stroke-width="3"/>
                     <circle cx="180" cy="310" r="28" fill="#fff" stroke="#1e7e5a" stroke-width="3"/>
                     <circle cx="60"  cy="190" r="28" fill="#fff" stroke="#1e7e5a" stroke-width="3"/>
-                    <text x="180" y="76"  font-size="20">🗂️</text><text x="300" y="196" font-size="20">📅</text>
-                    <text x="180" y="316" font-size="20">🚛</text><text x="60"  y="196" font-size="20">♻️</text>
-                    <g font-size="13" font-weight="700">
+                    <text x="180" y="76"  font-size="20">🥬</text><text x="300" y="196" font-size="20">📱</text>
+                    <text x="180" y="316" font-size="20">🚚</text><text x="60"  y="196" font-size="20">🏭</text>
+                    <g font-size="13" font-weight="800">
                         <text x="180" y="30">{{ tr('separate') }}</text><text x="300" y="150">{{ tr('book_s') }}</text>
                         <text x="180" y="270">{{ tr('collect') }}</text><text x="60" y="150">{{ tr('recover') }}</text>
                     </g>
-                    <g font-size="10" fill="#5b6b7a">
+                    <g font-size="10" font-weight="600" fill="#5C6E67">
                         <text x="180" y="112">4 streams at home</text><text x="300" y="232">kg + photo booking</text>
-                        <text x="180" y="352">van + SMS alerts</text><text x="60" y="232">points back to society</text>
+                        <text x="180" y="352">smart electric vans</text><text x="60" y="232">points to society</text>
                     </g>
                 </g>
 
                 <!-- reward chip pops when loop closes -->
                 <g class="chip">
-                    <rect x="86" y="112" width="128" height="26" rx="13" fill="#fff" stroke="#e0a800"/>
-                    <text x="150" y="129" text-anchor="middle" font-size="11" font-weight="700" fill="#14532d">🎉 +72 Green Points</text>
+                    <rect x="86" y="112" width="128" height="26" rx="13" fill="#fff" stroke="#B5E048" stroke-width="2"/>
+                    <text x="150" y="129" text-anchor="middle" font-size="11" font-weight="800" fill="#0C3B2E">🎉 +72 Green Points</text>
                 </g>
 
                 <!-- waste goes clockwise, rewards flow back -->
@@ -119,47 +119,45 @@
     </section>
 
     <!-- 3 Audience Cards -->
-    <section class="nl-audience-grid">
-        <!-- 1. Housing Societies -->
-        <div class="nl-audience-card">
-            <div>
-                <div class="text-success fs-3 mb-2"><i class="fa-solid fa-city"></i></div>
-                <h3 class="fs-5 fw-bold text-dark">{{ tr('society') }}</h3>
-                <p class="small text-secondary mb-3">
-                    Bulk society bins, automated morning van routes, society green certification, and collective podium ranking.
-                </p>
+    <section class="mb-5">
+        <h2 class="fs-4 fw-bold text-dark mb-3">Who Uses {{ BRAND }}?</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="nl-card h-100">
+                    <div class="d-inline-flex p-3 rounded-4 mb-3" style="background: var(--stream-wet-bg); color: var(--stream-wet);">
+                        <i class="fa-solid fa-building fs-3"></i>
+                    </div>
+                    <h3 class="fs-5 fw-bold mb-2">{{ tr('society') }}</h3>
+                    <p class="small text-secondary mb-4">Dedicated 240L wheelie bins, automated morning collection, society-wide impact certificates.</p>
+                    <a href="{{ url_for('citizen_booking') }}" class="btn-nl-outline w-100" style="min-height: 46px; font-size: 0.9rem;">
+                        Register Society <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
             </div>
-            <a href="{{ url_for('citizen_booking') }}" class="btn-nl-primary w-100">
-                {{ tr('start') }}
-            </a>
-        </div>
-
-        <!-- 2. Individual Homes -->
-        <div class="nl-audience-card">
-            <div>
-                <div class="text-primary fs-3 mb-2"><i class="fa-solid fa-house-user"></i></div>
-                <h3 class="fs-5 fw-bold text-dark">{{ tr('home_user') }}</h3>
-                <p class="small text-secondary mb-3">
-                    Doorstep segregated booking, instant digital QR manifests, and Green Points redeemable across Ahmedabad.
-                </p>
+            <div class="col-md-4">
+                <div class="nl-card h-100">
+                    <div class="d-inline-flex p-3 rounded-4 mb-3" style="background: var(--stream-dry-bg); color: var(--stream-dry);">
+                        <i class="fa-solid fa-house-user fs-3"></i>
+                    </div>
+                    <h3 class="fs-5 fw-bold mb-2">{{ tr('home_user') }}</h3>
+                    <p class="small text-secondary mb-4">On-demand doorstep booking, instant AI bin quality score, earn property tax rebate points.</p>
+                    <a href="{{ url_for('citizen_booking') }}" class="btn-nl-lime w-100" style="min-height: 46px; font-size: 0.9rem;">
+                        Book Pickup <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
             </div>
-            <a href="{{ url_for('citizen_booking') }}" class="btn-nl-outline w-100">
-                {{ tr('book') }}
-            </a>
-        </div>
-
-        <!-- 3. Active Citizens -->
-        <div class="nl-audience-card">
-            <div>
-                <div class="text-warning fs-3 mb-2"><i class="fa-solid fa-trophy"></i></div>
-                <h3 class="fs-5 fw-bold text-dark">{{ tr('citizen') }}</h3>
-                <p class="small text-secondary mb-3">
-                    Real-time verification portal, dispute protection, CO₂ emission tracking, and Ward Green Champions board.
-                </p>
+            <div class="col-md-4">
+                <div class="nl-card h-100">
+                    <div class="d-inline-flex p-3 rounded-4 mb-3" style="background: var(--stream-ewaste-bg); color: var(--stream-ewaste);">
+                        <i class="fa-solid fa-bullhorn fs-3"></i>
+                    </div>
+                    <h3 class="fs-5 fw-bold mb-2">{{ tr('citizen') }}</h3>
+                    <p class="small text-secondary mb-4">Report road waste blackspots, monitor civic response time, and participate in community drives.</p>
+                    <a href="{{ url_for('citizen_booking', mode='event') }}" class="btn-nl-outline w-100" style="min-height: 46px; font-size: 0.9rem;">
+                        Report Road Waste <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
             </div>
-            <a href="{{ url_for('public_leaderboard') }}" class="btn-nl-secondary w-100">
-                {{ tr('board') }}
-            </a>
         </div>
     </section>
 </div>

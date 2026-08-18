@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="{{ lang }}">
+<html lang="{{ lang|default('en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ BRAND }} — {{ SLOGAN[lang] }}{% endblock %}</title>
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Manrope -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -23,94 +23,113 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/nl.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    {% block extra_head %}{% endblock %}
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Sticky Product Nav -->
+    <!-- Sticky Glassy Deep Forest Navigation -->
     <header class="nl-nav">
         <div class="nl-nav-inner">
+            <!-- Brand Logo -->
             <a href="{{ url_for('home') }}" class="nl-brand">
                 <span class="nl-brand-icon"><i class="fa-solid fa-recycle"></i></span>
                 <span>{{ BRAND }}</span>
             </a>
 
+            <!-- Role-Isolated Navigation Links -->
             <nav>
                 <ul class="nl-nav-links">
-                    <li><a href="{{ url_for('home') }}" class="nl-nav-link {% if request.path == '/' %}active{% endif %}">{{ tr('home') }}</a></li>
-                    <li><a href="{{ url_for('citizen_booking') }}" class="nl-nav-link {% if request.path == '/book' %}active{% endif %}">{{ tr('book') }}</a></li>
-                    <li><a href="{{ url_for('citizen_my_reports') }}" class="nl-nav-link {% if request.path == '/my-pickups' %}active{% endif %}">{{ tr('my_pickups') }}</a></li>
-                    <li><a href="{{ url_for('citizen_impact') }}" class="nl-nav-link {% if request.path == '/impact' %}active{% endif %}">{{ tr('impact') }}</a></li>
-                    <li><a href="{{ url_for('public_leaderboard') }}" class="nl-nav-link {% if request.path == '/leaderboard' %}active{% endif %}">{{ tr('board') }}</a></li>
-                    <li><a href="{{ url_for('help_page') }}" class="nl-nav-link {% if request.path == '/help' %}active{% endif %}">{{ tr('help') }}</a></li>
+                    {% if session.get('role') == 'citizen' %}
+                        <!-- Citizen Role Nav -->
+                        <li><a href="{{ url_for('home') }}" class="nl-nav-link {% if request.path == '/' %}active{% endif %}">{{ tr('home') }}</a></li>
+                        <li><a href="{{ url_for('citizen_booking') }}" class="nl-nav-link {% if request.path == '/book' %}active{% endif %}">{{ tr('book') }}</a></li>
+                        <li><a href="{{ url_for('citizen_my_reports') }}" class="nl-nav-link {% if request.path in ['/my-pickups', '/my-reports'] %}active{% endif %}">{{ tr('my_pickups') }}</a></li>
+                        <li><a href="{{ url_for('citizen_impact') }}" class="nl-nav-link {% if request.path == '/impact' %}active{% endif %}">{{ tr('impact') }}</a></li>
+                        <li><a href="{{ url_for('public_leaderboard') }}" class="nl-nav-link {% if request.path == '/leaderboard' %}active{% endif %}">{{ tr('board') }}</a></li>
+                    
+                    {% elif session.get('role') == 'driver' %}
+                        <!-- Driver Role Nav -->
+                        <li><a href="{{ url_for('driver_portal') }}" class="nl-nav-link {% if request.path == '/driver' %}active{% endif %}">Next Stop</a></li>
+                        <li><a href="{{ url_for('driver_history') }}" class="nl-nav-link {% if request.path == '/driver/history' %}active{% endif %}">Completed Stops</a></li>
+                    
+                    {% elif session.get('role') == 'admin' %}
+                        <!-- Admin Role Nav -->
+                        <li><a href="{{ url_for('admin_dashboard') }}" class="nl-nav-link {% if request.path == '/admin' %}active{% endif %}">Command Center</a></li>
+                        <li><a href="{{ url_for('admin_dispatch') }}" class="nl-nav-link {% if request.path == '/admin/dispatch' %}active{% endif %}">Dispatch & Fleet</a></li>
+                        <li><a href="{{ url_for('public_leaderboard') }}" class="nl-nav-link {% if request.path == '/leaderboard' %}active{% endif %}">{{ tr('board') }}</a></li>
+
+                    {% else %}
+                        <!-- Public / Guest Nav -->
+                        <li><a href="{{ url_for('home') }}" class="nl-nav-link {% if request.path == '/' %}active{% endif %}">{{ tr('home') }}</a></li>
+                        <li><a href="{{ url_for('citizen_booking') }}" class="nl-nav-link {% if request.path == '/book' %}active{% endif %}">{{ tr('book') }}</a></li>
+                        <li><a href="{{ url_for('public_leaderboard') }}" class="nl-nav-link {% if request.path == '/leaderboard' %}active{% endif %}">{{ tr('board') }}</a></li>
+                        <li><a href="{{ url_for('help_page') }}" class="nl-nav-link {% if request.path == '/help' %}active{% endif %}">{{ tr('help') }}</a></li>
+                    {% endif %}
                 </ul>
             </nav>
 
+            <!-- Right Controls: Language Switcher & Auth State -->
             <div class="d-flex align-items-center gap-2">
-                <!-- Language Toggle Form -->
+                <!-- Language Switcher Form -->
                 <form action="{{ url_for('set_lang') }}" method="POST" class="d-inline m-0">
-                    <input type="hidden" name="lang" value="{% if lang == 'en' %}gu{% else %}en{% endif %}">
-                    <button type="submit" class="lang-toggle-btn" title="Switch Language">
-                        <i class="fa-solid fa-language me-1"></i> {% if lang == 'en' %}ગુજરાતી{% else %}English{% endif %}
+                    <input type="hidden" name="lang" value="{% if lang == 'gu' %}en{% else %}gu{% endif %}">
+                    <button type="submit" class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold" style="font-size: 0.85rem;" title="Switch Language">
+                        <i class="fa-solid fa-language me-1"></i> {% if lang == 'gu' %}English{% else %}ગુજરાતી{% endif %}
                     </button>
                 </form>
 
-                <!-- Auth State Button -->
-                {% if session.get('user') %}
+                <!-- Auth / Profile Buttons -->
+                {% if session.get('user_id') %}
+                    <span class="nl-role-badge {{ session.get('role') }}">
+                        <i class="fa-solid fa-circle-user"></i> {{ session.get('name')|truncate(14) }}
+                    </span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" title="Sign Out">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    </a>
+                {% else %}
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-dark dropdown-toggle rounded-pill px-3 fw-bold" type="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-user-circle me-1"></i> {{ session['user']['name'] }}
+                        <button class="btn btn-sm btn-nl-lime px-3 py-1 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-right-to-bracket me-1"></i> {{ tr('login') }}
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
-                            {% if session['user']['role'] == 'admin' %}
-                                <li><a class="dropdown-item fw-semibold" href="{{ url_for('admin_dashboard') }}"><i class="fa-solid fa-shield-halved me-2 text-primary"></i>Command Center</a></li>
-                                <li><a class="dropdown-item fw-semibold" href="{{ url_for('admin_dispatch') }}"><i class="fa-solid fa-truck-fast me-2 text-success"></i>Dispatch Center</a></li>
-                            {% elif session['user']['role'] == 'driver' %}
-                                <li><a class="dropdown-item fw-semibold" href="{{ url_for('driver_portal') }}"><i class="fa-solid fa-truck me-2 text-success"></i>Driver Route</a></li>
-                            {% else %}
-                                <li><a class="dropdown-item fw-semibold" href="{{ url_for('citizen_booking') }}"><i class="fa-solid fa-calendar-plus me-2 text-success"></i>Book Pickup</a></li>
-                                <li><a class="dropdown-item fw-semibold" href="{{ url_for('citizen_my_reports') }}"><i class="fa-solid fa-list-check me-2 text-primary"></i>My Pickups</a></li>
-                            {% endif %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger fw-semibold" href="{{ url_for('logout') }}"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>{{ tr('logout') }}</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 p-2">
+                            <li><a class="dropdown-item rounded-2 py-2 fw-semibold" href="{{ url_for('login_page', role='citizen') }}"><i class="fa-solid fa-house-chimney text-success me-2"></i> Citizen Login</a></li>
+                            <li><a class="dropdown-item rounded-2 py-2 fw-semibold" href="{{ url_for('login_page', role='driver') }}"><i class="fa-solid fa-truck text-warning me-2"></i> Driver Login</a></li>
+                            <li><a class="dropdown-item rounded-2 py-2 fw-semibold" href="{{ url_for('login_page', role='admin') }}"><i class="fa-solid fa-shield-halved text-primary me-2"></i> Municipal Admin</a></li>
                         </ul>
                     </div>
-                {% else %}
-                    <a href="{{ url_for('login_page', role='citizen') }}" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold">
-                        <i class="fa-solid fa-right-to-bracket me-1"></i> {{ tr('login') }}
-                    </a>
                 {% endif %}
             </div>
         </div>
     </header>
 
-    <!-- Main Dynamic Content -->
-    <main class="nl-main">
-        <!-- Flash Notification Messages -->
+    <!-- Main Container Content -->
+    <main class="container-xl py-4 flex-grow-1">
+        <!-- Flash Alert Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="mb-4">
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'success' if category == 'success' else ('danger' if category in ['error', 'danger'] else 'info') }} alert-dismissible fade show rounded-3 shadow-sm border-0" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else ('danger' if category == 'error' else 'info') }} alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid {{ 'fa-circle-check text-success' if category == 'success' else ('fa-circle-exclamation text-danger' if category == 'error' else 'fa-circle-info') }} fs-5"></i>
+                            <div class="fw-semibold">{{ message }}</div>
                         </div>
-                    {% endfor %}
-                </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
             {% endif %}
         {% endwith %}
 
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Professional Product Footer -->
+    <!-- Deep Forest Footer -->
     <footer class="nl-footer">
         <div class="nl-footer-inner">
             <div>
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <span class="text-white fw-bold fs-5">{{ BRAND }}</span>
-                    <span class="badge bg-success text-white">Ahmedabad</span>
+                    <span class="badge" style="background: var(--lime); color: var(--forest); font-weight: 800;">{{ CITY }}</span>
                 </div>
-                <p class="small text-secondary mb-0">
+                <p class="small text-white-50 mb-0">
                     &copy; 2026 {{ BRAND }}. Serving residential societies across {{ CITY }}.
                 </p>
             </div>
