@@ -161,8 +161,12 @@ async function handleSendOTP(e) {
             document.getElementById('sent-email-label').textContent = email;
             document.getElementById('step-email-box').classList.add('d-none');
             document.getElementById('step-otp-box').classList.remove('d-none');
-            document.getElementById('auth-otp-input').focus();
-            showAlert('OTP sent to your email address.', 'success');
+            const otpInput = document.getElementById('auth-otp-input');
+            if (data.demo_otp && otpInput) {
+                otpInput.value = data.demo_otp;
+            }
+            if (otpInput) otpInput.focus();
+            showAlert(data.message || 'OTP sent to your email address.', 'success');
             startResendTimer();
         } else {
             showAlert(data.message || 'Could not send OTP.', 'danger');

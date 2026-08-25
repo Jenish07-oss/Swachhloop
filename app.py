@@ -418,6 +418,14 @@ def send_otp_api():
     # Send Email
     send_otp_email(email, otp_code)
 
+    # In simulation/demo mode (when MAIL_USERNAME is empty or for @nagarloop.in demo accounts), return demo_otp for instant hackathon testing
+    if not MAIL_USERNAME or email.endswith('@nagarloop.in'):
+        return jsonify({
+            'success': True,
+            'message': f'OTP sent to {email}. [Demo OTP: {otp_code}]',
+            'demo_otp': otp_code
+        })
+
     return jsonify({'success': True, 'message': 'OTP sent to your email address.'})
 
 @app.route('/api/auth/verify-otp', methods=['POST'])
