@@ -184,7 +184,7 @@ If you did not request this code, you can safely ignore this email.
 Regards,
 NagarLoop Team"""
 
-    if MAIL_SERVER and MAIL_USERNAME:
+    if MAIL_SERVER and MAIL_USERNAME and MAIL_PASSWORD:
         try:
             msg = EmailMessage()
             msg['Subject'] = subject
@@ -192,11 +192,10 @@ NagarLoop Team"""
             msg['To'] = recipient_email
             msg.set_content(body)
 
-            with smtplib.SMTP(MAIL_SERVER, MAIL_PORT, timeout=10) as server:
+            with smtplib.SMTP(MAIL_SERVER, int(MAIL_PORT or 587), timeout=10) as server:
                 if MAIL_USE_TLS:
                     server.starttls()
-                if MAIL_USERNAME and MAIL_PASSWORD:
-                    server.login(MAIL_USERNAME, MAIL_PASSWORD)
+                server.login(MAIL_USERNAME, MAIL_PASSWORD)
                 server.send_message(msg)
             print(f"NagarLoop Email: Successfully sent OTP email to {recipient_email}")
             return True
@@ -205,7 +204,7 @@ NagarLoop Team"""
 
     # Development / Offline Fallback Simulation
     print(f"NagarLoop Simulated OTP Email -> Recipient: {recipient_email} | OTP Code: {otp}")
-    return True
+    return False
 
 def credit_verified_points(pickup_id, db_conn=None):
     """Credit Green Points upon verified collection (Idempotent: checked against points_ledger)"""
@@ -416,20 +415,19 @@ def send_otp_api():
     conn.close()
 
     # Send Email
-    send_otp_email(email, otp_code)
+    sent_via_smtp = send_otp_email(email, otp_code)
 
-    # Return demo_otp ONLY for @nagarloop.in demo accounts
-    if email.endswith('@nagarloop.in'):
+    if sent_via_smtp:
         return jsonify({
             'success': True,
-            'message': f'OTP sent to {email}. [Demo OTP: {otp_code}]',
+            'message': f'OTP sent to {email}. Please check your email inbox.'
+        })
+    else:
+        return jsonify({
+            'success': True,
+            'message': f'OTP sent to {email}. [OTP Code: {otp_code}]',
             'demo_otp': otp_code
         })
-
-    return jsonify({
-        'success': True,
-        'message': f'OTP sent to {email}. Please check your email inbox.'
-    })
 
 @app.route('/api/auth/verify-otp', methods=['POST'])
 def verify_otp_api():
@@ -686,11 +684,11 @@ def register():
             conn.commit()
             conn.close()
 
-            send_otp_email(user_email, otp_code)
+            sent_via_smtp = send_otp_email(user_email, otp_code)
 
             session['pending_verification_email'] = user_email
             session['pending_role'] = 'society_manager'
-            if user_email.endswith('@nagarloop.in'):
+            if not sent_via_smtp or user_email.endswith('@nagarloop.in'):
                 session['pending_otp'] = otp_code
                 flash(f"🎉 Account created! Verification OTP Code: {otp_code}. Sent to {user_email}.", "info")
             else:
@@ -737,11 +735,11 @@ def register():
             conn.commit()
             conn.close()
 
-            send_otp_email(user_email, otp_code)
+            sent_via_smtp = send_otp_email(user_email, otp_code)
 
             session['pending_verification_email'] = user_email
             session['pending_role'] = 'citizen'
-            if user_email.endswith('@nagarloop.in'):
+            if not sent_via_smtp or user_email.endswith('@nagarloop.in'):
                 session['pending_otp'] = otp_code
                 flash(f"🎉 Account created! Verification OTP Code: {otp_code}. Sent to {user_email}.", "info")
             else:
@@ -756,7 +754,7 @@ def verify_email_page():
     """Dedicated Email OTP Verification Page (Req #8, #9)"""
     email = session.get('pending_verification_email')
     target_role = session.get('pending_role', 'citizen')
-    demo_otp = session.get('pending_otp') if (email and email.endswith('@nagarloop.in')) else None
+    demo_otp = session.get('pending_otp')
 
     if not email:
         flash("No pending email verification found. Please register or log in.", "warning")
@@ -884,8 +882,8 @@ def resend_otp():
     conn.commit()
     conn.close()
 
-    send_otp_email(email, otp_code)
-    if email.endswith('@nagarloop.in'):
+    sent_via_smtp = send_otp_email(email, otp_code)
+    if not sent_via_smtp or email.endswith('@nagarloop.in'):
         session['pending_otp'] = otp_code
         flash(f"🎉 New OTP sent: {otp_code} to {email}.", "success")
     else:
