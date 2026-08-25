@@ -1,0 +1,113 @@
+====================================================================
+NAGARLOOP — SQL DATABASE QUERIES REFERENCE & SQL BROWSER CHEATSHEET
+Database File: swachhloop.db
+====================================================================
+
+1. VIEW ALL USERS & ROLES
+--------------------------------------------------------------------
+SELECT id, username, password, name, role, email, phone, locality, household_id, society_id, van_id, created_at
+FROM users
+ORDER BY id ASC;
+
+
+2. VIEW UNASSIGNED WORK QUEUE (ADMIN NEW WORK & PUBLIC REPORTS)
+--------------------------------------------------------------------
+SELECT p.id, p.pickup_code, p.is_public, p.is_society, p.reporter_name, p.address, 
+       p.lat, p.lng, p.status, p.total_kg, p.pickup_zone, p.created_at,
+       h.household_code, h.name AS citizen_name, h.phone AS citizen_phone,
+       s.society_code, s.name AS society_name
+FROM pickups p
+LEFT JOIN households h ON p.household_id = h.id
+LEFT JOIN societies s ON p.society_id = s.id
+WHERE p.status = 'pending' OR p.assigned_van_id IS NULL
+ORDER BY p.id DESC;
+
+
+3. VIEW DRIVER WORK ISOLATION (ASSIGNED WORK PER VAN / DRIVER)
+--------------------------------------------------------------------
+-- Driver 1 (SL-VAN-01):
+SELECT p.id, p.pickup_code, p.address, p.lat, p.lng, p.status, p.total_kg,
+       h.household_code, h.name AS citizen_name, h.phone
+FROM pickups p
+LEFT JOIN households h ON p.household_id = h.id
+WHERE p.assigned_van_id = 1
+ORDER BY p.id ASC;
+
+-- Driver 2 (SL-VAN-02):
+SELECT p.id, p.pickup_code, p.address, p.lat, p.lng, p.status, p.total_kg,
+       h.household_code, h.name AS citizen_name, h.phone
+FROM pickups p
+LEFT JOIN households h ON p.household_id = h.id
+WHERE p.assigned_van_id = 2
+ORDER BY p.id ASC;
+
+-- Driver 3 (SL-VAN-03):
+SELECT p.id, p.pickup_code, p.address, p.lat, p.lng, p.status, p.total_kg,
+       h.household_code, h.name AS citizen_name, h.phone
+FROM pickups p
+LEFT JOIN households h ON p.household_id = h.id
+WHERE p.assigned_van_id = 3
+ORDER BY p.id ASC;
+
+
+4. ADMIN ATOMIC DRIVER ASSIGNMENT QUERY
+--------------------------------------------------------------------
+-- Assign Pickup #44 to Driver 1 (van_id = 1):
+UPDATE pickups
+SET assigned_van_id = 1, status = 'assigned'
+WHERE id = 44 AND (status = 'pending' OR assigned_van_id IS NULL OR assigned_van_id = 1);
+
+
+5. VIEW ALL PICKUPS BY STATUS (ADMIN OPERATIONS QUEUES)
+--------------------------------------------------------------------
+-- New / Unassigned:
+SELECT * FROM pickups WHERE status = 'pending' OR assigned_van_id IS NULL;
+
+-- Assigned:
+SELECT * FROM pickups WHERE status = 'assigned';
+
+-- In Progress:
+SELECT * FROM pickups WHERE status = 'in_progress';
+
+-- Collected:
+SELECT * FROM pickups WHERE status IN ('collected', 'collection_reported');
+
+-- Verified:
+SELECT * FROM pickups WHERE status = 'verified';
+
+-- Disputed / Failed:
+SELECT * FROM pickups WHERE status IN ('disputed', 'failed');
+
+
+6. CITIZEN GREEN POINTS HISTORY & AUDITABLE LEDGER
+--------------------------------------------------------------------
+SELECT pl.id, pl.household_id, pl.society_id, pl.pickup_id, pl.points, pl.reason, pl.created_at,
+       p.pickup_code, p.total_kg
+FROM points_ledger pl
+LEFT JOIN pickups p ON pl.pickup_id = p.id
+ORDER BY pl.id DESC;
+
+
+7. SMS & CITIZEN NOTIFICATION LOGS
+--------------------------------------------------------------------
+SELECT s.id, s.recipient_phone, s.message, s.event_type, s.pickup_id, s.created_at,
+       p.pickup_code
+FROM sms_logs s
+LEFT JOIN pickups p ON s.pickup_id = p.id
+ORDER BY s.id DESC;
+
+
+8. SEGREGATED 4-STREAM BREAKDOWN
+--------------------------------------------------------------------
+SELECT ps.pickup_id, ps.stream_type, ps.estimated_kg, ps.status, f.name AS destination_facility
+FROM pickup_streams ps
+LEFT JOIN facilities f ON ps.facility_id = f.id
+ORDER BY ps.pickup_id ASC;
+
+
+9. CIRCULAR ECONOMY DESTINATION FACILITIES & UTILIZATION
+--------------------------------------------------------------------
+SELECT id, name, facility_type, stream_type, capacity_kg, current_load_kg,
+       ROUND((current_load_kg / capacity_kg) * 100, 1) AS utilization_pct
+FROM facilities
+ORDER BY id ASC;
