@@ -70,6 +70,83 @@
 </div>
 {% endif %}
 
+<!-- NEW / UNASSIGNED WORK QUEUE (ADMIN DRIVER ASSIGNMENT) -->
+<div class="surface-card p-4 mb-4 border-start border-warning border-5 bg-white shadow-sm rounded-4" id="assign-new-work-section">
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-list-check text-warning fs-5"></i>
+            <h3 class="fw-bold mb-0 fs-5 text-dark">Assign New Work Queue</h3>
+            <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1">{{ unassigned_work|length }} Unassigned</span>
+        </div>
+        <span class="small text-muted">Assign Collection Vans & Drivers to Pending Household & Public Pickups</span>
+    </div>
+
+    {% if unassigned_work %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light text-uppercase text-muted" style="font-size: 11px;">
+                <tr>
+                    <th>ID / Code</th>
+                    <th>Type & Citizen</th>
+                    <th>Address / Phone</th>
+                    <th>Waste Stream / KG</th>
+                    <th>AI Status</th>
+                    <th class="text-end">Assign Collection Driver</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in unassigned_work %}
+                <tr>
+                    <td class="fw-bold text-dark font-monospace">#{{ format_pickup_code(item.id) if format_pickup_code else ('NL-2026-' ~ item.id) }}</td>
+                    <td>
+                        {% if item.is_public %}
+                            <span class="badge bg-info-subtle text-info border border-info rounded-pill px-2 py-0.5">Public Report</span>
+                            <div class="fw-bold text-dark mt-0.5">{{ item.reporter_name or 'Anonymous' }}</div>
+                        {% elif item.is_society %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary rounded-pill px-2 py-0.5">Society Bulk</span>
+                            <div class="fw-bold text-dark mt-0.5">{{ item.society_name or 'Housing Society' }}</div>
+                        {% else %}
+                            <span class="badge bg-success-subtle text-success border border-success rounded-pill px-2 py-0.5">Household</span>
+                            <div class="fw-bold text-dark mt-0.5">{{ item.citizen_name or 'Citizen' }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="text-dark fw-semibold">{{ item.address or item.street_segment or 'Navrangpura Ward' }}</div>
+                        {% if item.phone %}<small class="text-muted"><i class="fa-solid fa-phone me-1"></i>{{ item.phone }}</small>{% endif %}
+                    </td>
+                    <td>
+                        <strong class="text-success">{{ item.total_kg or 5.0 }} KG</strong>
+                        <span class="badge bg-light text-dark border ms-1">Zone {{ item.pickup_zone or 1 }}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-success-subtle text-success border border-success rounded-pill"><i class="fa-solid fa-check me-1"></i> Passed</span>
+                    </td>
+                    <td class="text-end">
+                        <div class="input-group input-group-sm justify-content-end" style="max-width: 280px; float: right;">
+                            <select class="form-select form-select-sm" id="dispatch-driver-sel-{{ item.id }}">
+                                <option value="">-- Select Driver --</option>
+                                {% for v in vans %}
+                                <option value="{{ v.id }}">{{ v.driver_name }} ({{ v.van_code }})</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-sm btn-success fw-bold px-3" onclick="assignDriverFromDispatch({{ item.id }})">
+                                Assign
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-3 text-muted">
+        <i class="fa-solid fa-circle-check fs-2 text-success mb-1 d-block"></i>
+        <p class="mb-0 small fw-bold">All incoming pickups and public reports are assigned!</p>
+    </div>
+    {% endif %}
+</div>
+
 <!-- Fleet Active Batches Bar -->
 <div class="row g-3 mb-4">
     {% for v_info in all_routes_overview %}
@@ -664,6 +741,31 @@
             }
             if (cancelBtn) cancelBtn.disabled = false;
         });
+    }
+
+    async function assignDriverFromDispatch(pickupId) {
+        const sel = document.getElementById(`dispatch-driver-sel-${pickupId}`);
+        const vanId = sel ? sel.value : '';
+        if (!vanId) {
+            alert("Please select a driver from the dropdown before clicking Assign.");
+            return;
+        }
+        try {
+            const res = await fetch(`/api/admin/assign-driver/${pickupId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ van_id: vanId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert("Assignment error: " + data.message);
+            }
+        } catch (err) {
+            alert("Network error assigning driver.");
+        }
     }
 </script>
 {% endblock %}

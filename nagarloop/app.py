@@ -2445,7 +2445,7 @@ def admin_dispatch():
         FROM pickups p
         JOIN households h ON p.household_id = h.id
         LEFT JOIN vans v ON p.assigned_van_id = v.id
-        WHERE (p.assigned_van_id = ? OR (p.assigned_van_id IS NULL AND p.pickup_zone <= 2))
+        WHERE p.assigned_van_id = ?
     """
     params = [selected_van['id']]
     if stream_filter != 'all':
@@ -2491,6 +2491,17 @@ def admin_dispatch():
         ORDER BY p.id DESC
     """).fetchall()
 
+    unassigned_work = conn.execute("""
+        SELECT p.*, h.household_code, h.name as citizen_name, h.street_segment, h.phone,
+               s.name as society_name, s.society_code, v.van_code, v.driver_name
+        FROM pickups p
+        LEFT JOIN households h ON p.household_id = h.id
+        LEFT JOIN societies s ON p.society_id = s.id
+        LEFT JOIN vans v ON p.assigned_van_id = v.id
+        WHERE p.status = 'pending' OR p.assigned_van_id IS NULL
+        ORDER BY p.id DESC
+    """).fetchall()
+
     conn.close()
 
     return render_template('admin_dispatch.html',
@@ -2504,6 +2515,7 @@ def admin_dispatch():
                            next_stop=next_stop,
                            is_route_complete=is_route_complete,
                            disputed_pickups=disputed_pickups,
+                           unassigned_work=[dict(r) for r in unassigned_work],
                            naive_dist=naive_dist,
                            opt_dist=opt_dist,
                            saved_pct=saved_pct,
