@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}SMS Audit Logs — {{ BRAND }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-1 fw-bold mb-1">
+                <i class="fa-solid fa-comment-sms me-1"></i> Citizen Communication Logs
+            </span>
+            <h1 class="h3 fw-bold mb-0 text-dark">AUTOMATED SMS & DISPATCH LOGS</h1>
+            <p class="small text-muted mb-0">Simulated automated citizen SMS alerts, booking confirmations & point notifications</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold">
+                <i class="fa-solid fa-arrow-left me-1"></i> Command Center
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3 fw-bold" onclick="location.reload()">
+                <i class="fa-solid fa-rotate me-1"></i> Refresh Logs
+            </button>
+        </div>
+    </div>
+
+    <!-- SMS Logs Card -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-list text-warning me-2"></i> All Logged SMS Dispatches ({{ sms_logs|length }})</h5>
+                <span class="badge bg-light text-dark border px-3 py-1">Ward: Navrangpura</span>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            {% if sms_logs %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light text-uppercase text-muted" style="font-size: 11px;">
+                        <tr>
+                            <th>Log ID</th>
+                            <th>Recipient Phone</th>
+                            <th>Event Type</th>
+                            <th>Pickup Code</th>
+                            <th>Notification Message Content</th>
+                            <th>Sent Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sms in sms_logs %}
+                        <tr>
+                            <td class="fw-bold font-monospace text-muted">#SMS-{{ "%04d"|format(sms.id) }}</td>
+                            <td class="fw-bold font-monospace text-dark">
+                                <i class="fa-solid fa-phone me-1 text-muted"></i>{{ sms.recipient_phone }}
+                            </td>
+                            <td>
+                                {% if sms.event_type == 'booking_confirmed' %}
+                                    <span class="badge bg-info-subtle text-info border border-info rounded-pill px-2.5 py-1"><i class="fa-solid fa-calendar-check me-1"></i> Booking Confirmed</span>
+                                {% elif sms.event_type == 'van_approaching' %}
+                                    <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill px-2.5 py-1"><i class="fa-solid fa-truck-fast me-1"></i> Van Approaching</span>
+                                {% elif sms.event_type == 'driver_assigned' %}
+                                    <span class="badge bg-primary-subtle text-primary border border-primary rounded-pill px-2.5 py-1"><i class="fa-solid fa-user-check me-1"></i> Driver Assigned</span>
+                                {% elif sms.event_type == 'points_credited' %}
+                                    <span class="badge bg-success-subtle text-success border border-success rounded-pill px-2.5 py-1"><i class="fa-solid fa-award me-1"></i> Points Credited</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary border rounded-pill px-2.5 py-1">{{ sms.event_type }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="font-monospace fw-bold text-dark">{{ sms.pickup_code or ('#NL-2026-' ~ sms.pickup_id) if sms.pickup_id else 'N/A' }}</span>
+                            </td>
+                            <td class="text-dark" style="max-width: 450px;">
+                                <div class="p-2 rounded bg-light border text-secondary" style="font-size: 12px;">
+                                    {{ sms.message }}
+                                </div>
+                            </td>
+                            <td class="text-muted">{{ sms.created_at or 'Recently' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="fa-solid fa-comment-slash fs-1 text-secondary mb-2 d-block"></i>
+                <h6 class="fw-bold text-dark">No SMS logs recorded</h6>
+                <p class="small text-muted mb-0">Automated SMS dispatches will appear here when bookings and driver assignments occur.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

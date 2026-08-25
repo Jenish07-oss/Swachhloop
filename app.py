@@ -2151,6 +2151,21 @@ def admin_reports():
                            issues=issues,
                            generated_at=time.strftime('%d %B %Y, %I:%M %p'))
 
+@app.route('/admin/sms')
+@login_required(roles=['admin'])
+def admin_sms():
+    """Dedicated Admin SMS & Notification Logs View"""
+    conn = get_db()
+    sms_logs = conn.execute("""
+        SELECT s.*, p.pickup_code 
+        FROM sms_logs s 
+        LEFT JOIN pickups p ON s.pickup_id = p.id 
+        ORDER BY s.id DESC
+    """).fetchall()
+    conn.close()
+
+    return render_template('admin_sms.html', sms_logs=[dict(r) for r in sms_logs])
+
 @app.route('/admin/export-csv')
 @login_required(roles=['admin'])
 def admin_export_csv():
