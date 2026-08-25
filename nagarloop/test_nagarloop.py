@@ -617,5 +617,49 @@ class TestNagarLoopPhase2(unittest.TestCase):
         self.assertEqual(res_pass.status_code, 200)
         self.assertIn(b'booked successfully', res_pass.data)
 
+    def test_46_email_otp_send_and_verify_success(self):
+        # TEST 1: Request OTP and verify successfully
+        send_res = self.client.post('/api/auth/send-otp', json={'email': 'jenish@nagarloop.in', 'role': 'citizen'})
+        self.assertEqual(send_res.status_code, 200)
+        self.assertTrue(send_res.json['success'])
+
+        # Verify with wrong OTP (TEST 2)
+        wrong_res = self.client.post('/api/auth/verify-otp', json={'email': 'jenish@nagarloop.in', 'otp': '000000', 'role': 'citizen'})
+        self.assertEqual(wrong_res.status_code, 400)
+        self.assertFalse(wrong_res.json['success'])
+
+    def test_47_email_otp_rate_limiting_cooldown(self):
+        # TEST 6: Resend OTP cooldown within 60s
+        self.client.post('/api/auth/send-otp', json={'email': 'rate_limit@nagarloop.in', 'role': 'citizen'})
+        res_limit = self.client.post('/api/auth/send-otp', json={'email': 'rate_limit@nagarloop.in', 'role': 'citizen'})
+        self.assertEqual(res_limit.status_code, 429)
+        self.assertIn('seconds before requesting another OTP', res_limit.json['message'])
+
+    def test_48_email_otp_max_attempts_lockout(self):
+        # TEST 5: Too many wrong OTP attempts invalidates OTP
+        self.client.post('/api/auth/send-otp', json={'email': 'lockout@nagarloop.in', 'role': 'citizen'})
+        for _ in range(5):
+            self.client.post('/api/auth/verify-otp', json={'email': 'lockout@nagarloop.in', 'otp': '111111', 'role': 'citizen'})
+        
+        # 6th attempt should be blocked due to max attempts
+        res_lock = self.client.post('/api/auth/verify-otp', json={'email': 'lockout@nagarloop.in', 'otp': '111111', 'role': 'citizen'})
+        self.assertEqual(res_lock.status_code, 400)
+
+    def test_49_rbac_citizen_access_denied_for_admin_page(self):
+        # TEST 7 & 8: Citizen logged in cannot access admin page or admin API
+        self.client.post('/login/citizen', data={'username': 'jenish', 'password': 'jenish123'})
+        res_admin_page = self.client.get('/admin', follow_redirects=True)
+        self.assertIn(b'Access denied', res_admin_page.data)
+
+        res_admin_api = self.client.post('/api/admin/reschedule/1', json={'rescheduled_date': '2026-08-30'})
+        self.assertEqual(res_admin_api.status_code, 403)
+
+    def test_50_logout_clears_session(self):
+        # TEST 11 & 12: Logout invalidates session
+        self.client.post('/login/citizen', data={'username': 'jenish', 'password': 'jenish123'})
+        self.client.get('/logout', follow_redirects=True)
+        res = self.client.get('/book', follow_redirects=True)
+        self.assertIn(b'Please log in or register', res.data)
+
 if __name__ == '__main__':
     unittest.main()

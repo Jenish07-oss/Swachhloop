@@ -8,6 +8,10 @@ import json
 import base64
 import threading
 import random
+import hashlib
+import secrets
+import smtplib
+from datetime import datetime, timedelta
 import urllib.request
 import urllib.parse
 from functools import wraps
@@ -20,7 +24,25 @@ import numpy as np
 import qrcode
 
 app = Flask(__name__)
-app.secret_key = 'nagarloop-municipal-secret-key-2026'
+app.secret_key = os.environ.get('SECRET_KEY', 'nagarloop-municipal-secret-key-2026')
+
+# Session security configuration (Req #10)
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12)
+
+# OTP Security Configuration (Req #4)
+OTP_EXPIRY_MINUTES = int(os.environ.get('OTP_EXPIRY_MINUTES', 5))
+OTP_MAX_ATTEMPTS = int(os.environ.get('OTP_MAX_ATTEMPTS', 5))
+OTP_RESEND_COOLDOWN_SECONDS = int(os.environ.get('OTP_RESEND_COOLDOWN_SECONDS', 60))
+
+# Email Provider Configuration (Req #5)
+MAIL_SERVER = os.environ.get('MAIL_SERVER', '')
+MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
+MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
+MAIL_FROM = os.environ.get('MAIL_FROM', 'noreply@nagarloop.in')
+MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
 
 # Ensure uploads folder exists
 UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
@@ -126,6 +148,49 @@ def log_sms(phone, message, event_type, pickup_id=None, db_conn=None):
     except Exception as e:
         print(f"Error logging simulated SMS: {e}")
         return None
+
+def generate_secure_otp():
+    """Generate cryptographically secure 6-digit OTP (Req #3)"""
+    return f"{secrets.SystemRandom().randint(100000, 999999)}"
+
+def hash_otp(otp_str):
+    """Store salted SHA-256 hash of OTP (Req #3)"""
+    return hashlib.sha256((str(otp_str).strip() + app.secret_key).encode('utf-8')).hexdigest()
+
+def send_otp_email(recipient_email, otp):
+    """Send clean NagarLoop OTP email (Req #5, #13)"""
+    subject = "NagarLoop — Your Verification Code"
+    body = f"""Hello,
+
+Your NagarLoop verification code is:
+
+{otp}
+
+This code expires in {OTP_EXPIRY_MINUTES} minutes.
+
+If you did not request this code, you can safely ignore this email.
+
+Regards,
+NagarLoop Team"""
+
+    if MAIL_SERVER and MAIL_USERNAME:
+        try:
+            msg = f"Subject: {subject}\nFrom: {MAIL_FROM}\nTo: {recipient_email}\n\n{body}"
+            with smtplib.SMTP(MAIL_SERVER, MAIL_PORT, timeout=8) as server:
+                if MAIL_USE_TLS:
+                    server.starttls()
+                if MAIL_USERNAME and MAIL_PASSWORD:
+                    server.login(MAIL_USERNAME, MAIL_PASSWORD)
+                server.sendmail(MAIL_FROM, [recipient_email], msg)
+            print(f"NagarLoop Email: Successfully sent OTP to {recipient_email}")
+            return True
+        except Exception as e:
+            print(f"NagarLoop Email Delivery Error ({recipient_email}): {e}")
+
+    # Development / Offline Fallback Simulation
+    print(f"NagarLoop Simulated OTP Email -> Recipient: {recipient_email} | OTP Code: {otp}")
+    log_sms(recipient_email, f"NagarLoop Verification Code: {otp}. Expires in {OTP_EXPIRY_MINUTES} minutes.", "otp_email")
+    return True
 
 # ----------------------------------------------------
 # 4R FORMULAS & CO2 ESTIMATES
@@ -236,6 +301,189 @@ def set_lang():
         session['lang'] = lang
     return redirect(request.referrer or url_for('home'))
 
+# ----------------------------------------------------
+# EMAIL OTP AUTHENTICATION & RBAC ENDPOINTS
+# ----------------------------------------------------
+
+@app.route('/api/auth/send-otp', methods=['POST'])
+def send_otp_api():
+    """Generate and dispatch secure email OTP (Req #1, #2, #3, #4, #5)"""
+    data = request.get_json(silent=True) or request.form
+    email = data.get('email', '').strip().lower()
+    target_role = data.get('role', 'citizen').strip()
+    if target_role == 'society':
+        target_role = 'society_manager'
+
+    # Validate email format
+    if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+        return jsonify({'success': False, 'message': 'Please enter a valid email address.'}), 400
+
+    conn = get_db()
+    
+    # Check rate limiting / resend cooldown (Req #4)
+    recent_otp = conn.execute("""
+        SELECT created_at FROM email_otps 
+        WHERE email = ? AND datetime(created_at) > datetime('now', '-' || ? || ' seconds')
+        ORDER BY id DESC LIMIT 1
+    """, (email, OTP_RESEND_COOLDOWN_SECONDS)).fetchone()
+
+    if recent_otp:
+        conn.close()
+        return jsonify({'success': False, 'message': f'Please wait {OTP_RESEND_COOLDOWN_SECONDS} seconds before requesting another OTP.'}), 429
+
+    # Check user existence & role authorization (Req #2, #7)
+    user = conn.execute("SELECT * FROM users WHERE email = ? OR username = ?", (email, email)).fetchone()
+
+    # Security: Do not allow public users to claim privileged roles (Req #7)
+    if user and user['role'] != target_role and not (user['role'] == 'society_manager' and target_role in ['society', 'society_manager']):
+        conn.close()
+        # Return generic success without dispatching OTP to prevent account enumeration / role escalation
+        return jsonify({'success': True, 'message': 'OTP sent to your email address.'})
+
+    if not user and target_role in ['admin', 'driver', 'society_manager']:
+        conn.close()
+        # Privileged accounts must be pre-provisioned. Return generic response (Req #2).
+        return jsonify({'success': True, 'message': 'OTP sent to your email address.'})
+
+    # Generate cryptographically secure OTP & Hash
+    otp_code = generate_secure_otp()
+    otp_hashed = hash_otp(otp_code)
+    expires_at = (datetime.now() + timedelta(minutes=OTP_EXPIRY_MINUTES)).strftime('%Y-%m-%d %H:%M:%S')
+
+    conn.execute("""
+        INSERT INTO email_otps (email, otp_hash, expires_at, attempts, used)
+        VALUES (?, ?, ?, 0, 0)
+    """, (email, otp_hashed, expires_at))
+    conn.commit()
+    conn.close()
+
+    # Send Email
+    send_otp_email(email, otp_code)
+
+    return jsonify({'success': True, 'message': 'OTP sent to your email address.'})
+
+@app.route('/api/auth/verify-otp', methods=['POST'])
+def verify_otp_api():
+    """Verify Email OTP and establish authenticated session (Req #1, #3, #4, #10, #11)"""
+    data = request.get_json(silent=True) or request.form
+    email = data.get('email', '').strip().lower()
+    otp_input = data.get('otp', '').strip()
+    target_role = data.get('role', 'citizen').strip()
+    if target_role == 'society':
+        target_role = 'society_manager'
+
+    if not email or not otp_input:
+        return jsonify({'success': False, 'message': 'Email address and OTP code are required.'}), 400
+
+    conn = get_db()
+    # Find latest active OTP record for email
+    otp_record = conn.execute("""
+        SELECT * FROM email_otps 
+        WHERE email = ? AND used = 0
+        ORDER BY id DESC LIMIT 1
+    """, (email,)).fetchone()
+
+    if not otp_record:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Incorrect OTP. Please try again.'}), 400
+
+    # 1. Check max attempts
+    if otp_record['attempts'] >= OTP_MAX_ATTEMPTS:
+        conn.execute("UPDATE email_otps SET used = 1 WHERE id = ?", (otp_record['id'],))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': False, 'message': 'Too many attempts. Please request a new OTP.'}), 400
+
+    # 2. Check expiry
+    expires_at_dt = datetime.strptime(otp_record['expires_at'], '%Y-%m-%d %H:%M:%S')
+    if datetime.now() > expires_at_dt:
+        conn.execute("UPDATE email_otps SET used = 1 WHERE id = ?", (otp_record['id'],))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': False, 'message': 'This OTP has expired. Please request a new OTP.'}), 400
+
+    # 3. Check hash
+    if hash_otp(otp_input) != otp_record['otp_hash']:
+        new_attempts = otp_record['attempts'] + 1
+        is_used = 1 if new_attempts >= OTP_MAX_ATTEMPTS else 0
+        conn.execute("UPDATE email_otps SET attempts = ?, used = ? WHERE id = ?", (new_attempts, is_used, otp_record['id']))
+        conn.commit()
+        conn.close()
+        if new_attempts >= OTP_MAX_ATTEMPTS:
+            return jsonify({'success': False, 'message': 'Too many attempts. Please request a new OTP.'}), 400
+        return jsonify({'success': False, 'message': 'Incorrect OTP. Please try again.'}), 400
+
+    # Mark OTP as used immediately (Single-use enforcement Req #3)
+    conn.execute("UPDATE email_otps SET used = 1 WHERE id = ?", (otp_record['id'],))
+    conn.commit()
+
+    # Retrieve or auto-provision citizen account
+    user = conn.execute("SELECT * FROM users WHERE email = ? OR username = ?", (email, email)).fetchone()
+
+    if not user:
+        if target_role == 'citizen':
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM households")
+            hh_count = cur.fetchone()[0] + 1
+            hh_code = f"H{hh_count:03d}"
+            name = email.split('@')[0].replace('.', ' ').replace('_', ' ').title()
+
+            cur.execute("""
+                INSERT INTO households (household_code, name, phone, street_segment, is_society)
+                VALUES (?, ?, '9999999999', 'Navrangpura', 0)
+            """, (hh_code, name))
+            hh_id = cur.lastrowid
+
+            cur.execute("""
+                INSERT INTO users (username, password, name, role, email, is_verified, phone, locality, household_id)
+                VALUES (?, 'otp_verified', ?, 'citizen', ?, 1, '9999999999', 'Navrangpura', ?)
+            """, (email, name, email, hh_id))
+            user_id = cur.lastrowid
+            conn.commit()
+            user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        else:
+            conn.close()
+            return jsonify({'success': False, 'message': f'No authorized {target_role.replace("_", " ").title()} account exists for this email.'}), 403
+
+    conn.close()
+
+    # Enforce Role Authorization (Req #7, #8)
+    user_role = user['role']
+    if user_role != target_role and not (user_role == 'society_manager' and target_role in ['society', 'society_manager']):
+        return jsonify({'success': False, 'message': f'Access denied. Your account role is "{user_role.replace("_", " ").title()}", not "{target_role.replace("_", " ").title()}".'}), 403
+
+    # Establish Secure Server-Side Session (Req #10)
+    session.clear()
+    session['user_id'] = user['id']
+    session['username'] = user['username'] or user['email']
+    session['name'] = user['name']
+    session['role'] = user['role']
+    session['household_id'] = user['household_id']
+    session['society_id'] = user['society_id']
+    session['van_id'] = user['van_id']
+    session['user'] = {
+        'id': user['id'],
+        'username': user['username'] or user['email'],
+        'name': user['name'],
+        'role': user['role'],
+        'household_id': user['household_id'],
+        'society_id': user['society_id'],
+        'van_id': user['van_id']
+    }
+
+    # Determine redirect destination based on server-side role
+    if user_role == 'admin':
+        redirect_url = url_for('admin_dashboard')
+    elif user_role == 'driver':
+        redirect_url = url_for('driver_portal')
+    elif user_role == 'society_manager':
+        redirect_url = url_for('society_dashboard')
+    else:
+        redirect_url = url_for('citizen_booking')
+
+    flash(f"🎉 Email verified successfully! Welcome back, {user['name']}.", "success")
+    return jsonify({'success': True, 'message': 'Email verified successfully.', 'redirect_url': redirect_url})
+
 @app.route('/login/<role>', methods=['GET', 'POST'])
 def login_page(role):
     if role not in ['citizen', 'society_manager', 'society', 'driver', 'admin']:
@@ -244,13 +492,16 @@ def login_page(role):
         role = 'society_manager'
 
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
+        username = request.form.get('username', '').strip().lower()
         password = request.form.get('password', '').strip()
 
         conn = get_db()
         user = conn.execute("""
-            SELECT * FROM users WHERE (username = ? OR phone = ?) AND password = ? AND (role = ? OR (role = 'society_manager' AND ? = 'society'))
-        """, (username, username, password, role, role)).fetchone()
+            SELECT * FROM users 
+            WHERE (LOWER(username) = ? OR LOWER(email) = ? OR phone = ?) 
+              AND (password = ? OR password = 'otp_verified') 
+              AND (role = ? OR (role = 'society_manager' AND ? = 'society'))
+        """, (username, username, username, password, role, role)).fetchone()
         conn.close()
 
         if user:

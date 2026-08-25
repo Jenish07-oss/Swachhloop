@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ BRAND }} — {{ tr('login') }}{% endblock %}
+{% block title %}{{ BRAND }} — Email OTP Login{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center py-4">
@@ -18,10 +18,10 @@
                         Citizen Portal
                     {% endif %}
                 </h2>
-                <p class="small text-secondary mb-0">Sign in to access your {{ BRAND }} account</p>
+                <p class="small text-secondary mb-0">Secure Email OTP Authentication</p>
             </div>
 
-            <!-- Role Tabs -->
+            <!-- Role Tabs (Req #8) -->
             <div class="d-flex justify-content-center gap-1 p-1 bg-light rounded-3 mb-4 border flex-wrap">
                 <a href="{{ url_for('login_page', role='citizen') }}" class="btn btn-xs btn-sm flex-fill fw-bold {% if role == 'citizen' %}btn-success text-white shadow-sm{% else %}btn-light text-muted{% endif %}">
                     Citizen
@@ -37,38 +37,213 @@
                 </a>
             </div>
 
-            <!-- Login Form -->
-            <form method="POST" action="{{ url_for('login_page', role=role) }}">
-                <div class="mb-3">
-                    <label class="form-label small fw-bold text-dark">Username</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="fa-solid fa-user text-muted"></i></span>
-                        <input type="text" name="username" class="form-control" placeholder="Enter username" required autofocus>
+            <div id="otp-alert" class="alert small py-2 px-3 mb-3 d-none"></div>
+
+            <!-- STEP 1: EMAIL INPUT FORM (Req #2) -->
+            <div id="step-email-box">
+                <form id="form-send-otp" onsubmit="handleSendOTP(event)">
+                    <input type="hidden" name="role" id="auth-role" value="{{ role }}">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-envelope text-muted"></i></span>
+                            <input type="email" id="auth-email" class="form-control" placeholder="{% if role == 'admin' %}admin@nagarloop.in{% elif role == 'driver' %}driver@nagarloop.in{% elif role == 'society_manager' %}society@nagarloop.in{% else %}jenish@nagarloop.in{% endif %}" required autofocus>
+                        </div>
                     </div>
+
+                    <button type="submit" id="btn-send-otp" class="btn-nl-primary w-100 mb-3">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Send OTP
+                    </button>
+                </form>
+            </div>
+
+            <!-- STEP 2: OTP VERIFICATION FORM (Req #2) -->
+            <div id="step-otp-box" class="d-none">
+                <div class="alert alert-success small py-2 px-3 mb-3">
+                    <i class="fa-solid fa-circle-check me-1"></i> OTP sent to <strong id="sent-email-label"></strong>
                 </div>
 
-                <div class="mb-4">
-                    <label class="form-label small fw-bold text-dark">Password</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="fa-solid fa-lock text-muted"></i></span>
-                        <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+                <form id="form-verify-otp" onsubmit="handleVerifyOTP(event)">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Enter 6-Digit OTP</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-key text-muted"></i></span>
+                            <input type="text" id="auth-otp-input" class="form-control text-center font-monospace fs-5 fw-bold letter-spacing-2" placeholder="482731" maxlength="6" pattern="\d{6}" required autocomplete="one-time-code">
+                        </div>
                     </div>
-                </div>
 
-                <button type="submit" class="btn-nl-primary w-100 mb-3">
-                    <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Sign In
-                </button>
-            </form>
+                    <button type="submit" id="btn-verify-otp" class="btn-nl-primary w-100 mb-2">
+                        <i class="fa-solid fa-shield-halved me-1"></i> Verify OTP & Login
+                    </button>
 
-            <!-- Demo Credentials Helper -->
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                        <button type="button" class="btn btn-link btn-sm text-secondary text-decoration-none p-0" onclick="resetEmailStep()">
+                            <i class="fa-solid fa-arrow-left me-1"></i> Change Email
+                        </button>
+                        <button type="button" id="btn-resend-otp" class="btn btn-link btn-sm text-success text-decoration-none p-0 fw-bold" onclick="resendOTP()" disabled>
+                            Resend OTP (<span id="resend-timer">60</span>s)
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <hr class="my-4 text-muted">
+
+            <!-- Demo Quick Login Helper (Req #14) -->
             <div class="p-3 bg-light rounded-3 border text-center small text-muted">
-                <div class="fw-bold text-dark mb-1"><i class="fa-solid fa-circle-info text-info me-1"></i> Demo Credentials</div>
-                <div>Citizen: <code>jenish</code> / <code>jenish123</code></div>
-                <div>Society: <code>society</code> / <code>society123</code></div>
-                <div>Driver: <code>vikram</code> / <code>vikram123</code></div>
-                <div>Admin: <code>admin</code> / <code>admin123</code></div>
+                <div class="fw-bold text-dark mb-2"><i class="fa-solid fa-bolt text-warning me-1"></i> Demo Accounts (Pre-configured)</div>
+                <div class="d-flex flex-wrap justify-content-center gap-1">
+                    {% if role == 'citizen' %}
+                        <button type="button" class="btn btn-xs btn-outline-success rounded-pill px-2 py-1" onclick="fillDemoEmail('jenish@nagarloop.in')">jenish@nagarloop.in</button>
+                    {% elif role == 'society_manager' %}
+                        <button type="button" class="btn btn-xs btn-outline-success rounded-pill px-2 py-1" onclick="fillDemoEmail('society@nagarloop.in')">society@nagarloop.in</button>
+                    {% elif role == 'driver' %}
+                        <button type="button" class="btn btn-xs btn-outline-success rounded-pill px-2 py-1" onclick="fillDemoEmail('driver@nagarloop.in')">driver@nagarloop.in</button>
+                    {% elif role == 'admin' %}
+                        <button type="button" class="btn btn-xs btn-outline-success rounded-pill px-2 py-1" onclick="fillDemoEmail('admin@nagarloop.in')">admin@nagarloop.in</button>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+let timerInterval = null;
+let resendSeconds = 60;
+
+function fillDemoEmail(email) {
+    document.getElementById('auth-email').value = email;
+}
+
+function resetEmailStep() {
+    document.getElementById('step-email-box').classList.remove('d-none');
+    document.getElementById('step-otp-box').classList.add('d-none');
+    document.getElementById('otp-alert').classList.add('d-none');
+    if (timerInterval) clearInterval(timerInterval);
+}
+
+function showAlert(msg, type) {
+    const alertBox = document.getElementById('otp-alert');
+    alertBox.className = `alert alert-${type} small py-2 px-3 mb-3`;
+    alertBox.textContent = msg;
+    alertBox.classList.remove('d-none');
+}
+
+function startResendTimer() {
+    resendSeconds = 60;
+    const btnResend = document.getElementById('btn-resend-otp');
+    const timerSpan = document.getElementById('resend-timer');
+    btnResend.disabled = true;
+
+    if (timerInterval) clearInterval(timerInterval);
+
+    timerInterval = setInterval(() => {
+        resendSeconds--;
+        if (timerSpan) timerSpan.textContent = resendSeconds;
+        if (resendSeconds <= 0) {
+            clearInterval(timerInterval);
+            btnResend.disabled = false;
+            btnResend.innerHTML = '<i class="fa-solid fa-rotate-right me-1"></i> Resend OTP';
+        }
+    }, 1000);
+}
+
+async function handleSendOTP(e) {
+    e.preventDefault();
+    const email = document.getElementById('auth-email').value.trim();
+    const role = document.getElementById('auth-role').value;
+    const btn = document.getElementById('btn-send-otp');
+
+    if (!email) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Sending OTP...';
+
+    try {
+        const res = await fetch('/api/auth/send-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, role: role })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            document.getElementById('sent-email-label').textContent = email;
+            document.getElementById('step-email-box').classList.add('d-none');
+            document.getElementById('step-otp-box').classList.remove('d-none');
+            document.getElementById('auth-otp-input').focus();
+            showAlert('OTP sent to your email address.', 'success');
+            startResendTimer();
+        } else {
+            showAlert(data.message || 'Could not send OTP.', 'danger');
+        }
+    } catch (err) {
+        showAlert('Network error. Please try again.', 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i> Send OTP';
+    }
+}
+
+async function handleVerifyOTP(e) {
+    e.preventDefault();
+    const email = document.getElementById('auth-email').value.trim();
+    const otp = document.getElementById('auth-otp-input').value.trim();
+    const role = document.getElementById('auth-role').value;
+    const btn = document.getElementById('btn-verify-otp');
+
+    if (!otp || otp.length !== 6) {
+        showAlert('Please enter a valid 6-digit OTP code.', 'warning');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Verifying...';
+
+    try {
+        const res = await fetch('/api/auth/verify-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, otp: otp, role: role })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            showAlert('Email verified successfully! Redirecting...', 'success');
+            window.location.href = data.redirect_url || '/';
+        } else {
+            showAlert(data.message || 'Incorrect OTP. Please try again.', 'danger');
+        }
+    } catch (err) {
+        showAlert('Network error during verification.', 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-shield-halved me-1"></i> Verify OTP & Login';
+    }
+}
+
+async function resendOTP() {
+    const email = document.getElementById('auth-email').value.trim();
+    const role = document.getElementById('auth-role').value;
+    if (!email) return;
+
+    try {
+        const res = await fetch('/api/auth/send-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, role: role })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            showAlert('A new OTP code has been sent to your email.', 'success');
+            startResendTimer();
+        } else {
+            showAlert(data.message || 'Please wait before requesting another OTP.', 'danger');
+        }
+    } catch (err) {
+        showAlert('Network error resending OTP.', 'danger');
+    }
+}
+</script>
 {% endblock %}

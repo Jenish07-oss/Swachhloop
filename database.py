@@ -203,6 +203,19 @@ def init_db():
         )
     ''')
 
+    # 13. Email OTPs table (Secure Hashed OTP Storage & Verification)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS email_otps (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            otp_hash TEXT NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            attempts INTEGER DEFAULT 0,
+            used INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     # 12. Driver Shifts table (Phase 3 Shift Operations & Summaries)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS driver_shifts (
@@ -247,6 +260,8 @@ def init_db():
         ("households", "is_society", "INTEGER DEFAULT 0"),
         ("households", "society_id", "INTEGER"),
         ("users", "phone", "TEXT"),
+        ("users", "email", "TEXT"),
+        ("users", "is_verified", "INTEGER DEFAULT 0"),
         ("users", "locality", "TEXT"),
         ("users", "society_id", "INTEGER"),
         ("points_ledger", "society_id", "INTEGER"),

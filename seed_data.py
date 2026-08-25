@@ -253,12 +253,12 @@ def seed():
     # 7. SEED USERS & NOTIFICATION SIMULATION
     # ----------------------------------------------------
     cursor.execute('''
-        INSERT INTO users (username, password, name, role, phone, locality, household_id, society_id, van_id)
+        INSERT INTO users (username, password, name, role, phone, email, is_verified, locality, household_id, society_id, van_id)
         VALUES 
-            ('jenish', 'jenish123', 'Jenish Patel', 'citizen', '9876543210', 'Navrangpura', 1, NULL, NULL),
-            ('society', 'society123', 'Rajesh Mehta', 'society_manager', '9825012345', 'Shivalik Heights', NULL, 1, NULL),
-            ('vikram', 'vikram123', 'Vikram Thakor', 'driver', '9988776655', 'Navrangpura Ward', NULL, NULL, 1),
-            ('admin', 'admin123', 'Municipal Operations Admin', 'admin', '0792650000', 'Central Control Room', NULL, NULL, NULL)
+            ('jenish', 'jenish123', 'Jenish Patel', 'citizen', '9876543210', 'jenish@nagarloop.in', 1, 'Navrangpura', 1, NULL, NULL),
+            ('society', 'society123', 'Rajesh Mehta', 'society_manager', '9825012345', 'society@nagarloop.in', 1, 'Shivalik Heights', NULL, 1, NULL),
+            ('vikram', 'vikram123', 'Vikram Thakor', 'driver', '9988776655', 'driver@nagarloop.in', 1, 'Navrangpura Ward', NULL, NULL, 1),
+            ('admin', 'admin123', 'Municipal Operations Admin', 'admin', '0792650000', 'admin@nagarloop.in', 1, 'Central Control Room', NULL, NULL, NULL)
     ''')
 
     # Seed Sample SMS Logs
