@@ -11,6 +11,7 @@ import random
 import hashlib
 import secrets
 import smtplib
+from email.message import EmailMessage
 from datetime import datetime, timedelta
 import urllib.request
 import urllib.parse
@@ -22,6 +23,16 @@ from brand import BRAND, SUB_BRAND, SLOGAN, SUPPORT_EMAIL, CITY, T, format_picku
 from sklearn.cluster import KMeans
 import numpy as np
 import qrcode
+
+# Auto-load .env file if present
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+if os.path.exists(env_path):
+    with open(env_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, val = line.split('=', 1)
+                os.environ.setdefault(key.strip(), val.strip().strip("'\""))
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'nagarloop-municipal-secret-key-2026')
@@ -36,12 +47,12 @@ OTP_EXPIRY_MINUTES = int(os.environ.get('OTP_EXPIRY_MINUTES', 5))
 OTP_MAX_ATTEMPTS = int(os.environ.get('OTP_MAX_ATTEMPTS', 5))
 OTP_RESEND_COOLDOWN_SECONDS = int(os.environ.get('OTP_RESEND_COOLDOWN_SECONDS', 60))
 
-# Email Provider Configuration (Req #5)
+# Email Provider Configuration (Google App Password / SMTP)
 MAIL_SERVER = os.environ.get('MAIL_SERVER', '')
 MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
 MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
 MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
-MAIL_FROM = os.environ.get('MAIL_FROM', 'noreply@nagarloop.in')
+MAIL_FROM = os.environ.get('MAIL_FROM', MAIL_USERNAME or 'noreply@nagarloop.in')
 MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
 
 # Ensure uploads folder exists
@@ -158,7 +169,7 @@ def hash_otp(otp_str):
     return hashlib.sha256((str(otp_str).strip() + app.secret_key).encode('utf-8')).hexdigest()
 
 def send_otp_email(recipient_email, otp):
-    """Send clean NagarLoop OTP email (Req #5, #13)"""
+    """Send clean NagarLoop OTP email via SMTP / Google App Password (Req #5, #13)"""
     subject = "NagarLoop — Your Verification Code"
     body = f"""Hello,
 
@@ -175,14 +186,19 @@ NagarLoop Team"""
 
     if MAIL_SERVER and MAIL_USERNAME:
         try:
-            msg = f"Subject: {subject}\nFrom: {MAIL_FROM}\nTo: {recipient_email}\n\n{body}"
-            with smtplib.SMTP(MAIL_SERVER, MAIL_PORT, timeout=8) as server:
+            msg = EmailMessage()
+            msg['Subject'] = subject
+            msg['From'] = MAIL_FROM or MAIL_USERNAME
+            msg['To'] = recipient_email
+            msg.set_content(body)
+
+            with smtplib.SMTP(MAIL_SERVER, MAIL_PORT, timeout=10) as server:
                 if MAIL_USE_TLS:
                     server.starttls()
                 if MAIL_USERNAME and MAIL_PASSWORD:
                     server.login(MAIL_USERNAME, MAIL_PASSWORD)
-                server.sendmail(MAIL_FROM, [recipient_email], msg)
-            print(f"NagarLoop Email: Successfully sent OTP to {recipient_email}")
+                server.send_message(msg)
+            print(f"NagarLoop Email: Successfully sent OTP email to {recipient_email}")
             return True
         except Exception as e:
             print(f"NagarLoop Email Delivery Error ({recipient_email}): {e}")
