@@ -2906,7 +2906,46 @@ def privacy_page():
 
 @app.route('/rewards')
 def rewards_page():
-    return render_template('legal.html', page_type='rewards', page_title='Green Rewards & Points')
+    user = session.get('user')
+    points_history = []
+    total_points = 0
+
+    if user:
+        conn = get_db()
+        hh_id = session.get('household_id') or (user.get('household_id') if user else None)
+        soc_id = session.get('society_id') or (user.get('society_id') if user else None)
+        
+        if hh_id:
+            history_rows = conn.execute("""
+                SELECT pl.*, p.pickup_code, p.total_kg, p.bin_score
+                FROM points_ledger pl
+                LEFT JOIN pickups p ON pl.pickup_id = p.id
+                WHERE pl.household_id = ?
+                ORDER BY pl.id DESC
+                LIMIT 25
+            """, (hh_id,)).fetchall()
+            points_history = [dict(r) for r in history_rows]
+            tot = conn.execute("SELECT COALESCE(SUM(points), 0) FROM points_ledger WHERE household_id = ?", (hh_id,)).fetchone()
+            total_points = tot[0] if tot else 0
+        elif soc_id:
+            history_rows = conn.execute("""
+                SELECT pl.*, p.pickup_code, p.total_kg, p.bin_score
+                FROM points_ledger pl
+                LEFT JOIN pickups p ON pl.pickup_id = p.id
+                WHERE pl.society_id = ?
+                ORDER BY pl.id DESC
+                LIMIT 25
+            """, (soc_id,)).fetchall()
+            points_history = [dict(r) for r in history_rows]
+            tot = conn.execute("SELECT COALESCE(SUM(points), 0) FROM points_ledger WHERE society_id = ?", (soc_id,)).fetchone()
+            total_points = tot[0] if tot else 0
+        conn.close()
+
+    return render_template('legal.html', 
+                           page_type='rewards', 
+                           page_title='Green Rewards & Points',
+                           points_history=points_history,
+                           total_points=total_points)
 
 @app.route('/help')
 def help_page():

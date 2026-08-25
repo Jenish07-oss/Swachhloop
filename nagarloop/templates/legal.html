@@ -76,7 +76,7 @@
                         <strong>{{ BRAND }} Green Rewards</strong> incentivizes segregation at source. Households and residential societies earn verifiable Green Points for every segregated pickup.
                     </p>
 
-                    <h3 class="fs-5 fw-bold text-dark mb-3">Green Points Rules & Valuation</h3>
+                    <h3 class="fs-5 fw-bold text-dark mb-3"><i class="fa-solid fa-award text-warning me-2"></i> Green Points Rules & Valuation</h3>
                     <ul class="list-unstyled d-flex flex-column gap-3 mb-4">
                         <li class="p-3 rounded-3 bg-light border d-flex gap-3">
                             <i class="fa-solid fa-coins text-warning fs-5 mt-1"></i>
@@ -115,6 +115,122 @@
                             </div>
                         </li>
                     </ul>
+
+                    <!-- HOW YOUR GREEN POINTS ARE CALCULATED -->
+                    <div class="p-4 rounded-3 border bg-white shadow-sm mb-4">
+                        <h3 class="fs-5 fw-bold text-dark mb-3"><i class="fa-solid fa-calculator text-success me-2"></i> How Your Green Points Are Calculated</h3>
+
+                        <ol class="small text-secondary mb-4 ps-3">
+                            <li class="mb-1.5">User books a pickup.</li>
+                            <li class="mb-1.5">Waste is collected.</li>
+                            <li class="mb-1.5">Collection is verified.</li>
+                            <li class="mb-1.5">Waste/bin quality is evaluated.</li>
+                            <li class="mb-1.5">Base Points are calculated.</li>
+                            <li class="mb-1.5">Quality bonus is calculated using <code>floor(Bin Quality Score / 10)</code>.</li>
+                            <li class="mb-0">Final Green Points are added to the user's Green Points balance/history.</li>
+                        </ol>
+
+                        <!-- Formula Box -->
+                        <div class="p-3 rounded-3 bg-success-subtle text-success border border-success mb-3 text-center">
+                            <small class="text-uppercase fw-bold d-block text-muted mb-1" style="font-size: 11px;">Scoring Formula</small>
+                            <div class="fs-5 font-monospace fw-bold">
+                                Final Green Points = 20 Base Points + floor(Bin Quality Score / 10)
+                            </div>
+                        </div>
+
+                        <!-- Example Table -->
+                        <div class="table-responsive mb-3">
+                            <table class="table table-bordered table-sm align-middle text-center small mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Quality Score</th>
+                                        <th>Calculation</th>
+                                        <th>Final Points</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><span class="badge bg-secondary">50</span></td>
+                                        <td class="font-monospace">20 + floor(50 / 10)</td>
+                                        <td><strong class="text-success">25</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-primary">80</span></td>
+                                        <td class="font-monospace">20 + floor(80 / 10)</td>
+                                        <td><strong class="text-success">28</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-success">100</span></td>
+                                        <td class="font-monospace">20 + floor(100 / 10)</td>
+                                        <td><strong class="text-success">30</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="p-3 bg-warning-subtle text-dark border border-warning rounded-3 small mb-3">
+                            <i class="fa-solid fa-triangle-exclamation text-warning me-1 fs-6"></i>
+                            <strong>Verification Note:</strong> Points are credited only after the physical collection is verified. Booking a pickup alone does not award final points.
+                        </div>
+
+                        <p class="small text-muted mb-0">
+                            <i class="fa-solid fa-circle-info text-success me-1"></i> Properly segregated waste can qualify for additional reward/quality benefits where existing NagarLoop rules support them.
+                        </p>
+                    </div>
+
+                    <!-- WHERE YOUR POINTS APPEAR -->
+                    <div class="p-4 rounded-3 border bg-white shadow-sm mb-4">
+                        <h3 class="fs-5 fw-bold text-dark mb-3"><i class="fa-solid fa-diagram-next text-primary me-2"></i> Where Your Points Appear</h3>
+
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 text-center small mb-3">
+                            <div class="p-2.5 rounded-3 bg-light border flex-grow-1">
+                                <strong>Verified Pickup</strong>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-muted d-none d-md-block"></i>
+                            <div class="p-2.5 rounded-3 bg-light border flex-grow-1">
+                                <strong>Points Calculated</strong>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-muted d-none d-md-block"></i>
+                            <div class="p-2.5 rounded-3 bg-light border flex-grow-1">
+                                <strong>Green Points History</strong>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-muted d-none d-md-block"></i>
+                            <div class="p-2.5 rounded-3 bg-success-subtle text-success border border-success flex-grow-1">
+                                <strong>Total Green Points</strong>
+                            </div>
+                        </div>
+
+                        {% if points_history %}
+                        <div class="mt-4 border-top pt-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h4 class="fs-6 fw-bold text-dark mb-0"><i class="fa-solid fa-history text-success me-1"></i> Your Green Points History</h4>
+                                <span class="badge bg-success font-monospace">+{{ total_points }} Total Points</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 small">
+                                    <thead class="table-light text-uppercase text-muted" style="font-size: 11px;">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Pickup Code</th>
+                                            <th>Activity / Reason</th>
+                                            <th class="text-end">Points</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in points_history %}
+                                        <tr>
+                                            <td class="text-muted">{{ item.created_at }}</td>
+                                            <td><strong class="font-monospace text-dark">#{{ item.pickup_code or format_pickup_code(item.pickup_id) }}</strong></td>
+                                            <td class="text-dark fw-semibold">{{ item.reason }}</td>
+                                            <td class="text-end fw-bold text-success">+{{ item.points }} Points</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
 
             {% else %}
