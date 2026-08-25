@@ -45,7 +45,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12)
 # OTP Security Configuration (Req #4)
 OTP_EXPIRY_MINUTES = int(os.environ.get('OTP_EXPIRY_MINUTES', 5))
 OTP_MAX_ATTEMPTS = int(os.environ.get('OTP_MAX_ATTEMPTS', 5))
-OTP_RESEND_COOLDOWN_SECONDS = int(os.environ.get('OTP_RESEND_COOLDOWN_SECONDS', 60))
+OTP_RESEND_COOLDOWN_SECONDS = int(os.environ.get('OTP_RESEND_COOLDOWN_SECONDS', 0))
 
 # Email Provider Configuration (Google App Password / SMTP)
 MAIL_SERVER = os.environ.get('MAIL_SERVER', '')
@@ -336,16 +336,17 @@ def send_otp_api():
 
     conn = get_db()
     
-    # Check rate limiting / resend cooldown (Req #4)
-    recent_otp = conn.execute("""
-        SELECT created_at FROM email_otps 
-        WHERE email = ? AND datetime(created_at) > datetime('now', '-' || ? || ' seconds')
-        ORDER BY id DESC LIMIT 1
-    """, (email, OTP_RESEND_COOLDOWN_SECONDS)).fetchone()
+    # Check rate limiting / resend cooldown if configured
+    if OTP_RESEND_COOLDOWN_SECONDS > 0:
+        recent_otp = conn.execute("""
+            SELECT created_at FROM email_otps 
+            WHERE email = ? AND datetime(created_at) > datetime('now', '-' || ? || ' seconds')
+            ORDER BY id DESC LIMIT 1
+        """, (email, OTP_RESEND_COOLDOWN_SECONDS)).fetchone()
 
-    if recent_otp:
-        conn.close()
-        return jsonify({'success': False, 'message': f'Please wait {OTP_RESEND_COOLDOWN_SECONDS} seconds before requesting another OTP.'}), 429
+        if recent_otp:
+            conn.close()
+            return jsonify({'success': False, 'message': f'Please wait {OTP_RESEND_COOLDOWN_SECONDS} seconds before requesting another OTP.'}), 429
 
     # Check user existence & role authorization (Req #2, #7)
     user = conn.execute("SELECT * FROM users WHERE email = ? OR username = ?", (email, email)).fetchone()
@@ -794,16 +795,17 @@ def resend_otp():
         return redirect(url_for('register'))
 
     conn = get_db()
-    recent_otp = conn.execute("""
-        SELECT created_at FROM email_otps 
-        WHERE email = ? AND datetime(created_at) > datetime('now', '-' || ? || ' seconds')
-        ORDER BY id DESC LIMIT 1
-    """, (email, OTP_RESEND_COOLDOWN_SECONDS)).fetchone()
+    if OTP_RESEND_COOLDOWN_SECONDS > 0:
+        recent_otp = conn.execute("""
+            SELECT created_at FROM email_otps 
+            WHERE email = ? AND datetime(created_at) > datetime('now', '-' || ? || ' seconds')
+            ORDER BY id DESC LIMIT 1
+        """, (email, OTP_RESEND_COOLDOWN_SECONDS)).fetchone()
 
-    if recent_otp:
-        conn.close()
-        flash(f"Please wait {OTP_RESEND_COOLDOWN_SECONDS} seconds before requesting another code.", "warning")
-        return redirect(url_for('verify_email_page'))
+        if recent_otp:
+            conn.close()
+            flash(f"Please wait {OTP_RESEND_COOLDOWN_SECONDS} seconds before requesting another code.", "warning")
+            return redirect(url_for('verify_email_page'))
 
     # Invalidate old OTPs for this email
     conn.execute("UPDATE email_otps SET used = 1 WHERE email = ? AND used = 0", (email,))

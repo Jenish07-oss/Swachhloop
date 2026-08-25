@@ -628,11 +628,11 @@ class TestNagarLoopPhase2(unittest.TestCase):
         self.assertFalse(wrong_res.json['success'])
 
     def test_47_email_otp_rate_limiting_cooldown(self):
-        # TEST 6: Resend OTP cooldown within 60s
+        # Immediate OTP resend without 60s cooldown block
         self.client.post('/api/auth/send-otp', json={'email': 'rate_limit_unique@nagarloop.in', 'role': 'citizen'})
         res_limit = self.client.post('/api/auth/send-otp', json={'email': 'rate_limit_unique@nagarloop.in', 'role': 'citizen'})
-        self.assertEqual(res_limit.status_code, 429)
-        self.assertIn('seconds before requesting another OTP', res_limit.json['message'])
+        self.assertEqual(res_limit.status_code, 200)
+        self.assertTrue(res_limit.json['success'])
 
     def test_48_email_otp_max_attempts_lockout(self):
         # TEST 5: Too many wrong OTP attempts invalidates OTP

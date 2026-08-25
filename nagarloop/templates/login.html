@@ -131,22 +131,11 @@ function showAlert(msg, type) {
 }
 
 function startResendTimer() {
-    resendSeconds = 60;
     const btnResend = document.getElementById('btn-resend-otp');
-    const timerSpan = document.getElementById('resend-timer');
-    btnResend.disabled = true;
-
-    if (timerInterval) clearInterval(timerInterval);
-
-    timerInterval = setInterval(() => {
-        resendSeconds--;
-        if (timerSpan) timerSpan.textContent = resendSeconds;
-        if (resendSeconds <= 0) {
-            clearInterval(timerInterval);
-            btnResend.disabled = false;
-            btnResend.innerHTML = '<i class="fa-solid fa-rotate-right me-1"></i> Resend OTP';
-        }
-    }, 1000);
+    if (btnResend) {
+        btnResend.disabled = false;
+        btnResend.innerHTML = '<i class="fa-solid fa-rotate-right me-1"></i> Resend OTP';
+    }
 }
 
 async function handleSendOTP(e) {
