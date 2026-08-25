@@ -83,12 +83,15 @@
                             <!-- 1. Wet Stream Card -->
                             <div class="stream-card-compact wet selected" id="card-wet" onclick="toggleStream('stream_wet', 'card-wet', 'kg-box-wet')">
                                 <div>
-                                    <div class="stream-header">
-                                        <span class="stream-icon">🥬</span>
-                                        <input class="form-check-input fs-5" type="checkbox" name="stream_wet" id="stream_wet" checked onclick="event.stopPropagation(); syncStreamCard('stream_wet', 'card-wet', 'kg-box-wet');">
+                                    <div class="stream-header d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="stream-icon me-1">🥬</span>
+                                            <input class="form-check-input fs-5 me-1" type="checkbox" name="stream_wet" id="stream_wet" checked onclick="event.stopPropagation(); syncStreamCard('stream_wet', 'card-wet', 'kg-box-wet');">
+                                        </div>
+                                        <span class="badge bg-success-subtle text-success border border-success font-monospace" id="pts-badge-wet" style="font-size: 10px;">+8 Pts (4kg × 2)</span>
                                     </div>
                                     <div class="stream-name">{{ tr('wet_name') }}</div>
-                                    <div class="stream-dest">Compost / Bio-CNG</div>
+                                    <div class="stream-dest">Compost / Bio-CNG (2 Pts/kg)</div>
                                 </div>
                                 <div class="stream-kg-box" id="kg-box-wet" onclick="event.stopPropagation()">
                                     <div class="input-group input-group-sm">
@@ -101,12 +104,15 @@
                             <!-- 2. Dry Recyclables Card -->
                             <div class="stream-card-compact dry selected" id="card-dry" onclick="toggleStream('stream_dry', 'card-dry', 'kg-box-dry')">
                                 <div>
-                                    <div class="stream-header">
-                                        <span class="stream-icon">📦</span>
-                                        <input class="form-check-input fs-5" type="checkbox" name="stream_dry" id="stream_dry" checked onclick="event.stopPropagation(); syncStreamCard('stream_dry', 'card-dry', 'kg-box-dry');">
+                                    <div class="stream-header d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="stream-icon me-1">📦</span>
+                                            <input class="form-check-input fs-5 me-1" type="checkbox" name="stream_dry" id="stream_dry" checked onclick="event.stopPropagation(); syncStreamCard('stream_dry', 'card-dry', 'kg-box-dry');">
+                                        </div>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary font-monospace" id="pts-badge-dry" style="font-size: 10px;">+18 Pts (3kg × 6)</span>
                                     </div>
                                     <div class="stream-name">{{ tr('dry_name') }}</div>
-                                    <div class="stream-dest">MRF Facility</div>
+                                    <div class="stream-dest">MRF Facility (6 Pts/kg)</div>
                                 </div>
                                 <div class="stream-kg-box" id="kg-box-dry" onclick="event.stopPropagation()">
                                     <div class="input-group input-group-sm">
@@ -119,12 +125,15 @@
                             <!-- 3. E-Waste Card -->
                             <div class="stream-card-compact ewaste" id="card-ewaste" onclick="toggleStream('stream_ewaste', 'card-ewaste', 'kg-box-ewaste')">
                                 <div>
-                                    <div class="stream-header">
-                                        <span class="stream-icon">🔌</span>
-                                        <input class="form-check-input fs-5" type="checkbox" name="stream_ewaste" id="stream_ewaste" onclick="event.stopPropagation(); syncStreamCard('stream_ewaste', 'card-ewaste', 'kg-box-ewaste');">
+                                    <div class="stream-header d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="stream-icon me-1">🔌</span>
+                                            <input class="form-check-input fs-5 me-1" type="checkbox" name="stream_ewaste" id="stream_ewaste" onclick="event.stopPropagation(); syncStreamCard('stream_ewaste', 'card-ewaste', 'kg-box-ewaste');">
+                                        </div>
+                                        <span class="badge bg-warning-subtle text-warning border border-warning font-monospace" id="pts-badge-ewaste" style="font-size: 10px;">20 Pts/kg</span>
                                     </div>
                                     <div class="stream-name">{{ tr('ewaste_name') }}</div>
-                                    <div class="stream-dest">Reg. Recycler</div>
+                                    <div class="stream-dest">Reg. Recycler (20 Pts/kg)</div>
                                 </div>
                                 <div class="stream-kg-box d-none" id="kg-box-ewaste" onclick="event.stopPropagation()">
                                     <div class="input-group input-group-sm">
@@ -137,12 +146,15 @@
                             <!-- 4. Residual Card -->
                             <div class="stream-card-compact residual" id="card-residual" onclick="toggleStream('stream_residual', 'card-residual', 'kg-box-residual')">
                                 <div>
-                                    <div class="stream-header">
-                                        <span class="stream-icon">🔥</span>
-                                        <input class="form-check-input fs-5" type="checkbox" name="stream_residual" id="stream_residual" onclick="event.stopPropagation(); syncStreamCard('stream_residual', 'card-residual', 'kg-box-residual');">
+                                    <div class="stream-header d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="stream-icon me-1">🔥</span>
+                                            <input class="form-check-input fs-5 me-1" type="checkbox" name="stream_residual" id="stream_residual" onclick="event.stopPropagation(); syncStreamCard('stream_residual', 'card-residual', 'kg-box-residual');">
+                                        </div>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger font-monospace" id="pts-badge-residual" style="font-size: 10px;">1 Pt/kg</span>
                                     </div>
                                     <div class="stream-name">{{ tr('residual_name') }}</div>
-                                    <div class="stream-dest">RDF / Kiln</div>
+                                    <div class="stream-dest">RDF / Kiln (1 Pt/kg)</div>
                                 </div>
                                 <div class="stream-kg-box d-none" id="kg-box-residual" onclick="event.stopPropagation()">
                                     <div class="input-group input-group-sm">
@@ -151,6 +163,16 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Live Category Points Breakdown Summary Box -->
+                        <div class="mt-3 p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center flex-wrap gap-2 small">
+                            <div>
+                                <i class="fa-solid fa-calculator text-success me-1"></i>
+                                <strong class="text-dark">Live Points Calculation:</strong>
+                                <span class="text-secondary ms-1" id="points-breakdown-detail">Base: <strong>26 Pts</strong> (8 Wet + 18 Dry) × 1.5x Quality Multiplier = <strong>+39 Final Green Points</strong></span>
+                            </div>
+                            <span class="badge bg-success text-white px-2.5 py-1 font-monospace" style="font-size: 11px;">Credited On Verification</span>
                         </div>
                     </div>
 
@@ -419,14 +441,35 @@ function handlePhotoPreview(input) {
 }
 
 function updateLivePointsPreview() {
-    let wetKg = document.getElementById('stream_wet').checked ? parseFloat(document.getElementById('stream_wet_kg').value || 0) : 0;
-    let dryKg = document.getElementById('stream_dry').checked ? parseFloat(document.getElementById('stream_dry_kg').value || 0) : 0;
-    let ewasteKg = document.getElementById('stream_ewaste').checked ? parseFloat(document.getElementById('stream_ewaste_kg').value || 0) : 0;
-    let residualKg = document.getElementById('stream_residual').checked ? parseFloat(document.getElementById('stream_residual_kg').value || 0) : 0;
+    let isWetChecked = document.getElementById('stream_wet').checked;
+    let isDryChecked = document.getElementById('stream_dry').checked;
+    let isEwasteChecked = document.getElementById('stream_ewaste').checked;
+    let isResidualChecked = document.getElementById('stream_residual').checked;
+
+    let wetKg = isWetChecked ? parseFloat(document.getElementById('stream_wet_kg').value || 0) : 0;
+    let dryKg = isDryChecked ? parseFloat(document.getElementById('stream_dry_kg').value || 0) : 0;
+    let ewasteKg = isEwasteChecked ? parseFloat(document.getElementById('stream_ewaste_kg').value || 0) : 0;
+    let residualKg = isResidualChecked ? parseFloat(document.getElementById('stream_residual_kg').value || 0) : 0;
+
+    let wetPts = Math.round(wetKg * 2.0);
+    let dryPts = Math.round(dryKg * 6.0);
+    let ewastePts = Math.round(ewasteKg * 20.0);
+    let residualPts = Math.round(residualKg * 1.0);
+
+    // Update category badge previews
+    const wetBadge = document.getElementById('pts-badge-wet');
+    const dryBadge = document.getElementById('pts-badge-dry');
+    const ewasteBadge = document.getElementById('pts-badge-ewaste');
+    const residualBadge = document.getElementById('pts-badge-residual');
+
+    if (wetBadge) wetBadge.innerText = isWetChecked ? `+${wetPts} Pts (${wetKg}kg × 2)` : '2 Pts/kg';
+    if (dryBadge) dryBadge.innerText = isDryChecked ? `+${dryPts} Pts (${dryKg}kg × 6)` : '6 Pts/kg';
+    if (ewasteBadge) ewasteBadge.innerText = isEwasteChecked ? `+${ewastePts} Pts (${ewasteKg}kg × 20)` : '20 Pts/kg';
+    if (residualBadge) residualBadge.innerText = isResidualChecked ? `+${residualPts} Pts (${residualKg}kg × 1)` : '1 Pt/kg';
 
     let totalKg = wetKg + dryKg + ewasteKg + residualKg;
-    let rawPts = (wetKg * 2.0) + (dryKg * 6.0) + (ewasteKg * 20.0) + (residualKg * 1.0);
-    let pts = Math.round(rawPts * 1.5); // Preview at good bin score 80+
+    let basePts = wetPts + dryPts + ewastePts + residualPts;
+    let pts = Math.round(basePts * 1.5); // Preview with 1.5x multiplier for 80+ bin score
 
     const ptsStr = `+${pts} Points`;
     const kgStr = `~${totalKg.toFixed(1)} kg`;
@@ -435,17 +478,22 @@ function updateLivePointsPreview() {
     const kgEl = document.getElementById('live-kg-preview');
     const mobPtsEl = document.getElementById('mobile-btn-pts');
     const reviewSummary = document.getElementById('review-streams-summary');
+    const breakdownDetail = document.getElementById('points-breakdown-detail');
 
     if (ptsEl) ptsEl.innerText = ptsStr;
     if (kgEl) kgEl.innerText = kgStr;
     if (mobPtsEl) mobPtsEl.innerText = ptsStr;
 
+    if (breakdownDetail) {
+        breakdownDetail.innerHTML = `Base: <strong>${basePts} Pts</strong> (${wetPts} Wet + ${dryPts} Dry + ${ewastePts} EWaste + ${residualPts} Res) × 1.5x Quality Multiplier = <strong>+${pts} Final Green Points</strong>`;
+    }
+
     // Summarize active streams
     const activeStreams = [];
-    if (document.getElementById('stream_wet').checked) activeStreams.push(`🥬 Wet (${wetKg}kg)`);
-    if (document.getElementById('stream_dry').checked) activeStreams.push(`📦 Dry (${dryKg}kg)`);
-    if (document.getElementById('stream_ewaste').checked) activeStreams.push(`🔌 E-Waste (${ewasteKg}kg)`);
-    if (document.getElementById('stream_residual').checked) activeStreams.push(`🔥 Residual (${residualKg}kg)`);
+    if (isWetChecked) activeStreams.push(`🥬 Wet (${wetKg}kg = +${wetPts}pts)`);
+    if (isDryChecked) activeStreams.push(`📦 Dry (${dryKg}kg = +${dryPts}pts)`);
+    if (isEwasteChecked) activeStreams.push(`🔌 E-Waste (${ewasteKg}kg = +${ewastePts}pts)`);
+    if (isResidualChecked) activeStreams.push(`🔥 Residual (${residualKg}kg = +${residualPts}pts)`);
 
     if (reviewSummary) {
         reviewSummary.innerText = activeStreams.length > 0 ? activeStreams.join(', ') : 'No streams selected';

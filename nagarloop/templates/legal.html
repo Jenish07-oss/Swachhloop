@@ -130,12 +130,63 @@
                             <li class="mb-0">Final Green Points are added to the user's Green Points balance/history.</li>
                         </ol>
 
+                        <!-- Category Points per KG Rates Table -->
+                        <div class="p-3 rounded-3 bg-light border mb-4">
+                            <h4 class="fs-6 fw-bold text-dark mb-2"><i class="fa-solid fa-layer-group text-success me-2"></i> Waste Category & Points Rate per KG</h4>
+                            <p class="small text-muted mb-3">Green Points are earned proportionally based on the verified weight (KG) of each segregated stream collected:</p>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm align-middle text-center small mb-2 bg-white">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th class="text-start">Waste Stream / Category</th>
+                                            <th>Destination Facility</th>
+                                            <th>Base Rate per KG</th>
+                                            <th>Example Calculation (5 KG)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-start fw-bold text-success"><i class="fa-solid fa-seedling me-1"></i> Wet / Organic Waste</td>
+                                            <td>Compost / Bio-CNG Plant</td>
+                                            <td><span class="badge bg-success font-monospace">2 Points / KG</span></td>
+                                            <td class="font-monospace">5 KG × 2 = 10 Points</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-start fw-bold text-primary"><i class="fa-solid fa-box me-1"></i> Dry Recyclables</td>
+                                            <td>MRF Baling & Recycling</td>
+                                            <td><span class="badge bg-primary font-monospace">6 Points / KG</span></td>
+                                            <td class="font-monospace">5 KG × 6 = 30 Points</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-start fw-bold text-warning"><i class="fa-solid fa-plug me-1"></i> E-Waste</td>
+                                            <td>Registered E-Recyclers</td>
+                                            <td><span class="badge bg-warning text-dark font-monospace">20 Points / KG</span></td>
+                                            <td class="font-monospace">5 KG × 20 = 100 Points</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-start fw-bold text-danger"><i class="fa-solid fa-fire me-1"></i> Residual Non-Recyclable</td>
+                                            <td>RDF / Cement Kiln Co-Processing</td>
+                                            <td><span class="badge bg-danger font-monospace">1 Point / KG</span></td>
+                                            <td class="font-monospace">5 KG × 1 = 5 Points</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="p-2.5 bg-white border rounded-3 mt-2 small text-secondary">
+                                <strong class="text-dark"><i class="fa-solid fa-sliders text-primary me-1"></i> Bin Quality Score Multiplier:</strong>
+                                Segregation Quality $\ge 80 \rightarrow 1.5\times$ | $60-79 \rightarrow 1.2\times$ | $40-59 \rightarrow 1.0\times$ | $<40 \rightarrow 0.5\times$.
+                            </div>
+                        </div>
+
                         <!-- Formula Box -->
                         <div class="p-3 rounded-3 bg-success-subtle text-success border border-success mb-3 text-center">
-                            <small class="text-uppercase fw-bold d-block text-muted mb-1" style="font-size: 11px;">Scoring Formula</small>
+                            <small class="text-uppercase fw-bold d-block text-muted mb-1" style="font-size: 11px;">PROPORTIONAL SCORING FORMULA</small>
                             <div class="fs-5 font-monospace fw-bold">
-                                Final Green Points = 20 Base Points + floor(Bin Quality Score / 10)
+                                Final Points = round( (Wet×2 + Dry×6 + EWaste×20 + Res×1) × Quality Multiplier )
                             </div>
+                            <div class="small text-muted mt-1">Guaranteed Base Bonus: 20 Base Points + floor(Bin Quality Score / 10)</div>
                         </div>
 
                         <!-- Example Table -->
@@ -144,25 +195,29 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>Quality Score</th>
-                                        <th>Calculation</th>
-                                        <th>Final Points</th>
+                                        <th>Calculation Formula</th>
+                                        <th>Guaranteed Base Points</th>
+                                        <th>Example (4kg Wet + 3kg Dry @ 80 Score)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td><span class="badge bg-secondary">50</span></td>
                                         <td class="font-monospace">20 + floor(50 / 10)</td>
-                                        <td><strong class="text-success">25</strong></td>
+                                        <td><strong class="text-secondary">25 Pts</strong></td>
+                                        <td><span class="font-monospace">(8+18) × 1.0 = 26 Pts</span></td>
                                     </tr>
                                     <tr>
                                         <td><span class="badge bg-primary">80</span></td>
                                         <td class="font-monospace">20 + floor(80 / 10)</td>
-                                        <td><strong class="text-success">28</strong></td>
+                                        <td><strong class="text-primary">28 Pts</strong></td>
+                                        <td><strong class="text-success font-monospace">(8+18) × 1.5 = 39 Pts</strong></td>
                                     </tr>
                                     <tr>
                                         <td><span class="badge bg-success">100</span></td>
                                         <td class="font-monospace">20 + floor(100 / 10)</td>
-                                        <td><strong class="text-success">30</strong></td>
+                                        <td><strong class="text-success">30 Pts</strong></td>
+                                        <td><strong class="text-success font-monospace">(8+18) × 1.5 = 39 Pts</strong></td>
                                     </tr>
                                 </tbody>
                             </table>
