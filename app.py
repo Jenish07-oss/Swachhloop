@@ -542,6 +542,7 @@ def register():
         reg_type = request.form.get('reg_type', 'citizen')
         password = request.form.get('password', '').strip()
         raw_phone = request.form.get('phone', '').strip()
+        email = request.form.get('email', '').strip().lower()
 
         if not raw_phone or not password:
             flash("Mobile number and password are required.", "danger")
@@ -552,11 +553,15 @@ def register():
             flash("Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9 (e.g. 9825012345).", "danger")
             return render_template('register.html', reg_type=reg_type)
 
+        if email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            flash("Please enter a valid email address.", "danger")
+            return render_template('register.html', reg_type=reg_type)
+
         conn = get_db()
-        existing = conn.execute("SELECT id FROM users WHERE username = ? OR phone = ?", (phone, phone)).fetchone()
+        existing = conn.execute("SELECT id FROM users WHERE username = ? OR phone = ? OR (email IS NOT NULL AND email = ?)", (phone, phone, email)).fetchone()
         if existing:
             conn.close()
-            flash("An account with this mobile number already exists. Please log in.", "warning")
+            flash("An account with this mobile number or email already exists. Please log in.", "warning")
             return redirect(url_for('login_page', role='society_manager' if reg_type in ['society', 'society_manager'] else 'citizen'))
 
         cur = conn.cursor()
@@ -588,9 +593,9 @@ def register():
             hh_id = cur.lastrowid
 
             cur.execute("""
-                INSERT INTO users (username, password, name, role, phone, locality, household_id, society_id)
-                VALUES (?, ?, ?, 'society_manager', ?, ?, ?, ?)
-            """, (phone, password, manager_name, phone, address, hh_id, soc_id))
+                INSERT INTO users (username, password, name, role, phone, email, is_verified, locality, household_id, society_id)
+                VALUES (?, ?, ?, 'society_manager', ?, ?, 1, ?, ?, ?)
+            """, (phone, password, manager_name, phone, email or f"society{soc_id}@nagarloop.in", address, hh_id, soc_id))
             user_id = cur.lastrowid
             conn.commit()
             conn.close()
@@ -630,9 +635,9 @@ def register():
             hh_id = cur.lastrowid
 
             cur.execute("""
-                INSERT INTO users (username, password, name, role, phone, locality, household_id)
-                VALUES (?, ?, ?, 'citizen', ?, ?, ?)
-            """, (phone, password, name, phone, address, hh_id))
+                INSERT INTO users (username, password, name, role, phone, email, is_verified, locality, household_id)
+                VALUES (?, ?, ?, 'citizen', ?, ?, 1, ?, ?)
+            """, (phone, password, name, phone, email or f"citizen{hh_id}@nagarloop.in", address, hh_id))
             user_id = cur.lastrowid
             conn.commit()
             conn.close()
