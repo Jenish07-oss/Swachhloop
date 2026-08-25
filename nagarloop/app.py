@@ -744,10 +744,41 @@ def verify_email_page():
         conn.execute("UPDATE users SET is_verified = 1 WHERE email = ? OR username = ?", (email, email))
         conn.execute("UPDATE email_otps SET used = 1 WHERE id = ?", (otp_record['id'],))
         conn.commit()
+
+        # Fetch verified user record to establish authenticated session directly
+        user = conn.execute("SELECT * FROM users WHERE email = ? OR username = ?", (email, email)).fetchone()
         conn.close()
 
         session.pop('pending_verification_email', None)
         session.pop('pending_role', None)
+
+        if user:
+            session['user_id'] = user['id']
+            session['username'] = user['username']
+            session['name'] = user['name']
+            session['role'] = user['role']
+            session['household_id'] = user['household_id']
+            session['society_id'] = user['society_id']
+            session['van_id'] = user['van_id']
+            session['user'] = {
+                'id': user['id'],
+                'username': user['username'],
+                'name': user['name'],
+                'role': user['role'],
+                'household_id': user['household_id'],
+                'society_id': user['society_id'],
+                'van_id': user['van_id']
+            }
+
+            flash(f"🎉 Email verified! Welcome to NagarLoop, {user['name']}.", "success")
+            if user['role'] == 'admin':
+                return redirect(url_for('admin_dashboard'))
+            elif user['role'] == 'driver':
+                return redirect(url_for('driver_portal'))
+            elif user['role'] == 'society_manager':
+                return redirect(url_for('society_dashboard'))
+            else:
+                return redirect(url_for('citizen_booking'))
 
         flash("🎉 Email verified successfully! Please log in to your account.", "success")
         return redirect(url_for('login_page', role=target_role))
