@@ -223,6 +223,95 @@
                 </a>
             </div>
         </div>
+    <!-- NEW / UNASSIGNED WORK QUEUE (ADMIN DRIVER ASSIGNMENT) -->
+    <div class="nl-card mb-4" id="unassigned-work-section">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fa-solid fa-list-check text-success fs-5"></i>
+                <h3 class="fw-bold mb-0 fs-5 text-dark">New / Unassigned Work Queue</h3>
+                <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1">{{ unassigned_work|length }} Unassigned</span>
+            </div>
+            <span class="small text-muted">Admin Control: Assign Collection Drivers to Pending Bookings & Reports</span>
+        </div>
+
+        {% if unassigned_work %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light text-uppercase text-muted" style="font-size: 11px;">
+                        <tr>
+                            <th>ID / Code</th>
+                            <th>Type & Entity</th>
+                            <th>Location / Address</th>
+                            <th>Waste Stream / KG</th>
+                            <th>Created Date</th>
+                            <th>AI Photo Verification</th>
+                            <th>Assigned Driver</th>
+                            <th class="text-end">Assign Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in unassigned_work %}
+                        <tr>
+                            <td class="fw-bold text-dark font-monospace">#{{ format_pickup_code(item.id) }}</td>
+                            <td>
+                                {% if item.is_public %}
+                                    <span class="badge bg-info-subtle text-info border border-info rounded-pill px-2 py-0.5">Public Report</span>
+                                    <div class="fw-bold text-dark mt-0.5">{{ item.reporter_name or 'Anonymous Citizen' }}</div>
+                                {% elif item.is_society %}
+                                    <span class="badge bg-primary-subtle text-primary border border-primary rounded-pill px-2 py-0.5">Society Bulk</span>
+                                    <div class="fw-bold text-dark mt-0.5">{{ item.society_name or 'Housing Society' }}</div>
+                                {% else %}
+                                    <span class="badge bg-success-subtle text-success border border-success rounded-pill px-2 py-0.5">Household</span>
+                                    <div class="fw-bold text-dark mt-0.5">{{ item.citizen_name or 'Citizen' }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="text-dark">{{ item.address or item.street_segment or 'Navrangpura' }}</div>
+                                {% if item.phone %}<small class="text-muted"><i class="fa-solid fa-phone me-1"></i>{{ item.phone }}</small>{% endif %}
+                            </td>
+                            <td>
+                                <strong class="text-success">{{ item.total_kg or 5.0 }} KG</strong>
+                                <span class="badge bg-light text-dark border ms-1">Zone {{ item.pickup_zone or 1 }}</span>
+                            </td>
+                            <td class="text-muted">{{ item.created_at or 'Just now' }}</td>
+                            <td>
+                                {% if item.ai_image_check == 'passed' %}
+                                    <span class="badge bg-success-subtle text-success border border-success rounded-pill"><i class="fa-solid fa-circle-check me-1"></i> Passed</span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning border border-warning rounded-pill"><i class="fa-solid fa-triangle-exclamation me-1"></i> {{ item.ai_image_check|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.driver_name %}
+                                    <span class="badge bg-dark text-white rounded-pill"><i class="fa-solid fa-truck-fast me-1"></i> {{ item.driver_name }} ({{ item.van_code }})</span>
+                                {% else %}
+                                    <span class="badge bg-secondary text-white rounded-pill">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="input-group input-group-sm justify-content-end" style="max-width: 260px; float: right;">
+                                    <select class="form-select form-select-sm" id="driver-select-{{ item.id }}">
+                                        <option value="">-- Select Driver --</option>
+                                        {% for v in vans %}
+                                        <option value="{{ v.id }}" {% if item.assigned_van_id == v.id %}selected{% endif %}>{{ v.driver_name }} ({{ v.van_code }})</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="btn btn-sm btn-success fw-bold px-3" onclick="assignDriverToPickup({{ item.id }})">
+                                        <i class="fa-solid fa-user-check me-1"></i> Assign
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="fa-solid fa-circle-check fs-1 text-success mb-2 d-block"></i>
+                <p class="mb-0 small fw-bold">No new unassigned work. All requests have been assigned to drivers.</p>
+            </div>
+        {% endif %}
     </div>
 
     <!-- TODAY'S OPERATIONS & NEEDS ATTENTION QUEUE -->
@@ -857,6 +946,31 @@ function resolveDispute(pickupId, action) {
         }
     })
     .catch(err => alert('Network error'));
+}
+
+async function assignDriverToPickup(pickupId) {
+    const select = document.getElementById(`driver-select-${pickupId}`);
+    const vanId = select ? select.value : '';
+    if (!vanId) {
+        alert("Please select a driver from the dropdown before clicking Assign.");
+        return;
+    }
+    try {
+        const res = await fetch(`/api/admin/assign-driver/${pickupId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ van_id: vanId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert("Error: " + data.message);
+        }
+    } catch (err) {
+        alert("Network error assigning driver.");
+    }
 }
 
 function executeDemoReset() {

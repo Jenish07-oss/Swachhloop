@@ -205,8 +205,49 @@ NagarLoop Team"""
 
     # Development / Offline Fallback Simulation
     print(f"NagarLoop Simulated OTP Email -> Recipient: {recipient_email} | OTP Code: {otp}")
-    log_sms(recipient_email, f"NagarLoop Verification Code: {otp}. Expires in {OTP_EXPIRY_MINUTES} minutes.", "otp_email")
     return True
+
+def credit_verified_points(pickup_id, db_conn=None):
+    """Credit Green Points upon verified collection (Idempotent: checked against points_ledger)"""
+    conn = db_conn or get_db()
+    cur = conn.cursor()
+
+    pickup = cur.execute("SELECT * FROM pickups WHERE id = ?", (pickup_id,)).fetchone()
+    if not pickup:
+        if not db_conn: conn.close()
+        return 0
+
+    # Idempotency Check: Verify points ledger entry doesn't already exist for this pickup
+    existing = cur.execute("SELECT 1 FROM points_ledger WHERE pickup_id = ?", (pickup_id,)).fetchone()
+    if existing:
+        if not db_conn: conn.close()
+        return 0
+
+    points = pickup['earned_points'] or 0
+    if points <= 0:
+        streams = cur.execute("SELECT stream_type, COALESCE(verified_kg, estimated_kg) as kg FROM pickup_streams WHERE pickup_id = ?", (pickup_id,)).fetchall()
+        stream_dict = {s['stream_type']: s['kg'] for s in streams}
+        points = calculate_green_points(stream_dict, bin_score=pickup['bin_score'] or 75, is_society=bool(pickup['is_society']))
+
+    if points > 0:
+        p_code = pickup['pickup_code'] or format_pickup_code(pickup_id)
+        cur.execute("""
+            INSERT INTO points_ledger (household_id, society_id, pickup_id, points, reason)
+            VALUES (?, ?, ?, ?, ?)
+        """, (pickup['household_id'], pickup['society_id'], pickup['id'], points, f"Verified 4-Stream Collection {p_code} ({pickup['total_kg'] or 5.0} kg)"))
+        
+        # Notify citizen via simulated SMS
+        hh = cur.execute("SELECT phone FROM households WHERE id = ?", (pickup['household_id'],)).fetchone() if pickup['household_id'] else None
+        phone = hh['phone'] if hh else '9876543210'
+        log_sms(phone, f"🎉 Verification Complete! +{points} Green Points credited for NagarLoop pickup {p_code}.", "points_credited", pickup_id, db_conn=conn)
+        
+        if not db_conn:
+            conn.commit()
+            conn.close()
+        return points
+
+    if not db_conn: conn.close()
+    return 0
 
 # ----------------------------------------------------
 # 4R FORMULAS & CO2 ESTIMATES
@@ -1036,20 +1077,13 @@ def book_pickup():
             VALUES (?, ?, ?, ?, 'pending')
         """, (pickup_id, stream_type, kg, facility_id))
 
-    # Green points ledger
-    if green_points > 0:
-        cur.execute("""
-            INSERT INTO points_ledger (household_id, society_id, pickup_id, points, reason)
-            VALUES (?, ?, ?, ?, ?)
-        """, (household_id if not is_society else None, society_id if is_society else None, pickup_id, green_points, f"Segregated 4-Stream Collection {p_code} ({total_kg} kg, Score: {bin_score}/100)"))
-
     # Simulated notification
     hh = None
     if household_id:
         cur.execute("SELECT phone FROM households WHERE id = ?", (household_id,))
         hh = cur.fetchone()
     phone = hh['phone'] if hh else '9876543210'
-    log_sms(phone, f"Your NagarLoop pickup {p_code} is confirmed. +{green_points} Green Points reserved.", "booking_confirmed", pickup_id, db_conn=conn)
+    log_sms(phone, f"Your NagarLoop pickup {p_code} is confirmed. +{green_points} Green Points will be awarded upon verified collection.", "booking_confirmed", pickup_id, db_conn=conn)
 
     conn.commit()
     conn.close()
@@ -1801,6 +1835,19 @@ def admin_dashboard():
         ORDER BY p.id DESC
     """).fetchall()
 
+    # New / Unassigned Work Queue (Household bookings, Society bookings, Public reports requiring driver assignment)
+    unassigned_work = conn.execute("""
+        SELECT p.*, h.household_code, h.name as citizen_name, h.street_segment, h.phone,
+               s.name as society_name, s.society_code, v.van_code, v.driver_name
+        FROM pickups p
+        LEFT JOIN households h ON p.household_id = h.id
+        LEFT JOIN societies s ON p.society_id = s.id
+        LEFT JOIN vans v ON p.assigned_van_id = v.id
+        WHERE p.status = 'pending' OR p.assigned_van_id IS NULL
+        ORDER BY p.id DESC
+        LIMIT 50
+    """).fetchall()
+
     vans = conn.execute("SELECT * FROM vans ORDER BY id ASC").fetchall()
 
     # Circular Flow Breakdown by Stream (P4.2)
@@ -1879,6 +1926,7 @@ def admin_dashboard():
                            facilities=facility_list,
                            alerts=alerts,
                            needs_attention=needs_attention,
+                           unassigned_work=unassigned_work,
                            vans=vans,
                            leaderboard=leaderboard,
                            stream_summary=stream_summary,
@@ -2001,6 +2049,52 @@ def admin_export_csv():
     mem_file.write(output.getvalue().encode('utf-8'))
     mem_file.seek(0)
     return send_file(mem_file, mimetype='text/csv', as_attachment=True, download_name='nagarloop_operations_report.csv')
+
+@app.route('/api/admin/assign-driver/<int:pickup_id>', methods=['POST'])
+@login_required(roles=['admin'])
+def api_admin_assign_driver(pickup_id):
+    """Admin assigns an unassigned pickup to a driver/van"""
+    data = request.json or request.form
+    van_id = data.get('van_id')
+
+    if not van_id:
+        return jsonify({'success': False, 'message': 'Please select a valid driver/van.'}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    pickup = cursor.execute("SELECT * FROM pickups WHERE id = ?", (pickup_id,)).fetchone()
+    if not pickup:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Pickup not found.'}), 404
+
+    van = cursor.execute("SELECT * FROM vans WHERE id = ?", (van_id,)).fetchone()
+    if not van:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Selected van/driver does not exist.'}), 404
+
+    cursor.execute("""
+        UPDATE pickups 
+        SET assigned_van_id = ?, status = 'assigned'
+        WHERE id = ?
+    """, (van_id, pickup_id))
+
+    cursor.execute("""
+        INSERT INTO audit_logs (pickup_id, previous_status, new_status, action, actor_type, notes)
+        VALUES (?, ?, 'assigned', 'admin_assign_driver', 'admin', ?)
+    """, (pickup_id, pickup['status'], f"Assigned to {van['van_code']} ({van['driver_name']})"))
+
+    p_code = pickup['pickup_code'] or format_pickup_code(pickup_id)
+    
+    # Notify citizen via simulated SMS
+    hh = cursor.execute("SELECT phone FROM households WHERE id = ?", (pickup['household_id'],)).fetchone() if pickup['household_id'] else None
+    phone = hh['phone'] if hh else '9876543210'
+    log_sms(phone, f"NagarLoop: Driver {van['driver_name']} ({van['van_code']}) has been assigned to your pickup {p_code}.", "driver_assigned", pickup_id, db_conn=conn)
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True, 'message': f'Pickup #{p_code} assigned to {van["driver_name"]} ({van["van_code"]}).'})
 
 @app.route('/api/admin/reschedule/<int:pickup_id>', methods=['POST'])
 @login_required(roles=['admin'])

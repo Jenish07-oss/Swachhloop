@@ -268,6 +268,7 @@ def init_db():
         ("pickups", "address", "TEXT"),
         ("pickups", "ai_image_check", "TEXT DEFAULT 'passed'"),
         ("pickups", "ai_confidence", "REAL DEFAULT 0.0"),
+        ("pickup_streams", "verified_kg", "REAL"),
     ]
 
     for table, col, col_type in migrations:
@@ -276,16 +277,20 @@ def init_db():
         except Exception:
             pass
 
-
-
-    # Create indexes
+    # Create justified performance indexes
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickups_status ON pickups(status)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickups_code ON pickups(pickup_code)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickups_zone ON pickups(pickup_zone)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickups_van ON pickups(assigned_van_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickups_household ON pickups(household_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickups_society ON pickups(society_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickups_created ON pickups(created_at)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickup_streams_pickup ON pickup_streams(pickup_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_pickup_streams_stream ON pickup_streams(stream_type)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_points_ledger_hh ON points_ledger(household_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_points_ledger_soc ON points_ledger(society_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_email_otps_email ON email_otps(email)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_routes_status ON routes(status)')
 
     conn.commit()

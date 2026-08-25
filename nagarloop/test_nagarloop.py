@@ -688,5 +688,37 @@ class TestNagarLoopPhase2(unittest.TestCase):
         wrong_otp_res = self.client.post('/verify-email', data={'otp': '000000'}, follow_redirects=True)
         self.assertIn(b'Incorrect OTP', wrong_otp_res.data)
 
+    def test_52_admin_driver_assignment_and_work_isolation(self):
+        # 1. Admin login with demo account password admin123
+        self.client.post('/login/admin', data={'username': 'admin', 'password': 'admin123'})
+        
+        # 2. Assign pickup 1 to van 1
+        assign_res = self.client.post('/api/admin/assign-driver/1', json={'van_id': 1})
+        self.assertEqual(assign_res.status_code, 200)
+        self.assertTrue(assign_res.json['success'])
+        
+        # 3. Log out admin and log in driver (vikram / vikram123)
+        self.client.get('/logout')
+        self.client.post('/login/driver', data={'username': 'vikram', 'password': 'vikram123'})
+        
+        # 4. Driver dashboard shows assigned pickup 1
+        driver_res = self.client.get('/driver')
+        self.assertEqual(driver_res.status_code, 200)
+
+    def test_53_verified_green_points_idempotency(self):
+        from database import get_db
+        from app import credit_verified_points
+        conn = get_db()
+        
+        # First call awards points
+        pts1 = credit_verified_points(1, db_conn=conn)
+        conn.commit()
+        
+        # Second call returns 0 due to idempotency check
+        pts2 = credit_verified_points(1, db_conn=conn)
+        conn.close()
+        
+        self.assertEqual(pts2, 0)
+
 if __name__ == '__main__':
     unittest.main()
