@@ -259,6 +259,9 @@ def seed():
         VALUES 
             ('jenish', 'jenish123', 'Jenish Patel', 'citizen', '9876543210', 'jenish@nagarloop.in', 1, 'Navrangpura', 1, NULL, NULL),
             ('society', 'society123', 'Rajesh Mehta', 'society_manager', '9825012345', 'society@nagarloop.in', 1, 'Shivalik Heights', NULL, 1, NULL),
+            ('driver1', 'vikram123', 'Vikram Thakor (Driver 1)', 'driver', '9988776655', 'driver1@nagarloop.in', 1, 'Navrangpura Ward', NULL, NULL, 1),
+            ('driver2', 'driver2_123', 'Ramesh Kumar (Driver 2)', 'driver', '9988776656', 'driver2@nagarloop.in', 1, 'Navrangpura Ward', NULL, NULL, 2),
+            ('driver3', 'driver3_123', 'Suresh Solanki (Driver 3)', 'driver', '9988776657', 'driver3@nagarloop.in', 1, 'Navrangpura Ward', NULL, NULL, 3),
             ('vikram', 'vikram123', 'Vikram Thakor', 'driver', '9988776655', 'driver@nagarloop.in', 1, 'Navrangpura Ward', NULL, NULL, 1),
             ('admin', 'admin123', 'Municipal Operations Admin', 'admin', '0792650000', 'admin@nagarloop.in', 1, 'Central Control Room', NULL, NULL, NULL)
     ''')

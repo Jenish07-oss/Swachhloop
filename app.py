@@ -964,6 +964,7 @@ def citizen_booking():
                            pickups=pickup_list,
                            repeat_pickup=repeat_pickup)
 
+@app.route('/book', methods=['POST'])
 @app.route('/book-pickup', methods=['POST'])
 @login_required(roles=['citizen', 'society_manager', 'admin'])
 def book_pickup():
@@ -1405,7 +1406,7 @@ def driver_portal():
         SELECT p.*, h.household_code, h.name as citizen_name, h.street_segment, h.phone
         FROM pickups p
         LEFT JOIN households h ON p.household_id = h.id
-        WHERE (p.assigned_van_id = ? OR (p.assigned_van_id IS NULL AND p.pickup_zone <= 2))
+        WHERE p.assigned_van_id = ?
         ORDER BY p.id ASC
     """, (van_id,)).fetchall()
 
@@ -1942,6 +1943,153 @@ def admin_dashboard():
                            societies=society_list,
                            sms_logs=sms_logs)
 
+@app.route('/admin/operations')
+@login_required(roles=['admin'])
+def admin_operations():
+    """Dedicated Admin Live Operations Management Dashboard"""
+    conn = get_db()
+
+    # Calculate real-time counts from database
+    counts = {
+        'new': conn.execute("SELECT COUNT(*) FROM pickups WHERE status = 'pending' OR assigned_van_id IS NULL").fetchone()[0],
+        'assigned': conn.execute("SELECT COUNT(*) FROM pickups WHERE status = 'assigned'").fetchone()[0],
+        'in_progress': conn.execute("SELECT COUNT(*) FROM pickups WHERE status = 'in_progress'").fetchone()[0],
+        'collected': conn.execute("SELECT COUNT(*) FROM pickups WHERE status = 'collected'").fetchone()[0],
+        'verified': conn.execute("SELECT COUNT(*) FROM pickups WHERE status = 'verified'").fetchone()[0],
+        'completed': conn.execute("SELECT COUNT(*) FROM pickups WHERE status IN ('completed', 'delivered')").fetchone()[0],
+        'disputed': conn.execute("SELECT COUNT(*) FROM pickups WHERE status IN ('disputed', 'failed')").fetchone()[0]
+    }
+
+    # Fetch live records for all queues
+    unassigned = conn.execute("""
+        SELECT p.*, h.household_code, h.name as citizen_name, h.street_segment, h.phone,
+               s.name as society_name, s.society_code, v.van_code, v.driver_name
+        FROM pickups p
+        LEFT JOIN households h ON p.household_id = h.id
+        LEFT JOIN societies s ON p.society_id = s.id
+        LEFT JOIN vans v ON p.assigned_van_id = v.id
+        WHERE p.status = 'pending' OR p.assigned_van_id IS NULL
+        ORDER BY p.id DESC
+    """).fetchall()
+
+    assigned = conn.execute("""
+        SELECT p.*, h.household_code, h.name as citizen_name, h.street_segment, h.phone,
+               s.name as society_name, v.van_code, v.driver_name
+        FROM pickups p
+        LEFT JOIN households h ON p.household_id = h.id
+        LEFT JOIN societies s ON p.society_id = s.id
+        LEFT JOIN vans v ON p.assigned_van_id = v.id
+        WHERE p.status = 'assigned'
+        ORDER BY p.id DESC
+    """).fetchall()
+
+    in_progress = conn.execute("""
+        SELECT p.*, h.household_code, h.name as citizen_name, h.street_segment, h.phone,
+               s.name as society_name, v.van_code, v.driver_name
+        FROM pickups p
+        LEFT JOIN households h ON p.household_id = h.id
+        LEFT JOIN societies s ON p.society_id = s.id
+        LEFT JOIN vans v ON p.assigned_van_id = v.id
+        WHERE p.status = 'in_progress'
+        ORDER BY p.id DESC
+    """).fetchall()
+
+    collected = conn.execute("""
+        SELECT p.*, h.household_code, h.name as citizen_name, h.street_segment, h.phone,
+               s.name as society_name, v.van_code, v.driver_name
+        FROM pickups p
+        LEFT JOIN households h ON p.household_id = h.id
+        LEFT JOIN societies s ON p.society_id = s.id
+        LEFT JOIN vans v ON p.assigned_van_id = v.id
+        WHERE p.status IN ('collected', 'collection_reported')
+        ORDER BY p.id DESC
+    """).fetchall()
+
+    verified = conn.execute("""
+        SELECT p.*, h.household_code, h.name as citizen_name, h.street_segment, h.phone,
+               s.name as society_name, v.van_code, v.driver_name
+        FROM pickups p
+        LEFT JOIN households h ON p.household_id = h.id
+        LEFT JOIN societies s ON p.society_id = s.id
+        LEFT JOIN vans v ON p.assigned_van_id = v.id
+        WHERE p.status = 'verified'
+        ORDER BY p.id DESC
+    """).fetchall()
+
+    completed = conn.execute("""
+        SELECT p.*, h.household_code, h.name as citizen_name, h.street_segment, h.phone,
+               s.name as society_name, v.van_code, v.driver_name
+        FROM pickups p
+        LEFT JOIN households h ON p.household_id = h.id
+        LEFT JOIN societies s ON p.society_id = s.id
+        LEFT JOIN vans v ON p.assigned_van_id = v.id
+        WHERE p.status IN ('completed', 'delivered')
+        ORDER BY p.id DESC
+    """).fetchall()
+
+    disputed = conn.execute("""
+        SELECT p.*, h.household_code, h.name as citizen_name, h.street_segment, h.phone,
+               s.name as society_name, v.van_code, v.driver_name
+        FROM pickups p
+        LEFT JOIN households h ON p.household_id = h.id
+        LEFT JOIN societies s ON p.society_id = s.id
+        LEFT JOIN vans v ON p.assigned_van_id = v.id
+        WHERE p.status IN ('disputed', 'failed')
+        ORDER BY p.id DESC
+    """).fetchall()
+
+    vans = conn.execute("SELECT * FROM vans ORDER BY id ASC").fetchall()
+    conn.close()
+
+    return render_template('admin_operations.html',
+                           counts=counts,
+                           unassigned=[dict(r) for r in unassigned],
+                           assigned=[dict(r) for r in assigned],
+                           in_progress=[dict(r) for r in in_progress],
+                           collected=[dict(r) for r in collected],
+                           verified=[dict(r) for r in verified],
+                           completed=[dict(r) for r in completed],
+                           disputed=[dict(r) for r in disputed],
+                           vans=[dict(r) for r in vans])
+
+@app.route('/api/ops/poll', methods=['GET'])
+def api_ops_poll():
+    """Role-authorized database-backed near-real-time polling API"""
+    user_role = session.get('role')
+    user = session.get('user')
+    if not user or not user_role:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+
+    conn = get_db()
+
+    if user_role == 'admin':
+        counts = {
+            'new': conn.execute("SELECT COUNT(*) FROM pickups WHERE status = 'pending' OR assigned_van_id IS NULL").fetchone()[0],
+            'assigned': conn.execute("SELECT COUNT(*) FROM pickups WHERE status = 'assigned'").fetchone()[0],
+            'in_progress': conn.execute("SELECT COUNT(*) FROM pickups WHERE status = 'in_progress'").fetchone()[0],
+            'collected': conn.execute("SELECT COUNT(*) FROM pickups WHERE status = 'collected'").fetchone()[0],
+            'verified': conn.execute("SELECT COUNT(*) FROM pickups WHERE status = 'verified'").fetchone()[0],
+            'completed': conn.execute("SELECT COUNT(*) FROM pickups WHERE status IN ('completed', 'delivered')").fetchone()[0],
+            'disputed': conn.execute("SELECT COUNT(*) FROM pickups WHERE status IN ('disputed', 'failed')").fetchone()[0]
+        }
+        conn.close()
+        return jsonify({'success': True, 'role': 'admin', 'counts': counts})
+
+    elif user_role == 'driver':
+        van_id = session.get('van_id') or (user.get('van_id') if user else 1) or 1
+        assigned_stops = conn.execute("""
+            SELECT p.id, p.pickup_code, p.status, p.total_kg, h.name as citizen_name
+            FROM pickups p
+            LEFT JOIN households h ON p.household_id = h.id
+            WHERE p.assigned_van_id = ?
+            ORDER BY p.id ASC
+        """, (van_id,)).fetchall()
+        conn.close()
+        return jsonify({'success': True, 'role': 'driver', 'stops_count': len(assigned_stops), 'stops': [dict(r) for r in assigned_stops]})
+
+    conn.close()
+    return jsonify({'success': True, 'role': user_role})
+
 @app.route('/admin/reports')
 @login_required(roles=['admin'])
 def admin_reports():
@@ -2084,8 +2232,12 @@ def api_admin_assign_driver(pickup_id):
     cursor.execute("""
         UPDATE pickups 
         SET assigned_van_id = ?, status = 'assigned'
-        WHERE id = ?
-    """, (van_id, pickup_id))
+        WHERE id = ? AND (status = 'pending' OR assigned_van_id IS NULL OR assigned_van_id = ?)
+    """, (van_id, pickup_id, van_id))
+
+    if cursor.rowcount == 0:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Pickup is no longer available for assignment or assigned to another driver.'}), 409
 
     cursor.execute("""
         INSERT INTO audit_logs (pickup_id, previous_status, new_status, action, actor_type, notes)

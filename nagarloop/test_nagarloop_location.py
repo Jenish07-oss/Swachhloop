@@ -195,6 +195,11 @@ class TestNagarLoopLocationSystem(unittest.TestCase):
 
     def test_driver_navigation_url_exact_coords(self):
         # 8. Test driver navigation URL contains exact coordinates
+        conn = get_db()
+        conn.execute("UPDATE pickups SET assigned_van_id = 1 WHERE id = 1")
+        conn.commit()
+        conn.close()
+
         with self.client.session_transaction() as sess:
             sess['user_id'] = 3
             sess['role'] = 'driver'

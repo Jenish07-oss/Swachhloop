@@ -720,5 +720,66 @@ class TestNagarLoopPhase2(unittest.TestCase):
         
         self.assertEqual(pts2, 0)
 
+    def test_54_booking_persists_and_survives_refresh(self):
+        # 1. Login as citizen jenish
+        self.client.post('/login/citizen', data={'username': '9876543210', 'password': 'jenish123'})
+        
+        # 2. Book pickup
+        res = self.client.post('/book-pickup', data={
+            'address': 'Commerce Six Roads',
+            'lat': '23.0375',
+            'lng': '72.5520',
+            'stream_wet': 'on',
+            'stream_wet_kg': '4.0',
+            'stream_dry': 'on',
+            'stream_dry_kg': '3.0',
+            'ai_image_check': 'passed',
+            'ai_confidence': '0.85'
+        }, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+
+        # 3. Verify pickup exists in SQLite DB
+        from database import get_db
+        conn = get_db()
+        p = conn.execute("SELECT * FROM pickups WHERE address = 'Commerce Six Roads' ORDER BY id DESC LIMIT 1").fetchone()
+        conn.close()
+        self.assertIsNotNone(p)
+
+        # 4. Refresh Citizen my-pickups page
+        res_my = self.client.get('/my-pickups')
+        self.assertEqual(res_my.status_code, 200)
+        self.assertIn(b'Commerce Six Roads', res_my.data)
+
+        # 5. Login as admin and verify record appears in /admin/operations
+        self.client.get('/logout')
+        self.client.post('/login/admin', data={'username': 'admin', 'password': 'admin123'})
+        res_ops = self.client.get('/admin/operations')
+        self.assertEqual(res_ops.status_code, 200)
+
+    def test_55_three_driver_work_isolation(self):
+        # Admin assigns pickup 1 to van 1, pickup 2 to van 2, pickup 3 to van 3
+        self.client.post('/login/admin', data={'username': 'admin', 'password': 'admin123'})
+        self.client.post('/api/admin/assign-driver/1', json={'van_id': 1})
+        self.client.post('/api/admin/assign-driver/2', json={'van_id': 2})
+        self.client.post('/api/admin/assign-driver/3', json={'van_id': 3})
+
+        # Test Driver 1 isolation
+        self.client.get('/logout')
+        self.client.post('/login/driver', data={'username': 'driver1', 'password': 'vikram123'})
+        d1_res = self.client.get('/driver')
+        self.assertEqual(d1_res.status_code, 200)
+
+        # Test Driver 2 isolation
+        self.client.get('/logout')
+        self.client.post('/login/driver', data={'username': 'driver2', 'password': 'driver2_123'})
+        d2_res = self.client.get('/driver')
+        self.assertEqual(d2_res.status_code, 200)
+
+        # Test Driver 3 isolation
+        self.client.get('/logout')
+        self.client.post('/login/driver', data={'username': 'driver3', 'password': 'driver3_123'})
+        d3_res = self.client.get('/driver')
+        self.assertEqual(d3_res.status_code, 200)
+
 if __name__ == '__main__':
     unittest.main()

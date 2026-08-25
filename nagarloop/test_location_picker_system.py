@@ -165,6 +165,12 @@ class TestNagarLoopLocationSystem(unittest.TestCase):
 
     def test_06_driver_navigation_uses_coordinates_not_address(self):
         """Test driver portal displays exact coordinates for Google Maps navigation"""
+        from database import get_db
+        conn = get_db()
+        conn.execute("UPDATE pickups SET assigned_van_id = 1 WHERE id = 1")
+        conn.commit()
+        conn.close()
+
         self.client.post('/login/driver', data={
             'username': 'vikram',
             'password': 'vikram123'

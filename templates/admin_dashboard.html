@@ -24,6 +24,9 @@
                 <a href="#sms-section" class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold d-flex align-items-center" style="min-height: 42px;">
                     <i class="fa-solid fa-comment-sms me-1 text-warning"></i> SMS Logs <span class="badge bg-light text-dark rounded-pill ms-2 fw-bold">{{ sms_logs|length }}</span>
                 </a>
+                <a href="{{ url_for('admin_operations') }}" class="btn btn-sm btn-success rounded-pill px-3 fw-bold d-flex align-items-center text-white" style="min-height: 42px;">
+                    <i class="fa-solid fa-signal me-1"></i> Live Operations
+                </a>
                 <a href="{{ url_for('admin_dispatch') }}" class="btn-nl-lime" style="min-height: 42px; font-size: 0.9rem; padding: 0.5rem 1.3rem;">
                     <i class="fa-solid fa-truck-fast me-1"></i> Open Dispatch Center
                 </a>

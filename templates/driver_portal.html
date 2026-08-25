@@ -526,7 +526,23 @@ function confirmEndShift() {
             alert(data.message || 'Error ending shift');
         }
     })
-    .catch(err => alert('Network error ending shift'));
 }
+
+// Database-backed near-real-time polling for assigned work (every 8 seconds)
+let initialStopsCount = null;
+setInterval(async () => {
+    try {
+        const res = await fetch('/api/ops/poll');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.role === 'driver' && data.stops_count !== undefined) {
+                if (initialStopsCount !== null && data.stops_count !== initialStopsCount) {
+                    window.location.reload();
+                }
+                initialStopsCount = data.stops_count;
+            }
+        }
+    } catch (e) {}
+}, 8000);
 </script>
 {% endblock %}

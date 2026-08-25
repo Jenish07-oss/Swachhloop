@@ -1,73 +1,25 @@
-# Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
-*$py.class
-
-# C extensions
-*.so
-
-# Distribution / packaging
+*.pyc
+*.pyo
+*.pyd
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyInstaller
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
-
-# Environments
-.env
-.venv
-env/
 venv/
+env/
 ENV/
-env.bak/
-venv.bak/
-
-# IDE & OS files
-.idea/
-.vscode/
+*.db
+*.sqlite
+*.sqlite3
+swachhloop.db
+uploads/
+.env
+*.log
+.DS_Store
 *.swp
 *.swo
-.DS_Store
-Thumbs.db
-
-# Runtime logs & Databases
-*.log
-*.db
-static/uploads/*
-!static/uploads/.gitkeep
+*~
+.vscode/
+.idea/
+*.egg-info/
+dist/
+build/
+DEMO_CREDENTIALS.txt

@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+{% block title %}Admin Live Operations — {{ BRAND }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Operations Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <span class="badge bg-success-subtle text-success border border-success px-3 py-1 fw-bold mb-1">
+                <i class="fa-solid fa-signal me-1"></i> Live Database Operations
+            </span>
+            <h1 class="h3 fw-bold mb-0 text-dark">NAGARLOOP OPERATIONS CONTROL</h1>
+            <p class="small text-muted mb-0">Real-time municipal dispatch, driver assignment & doorstep pickup tracking</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold" onclick="location.reload()">
+                <i class="fa-solid fa-rotate me-1"></i> Refresh
+            </button>
+
+        </div>
+    </div>
+
+    <!-- Live Status Counter Cards -->
+    <div class="row g-3 mb-4 text-center">
+        <div class="col-6 col-sm-4 col-md-2">
+            <div class="p-3 bg-white rounded-3 border shadow-sm h-100">
+                <small class="text-muted d-block font-monospace fw-bold mb-1" style="font-size: 11px;">NEW / UNASSIGNED</small>
+                <strong class="fs-4 text-warning" id="cnt-new">{{ counts.new }}</strong>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+            <div class="p-3 bg-white rounded-3 border shadow-sm h-100">
+                <small class="text-muted d-block font-monospace fw-bold mb-1" style="font-size: 11px;">ASSIGNED</small>
+                <strong class="fs-4 text-primary" id="cnt-assigned">{{ counts.assigned }}</strong>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+            <div class="p-3 bg-white rounded-3 border shadow-sm h-100">
+                <small class="text-muted d-block font-monospace fw-bold mb-1" style="font-size: 11px;">IN PROGRESS</small>
+                <strong class="fs-4 text-info" id="cnt-in_progress">{{ counts.in_progress }}</strong>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+            <div class="p-3 bg-white rounded-3 border shadow-sm h-100">
+                <small class="text-muted d-block font-monospace fw-bold mb-1" style="font-size: 11px;">COLLECTED</small>
+                <strong class="fs-4 text-success" id="cnt-collected">{{ counts.collected }}</strong>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+            <div class="p-3 bg-white rounded-3 border shadow-sm h-100">
+                <small class="text-muted d-block font-monospace fw-bold mb-1" style="font-size: 11px;">VERIFIED</small>
+                <strong class="fs-4 text-dark" id="cnt-verified">{{ counts.verified }}</strong>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+            <div class="p-3 bg-white rounded-3 border shadow-sm h-100">
+                <small class="text-muted d-block font-monospace fw-bold mb-1" style="font-size: 11px;">DISPUTED / FAILED</small>
+                <strong class="fs-4 text-danger" id="cnt-disputed">{{ counts.disputed }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Operations Queue Tabs -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom pt-3 pb-0 px-4">
+            <ul class="nav nav-tabs card-header-tabs border-0" id="opsTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold text-dark me-2" id="unassigned-tab" data-bs-toggle="tab" data-bs-target="#tab-unassigned" type="button" role="tab">
+                        <i class="fa-solid fa-list-check text-warning me-1"></i> New / Unassigned
+                        <span class="badge bg-warning text-dark rounded-pill ms-1">{{ unassigned|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-dark me-2" id="assigned-tab" data-bs-toggle="tab" data-bs-target="#tab-assigned" type="button" role="tab">
+                        <i class="fa-solid fa-truck-fast text-primary me-1"></i> Assigned
+                        <span class="badge bg-primary rounded-pill ms-1">{{ assigned|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-dark me-2" id="in_progress-tab" data-bs-toggle="tab" data-bs-target="#tab-in_progress" type="button" role="tab">
+                        <i class="fa-solid fa-spinner text-info me-1"></i> In Progress
+                        <span class="badge bg-info rounded-pill ms-1">{{ in_progress|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-dark me-2" id="collected-tab" data-bs-toggle="tab" data-bs-target="#tab-collected" type="button" role="tab">
+                        <i class="fa-solid fa-circle-check text-success me-1"></i> Collected
+                        <span class="badge bg-success rounded-pill ms-1">{{ collected|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-dark me-2" id="verified-tab" data-bs-toggle="tab" data-bs-target="#tab-verified" type="button" role="tab">
+                        <i class="fa-solid fa-award text-dark me-1"></i> Verified
+                        <span class="badge bg-dark rounded-pill ms-1">{{ verified|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-dark" id="disputed-tab" data-bs-toggle="tab" data-bs-target="#tab-disputed" type="button" role="tab">
+                        <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i> Disputed / Failed
+                        <span class="badge bg-danger rounded-pill ms-1">{{ disputed|length }}</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="tab-content" id="opsTabContent">
+
+                <!-- 1. NEW / UNASSIGNED QUEUE -->
+                <div class="tab-pane fade show active" id="tab-unassigned" role="tabpanel">
+                    {% if unassigned %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light text-uppercase text-muted" style="font-size: 11px;">
+                                <tr>
+                                    <th>ID / Code</th>
+                                    <th>Type & Citizen</th>
+                                    <th>Address / Phone</th>
+                                    <th>Waste Stream / KG</th>
+                                    <th>Created Time</th>
+                                    <th>AI Verification</th>
+                                    <th class="text-end">Assign Driver</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in unassigned %}
+                                <tr>
+                                    <td class="fw-bold text-dark font-monospace">#{{ format_pickup_code(item.id) }}</td>
+                                    <td>
+                                        {% if item.is_public %}
+                                            <span class="badge bg-info-subtle text-info border border-info rounded-pill px-2 py-0.5">Public Report</span>
+                                            <div class="fw-bold text-dark mt-0.5">{{ item.reporter_name or 'Anonymous' }}</div>
+                                        {% elif item.is_society %}
+                                            <span class="badge bg-primary-subtle text-primary border border-primary rounded-pill px-2 py-0.5">Society Bulk</span>
+                                            <div class="fw-bold text-dark mt-0.5">{{ item.society_name or 'Housing Society' }}</div>
+                                        {% else %}
+                                            <span class="badge bg-success-subtle text-success border border-success rounded-pill px-2 py-0.5">Household</span>
+                                            <div class="fw-bold text-dark mt-0.5">{{ item.citizen_name or 'Citizen' }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="text-dark">{{ item.address or item.street_segment or 'Navrangpura' }}</div>
+                                        {% if item.phone %}<small class="text-muted"><i class="fa-solid fa-phone me-1"></i>{{ item.phone }}</small>{% endif %}
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">{{ item.total_kg or 5.0 }} KG</strong>
+                                        <span class="badge bg-light text-dark border ms-1">Zone {{ item.pickup_zone or 1 }}</span>
+                                    </td>
+                                    <td class="text-muted">{{ item.created_at or 'Just now' }}</td>
+                                    <td>
+                                        <span class="badge bg-success-subtle text-success border border-success rounded-pill"><i class="fa-solid fa-check me-1"></i> Passed</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="input-group input-group-sm justify-content-end" style="max-width: 260px; float: right;">
+                                            <select class="form-select form-select-sm" id="driver-sel-{{ item.id }}">
+                                                <option value="">-- Select Driver --</option>
+                                                {% for v in vans %}
+                                                <option value="{{ v.id }}">{{ v.driver_name }} ({{ v.van_code }})</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button class="btn btn-sm btn-success fw-bold px-3" onclick="assignDriver({{ item.id }})">
+                                                Assign
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fa-solid fa-circle-check fs-1 text-success mb-2 d-block"></i>
+                        <p class="mb-0 small fw-bold">No unassigned pickups. All incoming bookings have been assigned!</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- 2. ASSIGNED QUEUE -->
+                <div class="tab-pane fade" id="tab-assigned" role="tabpanel">
+                    {% if assigned %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light text-uppercase text-muted" style="font-size: 11px;">
+                                <tr>
+                                    <th>ID / Code</th>
+                                    <th>Citizen / Entity</th>
+                                    <th>Address</th>
+                                    <th>Waste Stream</th>
+                                    <th>Assigned Driver / Van</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in assigned %}
+                                <tr>
+                                    <td class="fw-bold text-dark font-monospace">#{{ format_pickup_code(item.id) }}</td>
+                                    <td><strong class="text-dark">{{ item.citizen_name or item.society_name or 'Citizen' }}</strong></td>
+                                    <td>{{ item.address or item.street_segment or 'Navrangpura' }}</td>
+                                    <td><strong class="text-success">{{ item.total_kg or 5.0 }} KG</strong></td>
+                                    <td><span class="badge bg-dark text-white rounded-pill"><i class="fa-solid fa-truck-fast me-1"></i> {{ item.driver_name }} ({{ item.van_code }})</span></td>
+                                    <td><span class="badge bg-primary text-white rounded-pill">ASSIGNED</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <p class="mb-0 small">No assigned pickups currently pending driver startup.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- 3. IN PROGRESS QUEUE -->
+                <div class="tab-pane fade" id="tab-in_progress" role="tabpanel">
+                    {% if in_progress %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light text-uppercase text-muted" style="font-size: 11px;">
+                                <tr>
+                                    <th>ID / Code</th>
+                                    <th>Citizen</th>
+                                    <th>Address</th>
+                                    <th>Driver / Van</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in in_progress %}
+                                <tr>
+                                    <td class="fw-bold text-dark font-monospace">#{{ format_pickup_code(item.id) }}</td>
+                                    <td><strong class="text-dark">{{ item.citizen_name or item.society_name }}</strong></td>
+                                    <td>{{ item.address or item.street_segment }}</td>
+                                    <td><span class="badge bg-dark text-white rounded-pill">{{ item.driver_name }} ({{ item.van_code }})</span></td>
+                                    <td><span class="badge bg-info text-dark rounded-pill">IN PROGRESS</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <p class="mb-0 small">No active pickups currently in progress.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- 4. COLLECTED QUEUE -->
+                <div class="tab-pane fade" id="tab-collected" role="tabpanel">
+                    {% if collected %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light text-uppercase text-muted" style="font-size: 11px;">
+                                <tr>
+                                    <th>ID / Code</th>
+                                    <th>Citizen</th>
+                                    <th>Waste KG</th>
+                                    <th>Driver</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in collected %}
+                                <tr>
+                                    <td class="fw-bold text-dark font-monospace">#{{ format_pickup_code(item.id) }}</td>
+                                    <td><strong class="text-dark">{{ item.citizen_name or item.society_name }}</strong></td>
+                                    <td><strong class="text-success">{{ item.total_kg }} KG</strong></td>
+                                    <td>{{ item.driver_name }}</td>
+                                    <td><span class="badge bg-success rounded-pill">COLLECTED</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <p class="mb-0 small">No unverified collected pickups.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- 5. VERIFIED QUEUE -->
+                <div class="tab-pane fade" id="tab-verified" role="tabpanel">
+                    {% if verified %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light text-uppercase text-muted" style="font-size: 11px;">
+                                <tr>
+                                    <th>ID / Code</th>
+                                    <th>Citizen</th>
+                                    <th>Verified KG</th>
+                                    <th>Points Credited</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in verified %}
+                                <tr>
+                                    <td class="fw-bold text-dark font-monospace">#{{ format_pickup_code(item.id) }}</td>
+                                    <td><strong class="text-dark">{{ item.citizen_name or item.society_name }}</strong></td>
+                                    <td><strong class="text-success">{{ item.total_kg }} KG</strong></td>
+                                    <td><span class="badge bg-success font-monospace">+{{ item.earned_points }} Points</span></td>
+                                    <td><span class="badge bg-dark rounded-pill"><i class="fa-solid fa-award me-1"></i> VERIFIED</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <p class="mb-0 small">No verified records yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- 6. DISPUTED QUEUE -->
+                <div class="tab-pane fade" id="tab-disputed" role="tabpanel">
+                    {% if disputed %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light text-uppercase text-muted" style="font-size: 11px;">
+                                <tr>
+                                    <th>ID / Code</th>
+                                    <th>Citizen</th>
+                                    <th>Problem Reason / Notes</th>
+                                    <th>Driver / Van</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in disputed %}
+                                <tr>
+                                    <td class="fw-bold text-dark font-monospace">#{{ format_pickup_code(item.id) }}</td>
+                                    <td><strong class="text-dark">{{ item.citizen_name or item.society_name }}</strong></td>
+                                    <td class="text-danger fw-semibold">{{ item.problem_reason or item.problem_notes or 'Citizen Dispute Recorded' }}</td>
+                                    <td>{{ item.driver_name or 'Unassigned' }}</td>
+                                    <td><span class="badge bg-danger rounded-pill">DISPUTED</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <p class="mb-0 small">No disputed or failed pickup stops.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function assignDriver(pickupId) {
+    const sel = document.getElementById(`driver-sel-${pickupId}`);
+    const vanId = sel ? sel.value : '';
+    if (!vanId) {
+        alert("Please select a driver from the dropdown before clicking Assign.");
+        return;
+    }
+    try {
+        const res = await fetch(`/api/admin/assign-driver/${pickupId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ van_id: vanId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert("Assignment error: " + data.message);
+        }
+    } catch (err) {
+        alert("Network error assigning driver.");
+    }
+}
+
+// Lightweight database-backed near-real-time polling (every 8 seconds)
+setInterval(async () => {
+    try {
+        const res = await fetch('/api/ops/poll');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.counts) {
+                if (document.getElementById('cnt-new')) document.getElementById('cnt-new').textContent = data.counts.new;
+                if (document.getElementById('cnt-assigned')) document.getElementById('cnt-assigned').textContent = data.counts.assigned;
+                if (document.getElementById('cnt-in_progress')) document.getElementById('cnt-in_progress').textContent = data.counts.in_progress;
+                if (document.getElementById('cnt-collected')) document.getElementById('cnt-collected').textContent = data.counts.collected;
+                if (document.getElementById('cnt-verified')) document.getElementById('cnt-verified').textContent = data.counts.verified;
+                if (document.getElementById('cnt-disputed')) document.getElementById('cnt-disputed').textContent = data.counts.disputed;
+            }
+        }
+    } catch (e) {}
+}, 8000);
+</script>
+{% endblock %}
