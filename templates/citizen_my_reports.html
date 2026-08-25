@@ -26,78 +26,65 @@
     </div>
 
     <!-- Pickups Grid -->
-    <div class="row g-4">
+    <div class="row g-3">
         {% if pickups %}
             {% for p in pickups %}
             <div class="col-lg-6">
-                <div class="nl-card h-100 d-flex flex-column justify-content-between">
+                <div class="nl-card p-3 h-100 d-flex flex-column justify-content-between">
                     <div>
-                        <!-- Header -->
-                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                            <div>
-                                <span class="fw-bold fs-5 text-dark">{{ format_pickup_code(p.id) }}</span>
-                                <span class="badge bg-light text-secondary border ms-2">Zone {{ p.pickup_zone }}</span>
+                        <!-- Compact Header: ID, Status, Total KG, Points -->
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom flex-wrap gap-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold fs-6 text-dark">{{ format_pickup_code(p.id) }}</span>
+                                <span class="badge bg-light text-secondary border" style="font-size: 10px;">Zone {{ p.pickup_zone }}</span>
                             </div>
-                            
-                            <!-- Status Badge -->
                             <div>
                                 {% if p.status == 'delivered' %}
-                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background: var(--stream-wet-bg); color: var(--stream-wet);"><i class="fa-solid fa-building-circle-check me-1"></i> Recovered ✓</span>
+                                <span class="badge rounded-pill px-2 py-1 fw-bold" style="background: var(--stream-wet-bg); color: var(--stream-wet); font-size: 11px;"><i class="fa-solid fa-building-circle-check me-1"></i> Recovered ✓</span>
                                 {% elif p.status == 'collected' %}
-                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background: var(--stream-wet-bg); color: var(--stream-wet);"><i class="fa-solid fa-check me-1"></i> Collected ✓</span>
+                                <span class="badge rounded-pill px-2 py-1 fw-bold" style="background: var(--stream-wet-bg); color: var(--stream-wet); font-size: 11px;"><i class="fa-solid fa-check me-1"></i> Collected ✓</span>
                                 {% elif p.status == 'collection_reported' %}
-                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background: var(--stream-ewaste-bg); color: var(--stream-ewaste);"><i class="fa-solid fa-bell me-1"></i> Collection Reported</span>
+                                <span class="badge rounded-pill px-2 py-1 fw-bold" style="background: var(--stream-ewaste-bg); color: var(--stream-ewaste); font-size: 11px;"><i class="fa-solid fa-bell me-1"></i> Reported</span>
                                 {% elif p.status == 'disputed' %}
-                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background: var(--stream-residual-bg); color: var(--stream-residual);"><i class="fa-solid fa-triangle-exclamation me-1"></i> Dispute Review</span>
+                                <span class="badge rounded-pill px-2 py-1 fw-bold" style="background: var(--stream-residual-bg); color: var(--stream-residual); font-size: 11px;"><i class="fa-solid fa-triangle-exclamation me-1"></i> Dispute</span>
                                 {% elif p.status == 'failed' %}
-                                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background: var(--stream-residual-bg); color: var(--stream-residual);"><i class="fa-solid fa-triangle-exclamation me-1"></i> {{ p.problem_reason or 'Failed' }}</span>
+                                <span class="badge rounded-pill px-2 py-1 fw-bold" style="background: var(--stream-residual-bg); color: var(--stream-residual); font-size: 11px;"><i class="fa-solid fa-triangle-exclamation me-1"></i> Issue</span>
                                 {% else %}
-                                <span class="badge bg-secondary text-white rounded-pill px-3 py-2">● In Queue</span>
+                                <span class="badge bg-secondary text-white rounded-pill px-2 py-1" style="font-size: 11px;">● In Queue</span>
                                 {% endif %}
                             </div>
                         </div>
 
-                        <!-- Citizen Action: Verification Prompt -->
+                        <!-- Summary Row -->
+                        <div class="d-flex justify-content-between align-items-center mb-2 small text-dark">
+                            <div>
+                                <i class="fa-regular fa-clock text-muted me-1"></i> {{ p.created_at[:10] }}
+                                <span class="text-muted ms-1">• Est. <strong>{{ p.total_kg or 7.0 }} kg</strong></span>
+                            </div>
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning fw-bold">+{{ p.points_earned or 40 }} Pts</span>
+                        </div>
+
+                        <!-- Citizen Action: Verification Prompt (When Reported) -->
                         {% if p.status == 'collection_reported' %}
-                        <div class="p-3 mb-3 rounded-4 border shadow-sm" style="background: #FFFBEB; border-color: #FDE68A;">
-                            <div class="fw-bold mb-1 text-dark fs-6"><i class="fa-solid fa-clipboard-question text-warning me-1"></i> Did the van collect your waste?</div>
-                            <p class="small text-secondary mb-3">Driver reported physical collection. Confirm to finalize Green Points.</p>
-                            <div class="d-flex gap-2 flex-wrap">
-                                <button type="button" class="btn-nl-lime" style="min-height: 42px; font-size: 0.88rem; padding: 0.45rem 1.25rem;" onclick="verifyCitizenPickup({{ p.id }}, 'confirm')">
+                        <div class="p-2 mb-2 rounded-3 border shadow-xs" style="background: #FFFBEB; border-color: #FDE68A;">
+                            <div class="fw-bold mb-1 text-dark small"><i class="fa-solid fa-clipboard-question text-warning me-1"></i> Did the van collect your waste?</div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-nl-lime py-1 px-3 fw-bold" style="font-size: 12px;" onclick="verifyCitizenPickup({{ p.id }}, 'confirm')">
                                     <i class="fa-solid fa-circle-check me-1"></i> Yes, collected
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" onclick="verifyCitizenPickup({{ p.id }}, 'dispute')">
-                                    <i class="fa-solid fa-triangle-exclamation me-1"></i> No, not collected
+                                <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 fw-bold" style="font-size: 12px;" onclick="verifyCitizenPickup({{ p.id }}, 'dispute')">
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i> No
                                 </button>
                             </div>
-                        </div>
-                        {% elif p.status == 'disputed' %}
-                        <div class="p-3 mb-3 rounded-4 small" style="background: var(--stream-residual-bg); color: var(--stream-residual);">
-                            <div class="fw-bold mb-1"><i class="fa-solid fa-shield-halved me-1"></i> Dispute Under Municipal Review</div>
-                            <div>Our operations center is investigating this route stop and will reassign a collection van.</div>
-                        </div>
-                        {% elif p.status == 'failed' %}
-                        <div class="p-3 mb-3 rounded-4 small" style="background: var(--stream-residual-bg); color: var(--stream-residual);">
-                            <div class="fw-bold mb-1"><i class="fa-solid fa-circle-exclamation me-1"></i> Collection Issue Reported: {{ p.problem_reason }}</div>
-                            <div>{{ p.problem_notes or 'Driver could not complete collection. Operations is scheduling a recollection.' }}</div>
-                            {% if p.rescheduled_date %}
-                                <div class="mt-1 fw-bold text-dark">Rescheduled: {{ p.rescheduled_date }} ({{ p.rescheduled_window or 'Morning' }})</div>
-                            {% endif %}
                         </div>
                         {% endif %}
 
-                        <!-- Pickup Meta Info -->
-                        <div class="row g-3 mb-3">
-                            <div class="col-sm-4 text-center">
-                                <img src="{{ p.photo_path }}" class="img-fluid rounded-3 border mb-2 shadow-sm" alt="Bin Photo" style="height: 100px; width: 100%; object-fit: cover;">
-                                <div class="badge w-100 py-1" style="background: var(--stream-wet-bg); color: var(--stream-wet); font-size: 11px;">
-                                    Score: <strong>{{ p.bin_score }}/100</strong>
-                                </div>
-                            </div>
-                            <div class="col-sm-8">
-                                <div class="small text-muted mb-1"><i class="fa-solid fa-location-dot text-danger me-1"></i> {{ p.street_segment }}</div>
-                                <div class="small text-muted mb-2"><i class="fa-regular fa-clock me-1"></i> {{ p.created_at[:16] }}</div>
-                                
+                        <!-- Expandable Details Toggle -->
+                        <div class="collapse" id="details-pickup-{{ p.id }}">
+                            <div class="pt-2 border-top mt-2">
+                                <div class="small text-dark fw-semibold mb-1"><i class="fa-solid fa-location-dot text-danger me-1"></i> {{ p.address or p.street_segment }}</div>
+                                <div class="small text-muted font-monospace mb-2" style="font-size: 10.5px;">GPS: {{ p.lat }}, {{ p.lng }}</div>
+
                                 {% if p.van_code %}
                                 <div class="small text-dark fw-semibold mb-2">
                                     <i class="fa-solid fa-truck text-success me-1"></i> <strong>Assigned:</strong> {{ p.van_code }} ({{ p.driver_name or 'Vikram' }})
@@ -105,9 +92,9 @@
                                 {% endif %}
 
                                 <!-- Segregated Streams -->
-                                <div class="d-flex flex-column gap-1">
+                                <div class="d-flex flex-column gap-1 mb-3">
                                     {% for st in p.streams %}
-                                    <div class="p-2 bg-light rounded-2 d-flex justify-content-between align-items-center small">
+                                    <div class="p-1.5 px-2 bg-light rounded-2 d-flex justify-content-between align-items-center small" style="font-size: 11.5px;">
                                         <span>
                                             {% if st.stream_type == 'wet' %}🥬 <strong>Wet</strong>
                                             {% elif st.stream_type == 'dry' %}📦 <strong>Dry</strong>
@@ -115,51 +102,22 @@
                                             {% else %}🔥 <strong>Residual</strong>{% endif %}
                                             ({{ st.estimated_kg }} kg)
                                         </span>
-                                        <span class="badge bg-white text-secondary border" style="font-size: 10px;">{{ st.facility_name|truncate(18) if st.facility_name else 'Destination Facility' }}</span>
+                                        <span class="badge bg-white text-secondary border" style="font-size: 9.5px;">{{ st.facility_name|truncate(16) if st.facility_name else 'Destination Plant' }}</span>
                                     </div>
                                     {% endfor %}
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 5-Step Waste Journey Stepper -->
-                        <div class="nl-timeline">
-                            <div class="nl-timeline-step {% if p.status in ['pending', 'collection_reported', 'disputed', 'collected', 'delivered'] %}completed{% endif %}">
-                                <div class="nl-timeline-icon"><i class="fa-solid fa-check"></i></div>
-                                <span class="nl-timeline-label">Booked</span>
-                            </div>
-                            <div class="nl-timeline-step {% if p.van_code %}completed{% else %}active{% endif %}">
-                                <div class="nl-timeline-icon"><i class="fa-solid fa-truck"></i></div>
-                                <span class="nl-timeline-label">Van</span>
-                            </div>
-                            <div class="nl-timeline-step {% if p.status in ['collected', 'delivered'] %}completed{% elif p.status == 'collection_reported' %}active{% endif %}">
-                                <div class="nl-timeline-icon"><i class="fa-solid fa-boxes-packing"></i></div>
-                                <span class="nl-timeline-label">Reported</span>
-                            </div>
-                            <div class="nl-timeline-step {% if p.status in ['collected', 'delivered'] %}completed{% endif %}">
-                                <div class="nl-timeline-icon"><i class="fa-solid fa-handshake-simple"></i></div>
-                                <span class="nl-timeline-label">Confirmed</span>
-                            </div>
-                            <div class="nl-timeline-step {% if p.status == 'delivered' %}completed{% endif %}">
-                                <div class="nl-timeline-icon"><i class="fa-solid fa-recycle"></i></div>
-                                <span class="nl-timeline-label">Recovered</span>
-                            </div>
-                        </div>
                     </div>
 
-                    <!-- Footer Action -->
-                    <div class="pt-3 border-top d-flex justify-content-between align-items-center mt-3">
-                        <span class="small text-success fw-bold">
-                            <i class="fa-solid fa-shield-check me-1"></i> Verified QR Pass
-                        </span>
-                        <div class="d-flex gap-2">
-                            <a href="{{ url_for('citizen_booking', repeat_id=p.id) }}" class="btn btn-sm btn-nl-lime rounded-pill px-3" title="Repeat this pickup">
-                                <i class="fa-solid fa-repeat me-1"></i> Book Again
-                            </a>
-                            <a href="{{ url_for('manifest_page', pickup_id=p.id) }}" class="btn btn-sm btn-outline-dark rounded-pill px-3">
-                                <i class="fa-solid fa-qrcode me-1"></i> Manifest
-                            </a>
-                        </div>
+                    <!-- Card Bottom Action Bar -->
+                    <div class="pt-2 border-top mt-2 d-flex justify-content-between align-items-center">
+                        <button class="btn btn-sm btn-link p-0 text-decoration-none text-dark fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#details-pickup-{{ p.id }}" aria-expanded="false" style="font-size: 12px;">
+                            <i class="fa-solid fa-circle-info text-success me-1"></i> Details
+                        </button>
+                        <a href="{{ url_for('manifest_page', pickup_id=p.id) }}" class="btn btn-xs btn-outline-dark rounded-pill px-2.5 py-1 fw-bold" style="font-size: 11px;">
+                            <i class="fa-solid fa-qrcode text-success me-1"></i> QR Pass
+                        </a>
                     </div>
                 </div>
             </div>

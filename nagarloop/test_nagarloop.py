@@ -513,5 +513,109 @@ class TestNagarLoopPhase2(unittest.TestCase):
         co2 = calculate_co2_impact(wet_kg=10, dry_kg=10, ewaste_kg=10, residual_kg=10)
         self.assertEqual(co2, 50.0)
 
+    def test_41_validate_indian_phone_unit(self):
+        from app import validate_indian_phone
+        # Valid Indian numbers starting with 6, 7, 8, 9
+        self.assertEqual(validate_indian_phone("9825012345"), "9825012345")
+        self.assertEqual(validate_indian_phone("+919825012345"), "9825012345")
+        self.assertEqual(validate_indian_phone("91 98250 12345"), "9825012345")
+        self.assertEqual(validate_indian_phone("09825012345"), "9825012345")
+        self.assertEqual(validate_indian_phone("7878787878"), "7878787878")
+        self.assertEqual(validate_indian_phone("6351234567"), "6351234567")
+        self.assertEqual(validate_indian_phone("8989898989"), "8989898989")
+
+        # Invalid numbers (starting with 1-5, wrong length, letters)
+        self.assertIsNone(validate_indian_phone("1234567890"))
+        self.assertIsNone(validate_indian_phone("5555555555"))
+        self.assertIsNone(validate_indian_phone("98250123"))
+        self.assertIsNone(validate_indian_phone("982501234567"))
+        self.assertIsNone(validate_indian_phone("abcdefghij"))
+        self.assertIsNone(validate_indian_phone(""))
+        self.assertIsNone(validate_indian_phone(None))
+
+    def test_42_register_with_invalid_phone_fails(self):
+        res = self.client.post('/register', data={
+            'reg_type': 'citizen',
+            'name': 'Test Citizen',
+            'phone': '1234567890',
+            'password': 'password123',
+            'address': 'Navrangpura'
+        }, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Please enter a valid 10-digit Indian mobile number', res.data)
+
+    def test_43_register_with_valid_indian_phone_success(self):
+        res = self.client.post('/register', data={
+            'reg_type': 'citizen',
+            'name': 'Pooja Dave',
+            'phone': '9898123456',
+            'password': 'password123',
+            'address': 'Vijay Cross Roads, Navrangpura'
+        }, follow_redirects=True)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Account registered successfully', res.data)
+
+    def test_44_booking_blocked_when_ai_check_failed_or_missing(self):
+        # Log in citizen
+        self.client.post('/login/citizen', data={'username': 'jenish', 'password': 'jenish123'})
+        
+        # Test 1: Submit with failed AI check
+        res_fail = self.client.post('/book-pickup', data={
+            'household_id': 1,
+            'stream_wet': 'on',
+            'stream_wet_kg': '4.0',
+            'address': 'Navrangpura, Ahmedabad',
+            'lat': '23.0375',
+            'lng': '72.5520',
+            'ai_image_check': 'failed',
+            'ai_confidence': '0.05'
+        }, follow_redirects=True)
+        self.assertEqual(res_fail.status_code, 200)
+        self.assertIn(b'Booking blocked: A valid waste photo must be verified before booking', res_fail.data)
+
+        # Test 2: Submit with unverified AI check (not_submitted)
+        res_missing = self.client.post('/book-pickup', data={
+            'household_id': 1,
+            'stream_wet': 'on',
+            'stream_wet_kg': '4.0',
+            'address': 'Navrangpura, Ahmedabad',
+            'lat': '23.0375',
+            'lng': '72.5520',
+            'ai_image_check': 'not_submitted',
+            'ai_confidence': '0.0'
+        }, follow_redirects=True)
+        self.assertEqual(res_missing.status_code, 200)
+        self.assertIn(b'Booking blocked: A valid waste photo must be verified before booking', res_missing.data)
+
+        # Test 3: Submit with low confidence (below 0.30)
+        res_low_conf = self.client.post('/book-pickup', data={
+            'household_id': 1,
+            'stream_wet': 'on',
+            'stream_wet_kg': '4.0',
+            'address': 'Navrangpura, Ahmedabad',
+            'lat': '23.0375',
+            'lng': '72.5520',
+            'ai_image_check': 'passed',
+            'ai_confidence': '0.10'
+        }, follow_redirects=True)
+        self.assertEqual(res_low_conf.status_code, 200)
+        self.assertIn(b'Booking blocked: A valid waste photo must be verified before booking', res_low_conf.data)
+
+    def test_45_booking_succeeds_only_when_ai_check_passed(self):
+        self.client.post('/login/citizen', data={'username': 'jenish', 'password': 'jenish123'})
+        
+        res_pass = self.client.post('/book-pickup', data={
+            'household_id': 1,
+            'stream_wet': 'on',
+            'stream_wet_kg': '4.0',
+            'address': 'Navrangpura, Ahmedabad',
+            'lat': '23.0375',
+            'lng': '72.5520',
+            'ai_image_check': 'passed',
+            'ai_confidence': '0.85'
+        }, follow_redirects=True)
+        self.assertEqual(res_pass.status_code, 200)
+        self.assertIn(b'booked successfully', res_pass.data)
+
 if __name__ == '__main__':
     unittest.main()

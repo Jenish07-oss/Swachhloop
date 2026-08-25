@@ -58,198 +58,252 @@
                 <form action="{{ url_for('book_pickup') }}" method="POST" enctype="multipart/form-data" id="pickupForm">
                     <input type="hidden" name="household_id" value="{{ household.id }}">
 
-                    <!-- Zero-Mixing Mandate Educational Banner -->
-                    <div class="p-3 mb-4 rounded-4 border bg-white shadow-sm">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span class="badge bg-success-subtle text-success border border-success fw-bold px-2 py-1">ZERO-MIXING MANDATE</span>
-                            <strong class="text-dark small">{{ tr('zero_mixing_mandate') }}</strong>
+                    <!-- Compact Zero-Mixing Instruction (Req #9) -->
+                    <div class="p-2 mb-3 rounded-3 border bg-white shadow-xs">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                            <span class="badge bg-success-subtle text-success border border-success fw-bold" style="font-size: 10px;">ZERO-MIXING</span>
+                            <span class="small text-dark fw-bold" style="font-size: 11px;">Keep streams strictly segregated for circular recovery</span>
                         </div>
-                        <div class="row g-2 text-center small">
-                            <div class="col-6 col-md-3"><div class="p-2 rounded-3" style="background: var(--stream-wet-bg); color: var(--stream-wet);">🟢 <strong>WET</strong> → Compost / Bio-CNG</div></div>
-                            <div class="col-6 col-md-3"><div class="p-2 rounded-3" style="background: var(--stream-dry-bg); color: var(--stream-dry);">🔵 <strong>DRY</strong> → MRF</div></div>
-                            <div class="col-6 col-md-3"><div class="p-2 rounded-3" style="background: var(--stream-ewaste-bg); color: var(--stream-ewaste);">🟡 <strong>E-WASTE</strong> → Registered Recycler</div></div>
-                            <div class="col-6 col-md-3"><div class="p-2 rounded-3" style="background: var(--stream-residual-bg); color: var(--stream-residual);">🔴 <strong>RESIDUAL</strong> → RDF / Cement Kiln</div></div>
+                        <div class="d-flex justify-content-between text-center small mt-1 gap-1" style="font-size: 10px;">
+                            <span class="px-1 py-0.5 rounded" style="background: var(--stream-wet-bg); color: var(--stream-wet);">🥬 Compost</span>
+                            <span class="px-1 py-0.5 rounded" style="background: var(--stream-dry-bg); color: var(--stream-dry);">📦 MRF</span>
+                            <span class="px-1 py-0.5 rounded" style="background: var(--stream-ewaste-bg); color: var(--stream-ewaste);">🔌 E-Recycler</span>
+                            <span class="px-1 py-0.5 rounded" style="background: var(--stream-residual-bg); color: var(--stream-residual);">🔥 RDF</span>
                         </div>
                     </div>
 
-                    <!-- Step 1: 4 Stream Selection Cards with Estimated KG -->
-                    <div class="mb-4 pb-3">
-                        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="nl-step-num mb-0" style="width: 32px; height: 32px; font-size: 0.85rem;">1</span>
-                                <h3 class="fs-5 fw-bold mb-0">{{ tr('step1_title') }}</h3>
-                            </div>
-                            <span class="small text-muted fw-bold fst-italic">{{ tr('est_qty_note') }}</span>
+                    <!-- Step 1: 2x2 Compact Stream Selection Grid (Req #5, #8) -->
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h3 class="fs-6 fw-bold mb-0 text-dark"><i class="fa-solid fa-layer-group text-success me-1"></i> 1. Waste Streams & Est. KG</h3>
+                            <span class="small text-muted" style="font-size: 11px;">Select all that apply</span>
                         </div>
 
-                        <div class="row g-3">
+                        <div class="stream-grid-2x2">
                             <!-- 1. Wet Stream Card -->
-                            <div class="col-md-6">
-                                <div class="stream-card wet selected" id="card-wet" onclick="toggleStream('stream_wet', 'card-wet')">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <span class="stream-icon-box">🥬</span>
-                                        <input class="form-check-input fs-5" type="checkbox" name="stream_wet" id="stream_wet" checked onclick="event.stopPropagation(); updateLivePointsPreview();">
+                            <div class="stream-card-compact wet selected" id="card-wet" onclick="toggleStream('stream_wet', 'card-wet', 'kg-box-wet')">
+                                <div>
+                                    <div class="stream-header">
+                                        <span class="stream-icon">🥬</span>
+                                        <input class="form-check-input fs-5" type="checkbox" name="stream_wet" id="stream_wet" checked onclick="event.stopPropagation(); syncStreamCard('stream_wet', 'card-wet', 'kg-box-wet');">
                                     </div>
-                                    <h4 class="fs-6 fw-bold mb-1 text-dark">{{ tr('wet_name') }}</h4>
-                                    <p class="small text-secondary mb-2">{{ tr('wet_desc') }}</p>
-                                    <span class="stream-tag wet mb-3"><i class="fa-solid fa-arrow-right"></i> {{ tr('wet_dest') }}</span>
-                                    
-                                    <div class="mt-2 pt-2 border-top" onclick="event.stopPropagation()">
-                                        <label class="small fw-bold text-muted d-block mb-1" style="font-size: 11px;">{{ tr('est_qty_note') }}:</label>
-                                        <div class="input-group input-group-sm">
-                                            <input type="number" step="0.1" min="0.1" name="stream_wet_kg" id="stream_wet_kg" class="form-control rounded-start-pill text-center fw-bold" value="4.2" oninput="updateLivePointsPreview()">
-                                            <span class="input-group-text rounded-end-pill bg-white text-muted fw-bold">kg</span>
-                                        </div>
+                                    <div class="stream-name">{{ tr('wet_name') }}</div>
+                                    <div class="stream-dest">Compost / Bio-CNG</div>
+                                </div>
+                                <div class="stream-kg-box" id="kg-box-wet" onclick="event.stopPropagation()">
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" step="0.1" min="0.1" name="stream_wet_kg" id="stream_wet_kg" class="form-control text-center fw-bold py-1" value="4.0" oninput="updateLivePointsPreview()">
+                                        <span class="input-group-text bg-white small px-1 fw-bold">kg</span>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- 2. Dry Recyclables Card -->
-                            <div class="col-md-6">
-                                <div class="stream-card dry selected" id="card-dry" onclick="toggleStream('stream_dry', 'card-dry')">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <span class="stream-icon-box">📦</span>
-                                        <input class="form-check-input fs-5" type="checkbox" name="stream_dry" id="stream_dry" checked onclick="event.stopPropagation(); updateLivePointsPreview();">
+                            <div class="stream-card-compact dry selected" id="card-dry" onclick="toggleStream('stream_dry', 'card-dry', 'kg-box-dry')">
+                                <div>
+                                    <div class="stream-header">
+                                        <span class="stream-icon">📦</span>
+                                        <input class="form-check-input fs-5" type="checkbox" name="stream_dry" id="stream_dry" checked onclick="event.stopPropagation(); syncStreamCard('stream_dry', 'card-dry', 'kg-box-dry');">
                                     </div>
-                                    <h4 class="fs-6 fw-bold mb-1 text-dark">{{ tr('dry_name') }}</h4>
-                                    <p class="small text-secondary mb-2">{{ tr('dry_desc') }}</p>
-                                    <span class="stream-tag dry mb-3"><i class="fa-solid fa-arrow-right"></i> {{ tr('dry_dest') }}</span>
-
-                                    <div class="mt-2 pt-2 border-top" onclick="event.stopPropagation()">
-                                        <label class="small fw-bold text-muted d-block mb-1" style="font-size: 11px;">{{ tr('est_qty_note') }}:</label>
-                                        <div class="input-group input-group-sm">
-                                            <input type="number" step="0.1" min="0.1" name="stream_dry_kg" id="stream_dry_kg" class="form-control rounded-start-pill text-center fw-bold" value="3.5" oninput="updateLivePointsPreview()">
-                                            <span class="input-group-text rounded-end-pill bg-white text-muted fw-bold">kg</span>
-                                        </div>
+                                    <div class="stream-name">{{ tr('dry_name') }}</div>
+                                    <div class="stream-dest">MRF Facility</div>
+                                </div>
+                                <div class="stream-kg-box" id="kg-box-dry" onclick="event.stopPropagation()">
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" step="0.1" min="0.1" name="stream_dry_kg" id="stream_dry_kg" class="form-control text-center fw-bold py-1" value="3.0" oninput="updateLivePointsPreview()">
+                                        <span class="input-group-text bg-white small px-1 fw-bold">kg</span>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- 3. E-Waste Card -->
-                            <div class="col-md-6">
-                                <div class="stream-card ewaste" id="card-ewaste" onclick="toggleStream('stream_ewaste', 'card-ewaste')">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <span class="stream-icon-box">🔌</span>
-                                        <input class="form-check-input fs-5" type="checkbox" name="stream_ewaste" id="stream_ewaste" onclick="event.stopPropagation(); updateLivePointsPreview();">
+                            <div class="stream-card-compact ewaste" id="card-ewaste" onclick="toggleStream('stream_ewaste', 'card-ewaste', 'kg-box-ewaste')">
+                                <div>
+                                    <div class="stream-header">
+                                        <span class="stream-icon">🔌</span>
+                                        <input class="form-check-input fs-5" type="checkbox" name="stream_ewaste" id="stream_ewaste" onclick="event.stopPropagation(); syncStreamCard('stream_ewaste', 'card-ewaste', 'kg-box-ewaste');">
                                     </div>
-                                    <h4 class="fs-6 fw-bold mb-1 text-dark">{{ tr('ewaste_name') }}</h4>
-                                    <p class="small text-secondary mb-2">{{ tr('ewaste_desc') }}</p>
-                                    <span class="stream-tag ewaste mb-3"><i class="fa-solid fa-arrow-right"></i> {{ tr('ewaste_dest') }}</span>
-
-                                    <div class="mt-2 pt-2 border-top" onclick="event.stopPropagation()">
-                                        <label class="small fw-bold text-muted d-block mb-1" style="font-size: 11px;">{{ tr('est_qty_note') }}:</label>
-                                        <div class="input-group input-group-sm">
-                                            <input type="number" step="0.1" min="0.1" name="stream_ewaste_kg" id="stream_ewaste_kg" class="form-control rounded-start-pill text-center fw-bold" value="1.0" oninput="updateLivePointsPreview()">
-                                            <span class="input-group-text rounded-end-pill bg-white text-muted fw-bold">kg</span>
-                                        </div>
+                                    <div class="stream-name">{{ tr('ewaste_name') }}</div>
+                                    <div class="stream-dest">Reg. Recycler</div>
+                                </div>
+                                <div class="stream-kg-box d-none" id="kg-box-ewaste" onclick="event.stopPropagation()">
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" step="0.1" min="0.1" name="stream_ewaste_kg" id="stream_ewaste_kg" class="form-control text-center fw-bold py-1" value="1.0" oninput="updateLivePointsPreview()">
+                                        <span class="input-group-text bg-white small px-1 fw-bold">kg</span>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- 4. Residual Card -->
-                            <div class="col-md-6">
-                                <div class="stream-card residual" id="card-residual" onclick="toggleStream('stream_residual', 'card-residual')">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <span class="stream-icon-box">🔥</span>
-                                        <input class="form-check-input fs-5" type="checkbox" name="stream_residual" id="stream_residual" onclick="event.stopPropagation(); updateLivePointsPreview();">
+                            <div class="stream-card-compact residual" id="card-residual" onclick="toggleStream('stream_residual', 'card-residual', 'kg-box-residual')">
+                                <div>
+                                    <div class="stream-header">
+                                        <span class="stream-icon">🔥</span>
+                                        <input class="form-check-input fs-5" type="checkbox" name="stream_residual" id="stream_residual" onclick="event.stopPropagation(); syncStreamCard('stream_residual', 'card-residual', 'kg-box-residual');">
                                     </div>
-                                    <h4 class="fs-6 fw-bold mb-1 text-dark">{{ tr('residual_name') }}</h4>
-                                    <p class="small text-secondary mb-2">{{ tr('residual_desc') }}</p>
-                                    <span class="stream-tag residual mb-3"><i class="fa-solid fa-arrow-right"></i> {{ tr('residual_dest') }}</span>
-
-                                    <div class="mt-2 pt-2 border-top" onclick="event.stopPropagation()">
-                                        <label class="small fw-bold text-muted d-block mb-1" style="font-size: 11px;">{{ tr('est_qty_note') }}:</label>
-                                        <div class="input-group input-group-sm">
-                                            <input type="number" step="0.1" min="0.1" name="stream_residual_kg" id="stream_residual_kg" class="form-control rounded-start-pill text-center fw-bold" value="1.5" oninput="updateLivePointsPreview()">
-                                            <span class="input-group-text rounded-end-pill bg-white text-muted fw-bold">kg</span>
-                                        </div>
+                                    <div class="stream-name">{{ tr('residual_name') }}</div>
+                                    <div class="stream-dest">RDF / Kiln</div>
+                                </div>
+                                <div class="stream-kg-box d-none" id="kg-box-residual" onclick="event.stopPropagation()">
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" step="0.1" min="0.1" name="stream_residual_kg" id="stream_residual_kg" class="form-control text-center fw-bold py-1" value="2.0" oninput="updateLivePointsPreview()">
+                                        <span class="input-group-text bg-white small px-1 fw-bold">kg</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Step 2: Location Map Pin -->
-                    <div class="mb-4 pb-3">
-                        <div class="d-flex align-items-center gap-2 mb-3">
-                            <span class="nl-step-num mb-0" style="width: 32px; height: 32px; font-size: 0.85rem;">2</span>
-                            <h3 class="fs-5 fw-bold mb-0">{{ tr('step2_title') }}</h3>
-                        </div>
-
-                        <div class="d-flex gap-2 flex-wrap mb-3">
-                            <button type="button" class="btn btn-sm btn-outline-success fw-bold px-3 py-2 rounded-pill" onclick="getGPSLocation()">
+                    <!-- Step 2: Pickup Location (Google-Maps-like Location Picker) -->
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h3 class="fs-6 fw-bold mb-0 text-dark"><i class="fa-solid fa-map-pin text-danger me-1"></i> 2. Pickup Location</h3>
+                            <button type="button" class="btn btn-xs btn-outline-success rounded-pill px-2 py-1 fw-bold" style="font-size: 11px;" onclick="locPicker.useGPSLocation()">
                                 <i class="fa-solid fa-crosshairs me-1"></i> Use My Current Location
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary fw-bold px-3 py-2 rounded-pill" onclick="showManualLocationInput()">
-                                <i class="fa-solid fa-house me-1"></i> Enter Address Manually
-                            </button>
                         </div>
 
-                        <!-- Manual Location Fallback Input Box -->
-                        <div id="manual-location-box" class="p-3 bg-light rounded-3 border mb-3 d-none">
-                            <label class="form-label small fw-bold text-dark">Street Address or Landmark:</label>
-                            <div class="input-group">
-                                <input type="text" id="manual-address-input" class="form-control" placeholder="e.g. Mithakhali 2nd Avenue, Navrangpura" value="{{ household.street_segment }}">
-                                <button type="button" class="btn btn-success fw-bold" onclick="geocodeManualAddress()">
-                                    <i class="fa-solid fa-magnifying-glass me-1"></i> Pin on Map
+                        <!-- Location Search Bar with Live Suggestions Dropdown -->
+                        <div class="nl-address-wrapper mb-2">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                                <input type="text" name="address" id="form-address" class="form-control py-2 fw-semibold" placeholder="Search area, street, landmark or address in Gujarat..." value="{{ household.street_segment }}" autocomplete="off" required>
+                                <button type="button" class="btn btn-dark fw-bold px-3" onclick="locPicker.searchLocation(document.getElementById('form-address').value)" title="Search on Map">
+                                    Search
                                 </button>
                             </div>
-                            <small class="text-muted">Type an address to update the GPS pin automatically.</small>
+                            <div id="form-address-suggestions" class="nl-suggestions-dropdown"></div>
                         </div>
 
-                        <!-- Interactive Leaflet Map Container -->
-                        <div id="citizen-booking-map" class="rounded-4 border shadow-sm" style="height: 260px; width: 100%;"></div>
-
-                        <!-- Coordinates readout & hidden form values -->
-                        <div class="d-flex justify-content-between align-items-center mt-2 small text-secondary">
-                            <div>
-                                <i class="fa-solid fa-location-dot text-danger me-1"></i>
-                                <span id="location-text">Navrangpura (Lat: 23.0375, Lng: 72.5520)</span>
+                        <!-- Map & Pin Placement Container -->
+                        <div id="map-collapsible-wrapper">
+                            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+                                <span class="small text-muted" style="font-size: 11px;" id="location-status-msg">Click map or drag pin for exact vehicle doorstep.</span>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="locPicker.jumpToCity('Ahmedabad', 23.0225, 72.5714)">Ahmedabad</button>
+                                    <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="locPicker.jumpToCity('Surat', 21.1702, 72.8311)">Surat</button>
+                                    <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="locPicker.jumpToCity('Vadodara', 22.3072, 73.1812)">Vadodara</button>
+                                    <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="locPicker.jumpToCity('Rajkot', 22.3039, 70.8022)">Rajkot</button>
+                                </div>
                             </div>
-                            <span class="badge bg-light text-dark border">GPS Calibrated</span>
+
+                            <!-- Map Viewport -->
+                            <div id="citizen-booking-map" class="rounded-3 border shadow-xs mb-2" style="height: 200px; width: 100%;"></div>
+
+                            <!-- Confirm / Lock Location Action -->
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted" style="font-size: 11px;">Move pin to exact gate / entrance before confirming</small>
+                                <button type="button" id="btn-confirm-location" class="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold shadow-xs">
+                                    <i class="fa-solid fa-check me-1"></i> Confirm Location
+                                </button>
+                            </div>
                         </div>
+
+                        <!-- Confirmed Location Summary Card -->
+                        <div id="location-confirmed-card" class="p-2 bg-light rounded-3 border shadow-xs d-flex justify-content-between align-items-center">
+                            <div class="text-truncate pe-2" style="max-width: 80%;">
+                                <div class="text-dark small fw-bold text-truncate" id="location-confirmed-address">{{ household.street_segment or 'Navrangpura, Ahmedabad, Gujarat 380009' }}</div>
+                                <div class="text-muted font-monospace" style="font-size: 10px;">Coordinates: <span id="location-confirmed-coords">23.037500, 72.552000</span></div>
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="badge bg-success-subtle text-success border border-success" style="font-size: 9.5px;">✓ Selected</span>
+                                <button type="button" id="btn-refine-location" class="btn btn-xs btn-outline-dark rounded-pill px-2 py-0.5" style="font-size: 10px;">
+                                    Change
+                                </button>
+                            </div>
+                        </div>
+
                         <input type="hidden" name="lat" id="form-lat" value="23.0375">
                         <input type="hidden" name="lng" id="form-lng" value="72.5520">
                     </div>
 
-                    <!-- Step 3: Photo Attach (Segregation Verification) -->
-                    <div class="mb-4 pb-3">
-                        <div class="d-flex align-items-center gap-2 mb-3">
-                            <span class="nl-step-num mb-0" style="width: 32px; height: 32px; font-size: 0.85rem;">3</span>
-                            <h3 class="fs-5 fw-bold mb-0">{{ tr('step3_title') }}</h3>
+                    <!-- Step 3: AI Waste Photo Verification (Req #12) -->
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h3 class="fs-6 fw-bold mb-0 text-dark"><i class="fa-solid fa-microchip text-success me-1"></i> 3. Photo Check (AI Verified)</h3>
+                            <span class="badge bg-success-subtle text-success border border-success" style="font-size: 10px;">Browser-Side AI</span>
                         </div>
 
-                        <div class="p-4 bg-light rounded-4 border-2 border-dashed text-center">
-                            <div class="d-inline-flex p-3 rounded-circle bg-white shadow-sm mb-2 text-success">
-                                <i class="fa-solid fa-camera fs-3"></i>
+                        <div class="p-3 bg-light rounded-4 border">
+                            <!-- Action Buttons: Take Photo & Gallery Upload -->
+                            <div class="d-flex gap-2 mb-2 flex-wrap">
+                                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3 fw-bold flex-grow-1" onclick="wasteValidator.openCamera('cit-camera-video', 'cit-camera-modal', 'cit-camera-error')">
+                                    <i class="fa-solid fa-camera me-1 text-lime"></i> 📷 Take Photo
+                                </button>
+                                <label class="btn btn-sm btn-outline-dark rounded-pill px-3 fw-bold mb-0 flex-grow-1 text-center" style="cursor: pointer;">
+                                    <i class="fa-solid fa-folder-open me-1"></i> Upload from Gallery
+                                    <input type="file" name="photo" id="photo-upload" class="d-none" accept="image/*" onchange="wasteValidator.handleFileInput(this, 'photo-preview-img')">
+                                </label>
                             </div>
-                            <h4 class="fs-6 fw-bold mb-1">{{ tr('step3_desc') }}</h4>
-                            <p class="small text-secondary mb-3">{{ tr('points_award_note') }}</p>
-                            
-                            <input type="file" name="photo" id="photo-upload" class="form-control d-inline-block w-auto mx-auto" accept="image/*">
+
+                            <div id="cit-camera-error" class="alert alert-warning small py-1 px-2 mb-2 d-none" style="font-size: 11px;"></div>
+
+                            <!-- Live Camera Viewfinder Modal / Overlay -->
+                            <div id="cit-camera-modal" class="position-relative bg-dark rounded-3 overflow-hidden mb-2 d-none" style="min-height: 200px;">
+                                <video id="cit-camera-video" autoplay playsinline muted class="w-100 h-100 object-fit-cover" style="max-height: 260px;"></video>
+                                <div class="position-absolute bottom-0 start-0 end-0 p-2 bg-dark bg-opacity-75 text-center d-flex justify-content-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-success rounded-pill px-4 fw-bold" onclick="wasteValidator.snapPhoto('cit-camera-video', 'cit-camera-modal', 'photo-upload', 'photo-preview-img')">
+                                        <i class="fa-solid fa-circle-dot me-1"></i> Snap Photo
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="wasteValidator.closeCamera('cit-camera-modal')">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Photo Preview & AI Result Card -->
+                            <div id="photo-preview-container" class="d-none">
+                                <div class="position-relative mb-2 text-center bg-white rounded-3 p-2 border">
+                                    <img id="photo-preview-img" src="" class="img-fluid rounded-2" style="max-height: 180px; object-fit: contain;" alt="Waste Preview">
+                                    <div id="ai-loading-spinner" class="position-absolute top-50 start-50 translate-middle bg-dark bg-opacity-75 text-white p-2 rounded-3 small fw-bold d-none">
+                                        <span class="spinner-border spinner-border-sm me-1 text-lime" role="status"></span> Checking photo...
+                                    </div>
+                                </div>
+
+                                <div id="ai-result-card" class="p-2 rounded-3 mb-2 border text-start small d-none">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span id="ai-badge" class="badge rounded-pill px-2 py-1 fw-bold">✓ Verified</span>
+                                        <span id="ai-prediction-label" class="fw-bold text-dark small"></span>
+                                    </div>
+                                    <div id="ai-feedback-msg" class="text-secondary" style="font-size: 11px;"></div>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center gap-2">
+                                    <button type="button" class="btn btn-xs btn-outline-danger rounded-pill px-3 py-1 fw-bold" onclick="wasteValidator.resetPhoto('photo-upload', 'photo-preview-container')">
+                                        <i class="fa-solid fa-rotate-left me-1"></i> Retake
+                                    </button>
+                                    <span id="ai-continue-msg" class="small text-success fw-bold d-none">✓ Ready for submission</span>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="ai_image_check" id="ai-image-check" value="not_submitted">
+                            <input type="hidden" name="ai_confidence" id="ai-confidence" value="0.0">
                         </div>
                     </div>
 
-                    <!-- Live Green Points Calculator Preview Widget -->
-                    <div class="p-3 mb-4 rounded-4 border d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: var(--lime-subtle);">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="p-2 rounded-circle bg-white text-dark shadow-sm">
-                                <i class="fa-solid fa-coins fs-4 text-warning"></i>
-                            </div>
-                            <div>
-                                <div class="small text-uppercase fw-bold text-dark" style="font-size: 11px;">{{ tr('est_points') }}</div>
-                                <div class="fs-4 fw-bold text-dark" id="live-points-preview">+44 Points</div>
-                            </div>
+                    <!-- Step 4: Compact Review Section (Req #13) -->
+                    <div class="p-3 mb-4 rounded-4 border bg-light shadow-xs">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small fw-bold text-uppercase text-dark" style="font-size: 11px;">Review & Rewards</span>
+                            <span class="badge rounded-pill px-2 py-1" style="background: var(--lime); color: var(--forest); font-weight: 800;" id="live-points-preview">+44 Points</span>
                         </div>
-                        <div class="text-end">
-                            <span class="badge bg-white text-dark border px-3 py-2 fw-bold" id="live-kg-preview">Total: ~7.7 kg</span>
+                        <div class="d-flex justify-content-between align-items-center text-dark small">
+                            <span id="review-streams-summary">🥬 Wet (4.0 kg), 📦 Dry (3.0 kg)</span>
+                            <strong class="font-monospace" id="live-kg-preview">~7.0 kg</strong>
                         </div>
                     </div>
 
-                    <!-- Giant 60px Submit Button -->
-                    <button type="submit" class="btn-nl-lime btn-nl-giant w-100 shadow-md">
+                    <!-- Desktop Submit Button (60px) -->
+                    <button type="submit" id="btn-submit-pickup" class="btn-nl-lime btn-nl-giant w-100 shadow-md d-none d-md-flex opacity-50" disabled title="A valid waste photo must be verified before booking">
                         <i class="fa-solid fa-circle-check fs-4 me-2"></i> {{ tr('confirm_btn') }}
                     </button>
+
+                    <!-- Mobile Sticky Bottom Action (Req #7) -->
+                    <div class="nl-mobile-sticky-action">
+                        <button type="submit" id="btn-submit-pickup-mobile" class="btn-nl-lime w-100 fw-bold rounded-pill shadow-md opacity-50" style="min-height: 48px; font-size: 1rem;" disabled title="A valid waste photo must be verified before booking">
+                            <i class="fa-solid fa-circle-check me-2"></i> {{ tr('confirm_btn') }} (<span id="mobile-btn-pts">+44 Pts</span>)
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -287,82 +341,81 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+<script src="{{ url_for('static', filename='js/waste-photo-validator.js') }}"></script>
+<script src="{{ url_for('static', filename='js/nagarloop_location.js') }}"></script>
 <script>
-// Leaflet Map Initialization
-let map, marker;
+let locPicker;
+let mapVisible = true;
+
 document.addEventListener("DOMContentLoaded", function () {
-    const defaultLat = 23.0375;
-    const defaultLng = 72.5520;
-
-    map = L.map('citizen-booking-map').setView([defaultLat, defaultLng], 14);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
-    marker.bindPopup("<b>📍 Pickup Location</b><br>Drag marker to adjust pin.").openPopup();
-
-    marker.on('dragend', function (e) {
-        const pos = e.target.getLatLng();
-        updateLocation(pos.lat, pos.lng, "Selected Pin Location");
-    });
-
-    map.on('click', function (e) {
-        marker.setLatLng(e.latlng);
-        updateLocation(e.latlng.lat, e.latlng.lng, "Selected Pin Location");
+    // Initialize Gujarat Location Picker with existing household default or Gujarat bounds
+    locPicker = new NagarLoopLocationPicker({
+        mapElementId: 'citizen-booking-map',
+        latInputId: 'form-lat',
+        lngInputId: 'form-lng',
+        addressInputId: 'form-address',
+        confirmAddressId: 'location-confirmed-address',
+        confirmCoordsId: 'location-confirmed-coords',
+        statusMsgId: 'location-status-msg',
+        collapsibleWrapperId: 'map-collapsible-wrapper',
+        confirmLocationBtnId: 'btn-confirm-location',
+        refineLocationBtnId: 'btn-refine-location',
+        confirmedCardId: 'location-confirmed-card',
+        initialLat: 23.0375,
+        initialLng: 72.5520,
+        initialAddress: {{ (household.street_segment ~ ', Navrangpura, Ahmedabad, Gujarat 380009') | tojson }}
     });
 
     updateLivePointsPreview();
 });
 
-function updateLocation(lat, lng, label) {
-    document.getElementById('form-lat').value = lat.toFixed(5);
-    document.getElementById('form-lng').value = lng.toFixed(5);
-    document.getElementById('location-text').innerText = `${label} (Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)})`;
-}
-
-function getGPSLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            function (pos) {
-                const lat = pos.coords.latitude;
-                const lng = pos.coords.longitude;
-                map.setView([lat, lng], 16);
-                marker.setLatLng([lat, lng]);
-                updateLocation(lat, lng, "Current GPS Device Location");
-            },
-            function () {
-                alert("GPS permission was denied or unavailable. You can click on the map directly.");
-            }
-        );
-    } else {
-        alert("Geolocation is not supported by your browser.");
-    }
-}
-
-function showManualLocationInput() {
-    document.getElementById('manual-location-box').classList.toggle('d-none');
-}
-
-function geocodeManualAddress() {
-    const addr = document.getElementById('manual-address-input').value.trim();
-    if (!addr) return;
-    const randomOffsetLat = (Math.random() - 0.5) * 0.008;
-    const randomOffsetLng = (Math.random() - 0.5) * 0.008;
-    const newLat = 23.0375 + randomOffsetLat;
-    const newLng = 72.5520 + randomOffsetLng;
-
-    map.setView([newLat, newLng], 15);
-    marker.setLatLng([newLat, newLng]);
-    updateLocation(newLat, newLng, addr);
-}
-
-function toggleStream(checkboxId, cardId) {
+function toggleStream(checkboxId, cardId, kgBoxId) {
     const cb = document.getElementById(checkboxId);
     cb.checked = !cb.checked;
+    syncStreamCard(checkboxId, cardId, kgBoxId);
+}
+
+function syncStreamCard(checkboxId, cardId, kgBoxId) {
+    const cb = document.getElementById(checkboxId);
     const card = document.getElementById(cardId);
-    card.classList.toggle('selected', cb.checked);
+    const kgBox = document.getElementById(kgBoxId);
+
+    if (cb.checked) {
+        card.classList.add('selected');
+        if (kgBox) kgBox.classList.remove('d-none');
+    } else {
+        card.classList.remove('selected');
+        if (kgBox) kgBox.classList.add('d-none');
+    }
     updateLivePointsPreview();
+}
+
+function toggleMapVisibility() {
+    mapVisible = !mapVisible;
+    const wrapper = document.getElementById('map-collapsible-wrapper');
+    const label = document.getElementById('map-toggle-label');
+    if (wrapper) wrapper.style.display = mapVisible ? 'block' : 'none';
+    if (label) label.innerText = mapVisible ? 'Hide Map' : 'Show Map';
+}
+
+function handlePhotoPreview(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const thumb = document.getElementById('photo-preview-thumb');
+            const icon = document.getElementById('photo-preview-icon');
+            const label = document.getElementById('photo-label');
+            if (thumb) {
+                thumb.src = e.target.result;
+                thumb.classList.remove('d-none');
+            }
+            if (icon) icon.classList.add('d-none');
+            if (label) label.innerText = 'Photo Attached ✓';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
 }
 
 function updateLivePointsPreview() {
@@ -375,8 +428,28 @@ function updateLivePointsPreview() {
     let rawPts = (wetKg * 2.0) + (dryKg * 6.0) + (ewasteKg * 20.0) + (residualKg * 1.0);
     let pts = Math.round(rawPts * 1.5); // Preview at good bin score 80+
 
-    document.getElementById('live-points-preview').innerText = `+${pts} Points`;
-    document.getElementById('live-kg-preview').innerText = `Total: ~${totalKg.toFixed(1)} kg`;
+    const ptsStr = `+${pts} Points`;
+    const kgStr = `~${totalKg.toFixed(1)} kg`;
+
+    const ptsEl = document.getElementById('live-points-preview');
+    const kgEl = document.getElementById('live-kg-preview');
+    const mobPtsEl = document.getElementById('mobile-btn-pts');
+    const reviewSummary = document.getElementById('review-streams-summary');
+
+    if (ptsEl) ptsEl.innerText = ptsStr;
+    if (kgEl) kgEl.innerText = kgStr;
+    if (mobPtsEl) mobPtsEl.innerText = ptsStr;
+
+    // Summarize active streams
+    const activeStreams = [];
+    if (document.getElementById('stream_wet').checked) activeStreams.push(`🥬 Wet (${wetKg}kg)`);
+    if (document.getElementById('stream_dry').checked) activeStreams.push(`📦 Dry (${dryKg}kg)`);
+    if (document.getElementById('stream_ewaste').checked) activeStreams.push(`🔌 E-Waste (${ewasteKg}kg)`);
+    if (document.getElementById('stream_residual').checked) activeStreams.push(`🔥 Residual (${residualKg}kg)`);
+
+    if (reviewSummary) {
+        reviewSummary.innerText = activeStreams.length > 0 ? activeStreams.join(', ') : 'No streams selected';
+    }
 }
 </script>
 {% endblock %}

@@ -3,8 +3,8 @@
 ## Phase 1: Rebranding, Landing, i18n & Auth Foundation
 - **Brand:** NagarLoop (`brand.py`)
 - **Slogan:** 
-  - EN: "Your society's waste, back in the loop."
-  - GU: "તમારી સોસાયટીનો કચરો, ફરી લૂપમાં."
+  - EN: "Collect. Recover. Reuse. Repeat."
+  - GU: "એકત્ર કરો. પુનઃપ્રાપ્ત કરો. પુનઃઉપયોગ કરો. પુનરાવર્તન કરો."
 - **City:** Ahmedabad
 - **Support:** support@nagarloop.in
 - **Roles:** Citizen (`/login/citizen`), Driver (`/login/driver`), Municipal Admin (`/login/admin`)

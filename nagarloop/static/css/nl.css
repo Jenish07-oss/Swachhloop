@@ -65,6 +65,11 @@
     padding: 0;
 }
 
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 body {
     font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background-color: var(--bg);
@@ -139,10 +144,43 @@ a:hover {
     justify-content: center;
     width: 36px;
     height: 36px;
-    background: var(--lime);
-    color: var(--forest);
+    background: transparent;
     border-radius: var(--radius-md);
-    font-size: 1.15rem;
+}
+
+.nl-brand-img {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    display: block;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.25));
+}
+
+.nl-brand-img-mobile {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    display: block;
+    flex-shrink: 0;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2));
+}
+
+.nl-brand-img-drawer {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    display: block;
+    flex-shrink: 0;
+}
+
+.nl-auth-logo {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 0.75rem;
+    filter: drop-shadow(0 4px 12px rgba(12, 59, 46, 0.15));
 }
 
 .nl-nav-links {
@@ -202,6 +240,64 @@ a:hover {
     white-space: nowrap !important;
     line-height: 1;
     text-decoration: none;
+    cursor: pointer;
+    border: none;
+}
+
+/* Standalone Desktop Dropdown Menu */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1050;
+    min-width: 220px;
+    padding: 8px 6px;
+    margin: 6px 0 0;
+    list-style: none !important;
+    background-color: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 30px rgba(12, 59, 46, 0.15);
+}
+
+.dropdown-menu.show,
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    clear: both;
+    font-weight: 600;
+    font-size: 13.5px;
+    color: var(--ink);
+    text-align: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+    color: var(--forest);
+    background-color: var(--lime-subtle);
+}
+
+.dropdown-item i {
+    width: 18px;
+    text-align: center;
 }
 
 .nl-role-badge {
@@ -823,3 +919,491 @@ a:hover {
     outline: 3px solid var(--lime) !important;
     outline-offset: 2px !important;
 }
+
+/* ==========================================================================
+   Address Autocomplete & Nearby Suggestions Dropdown
+   ========================================================================== */
+.nl-address-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.nl-suggestions-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 30px rgba(12, 59, 46, 0.15);
+    margin-top: 4px;
+    max-height: 280px;
+    overflow-y: auto;
+    display: none;
+}
+
+.nl-suggestion-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s ease, color 0.15s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.nl-suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.nl-suggestion-item:hover, .nl-suggestion-item.active {
+    background: #f8fafc;
+}
+
+.nl-suggestion-item .sugg-icon {
+    color: var(--forest);
+    font-size: 14px;
+    margin-top: 2px;
+}
+
+.nl-suggestion-item .sugg-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--ink);
+    line-height: 1.3;
+}
+
+.nl-suggestion-item .sugg-sub {
+    font-size: 11px;
+    color: var(--ink-muted);
+    line-height: 1.2;
+    margin-top: 2px;
+}
+
+/* ==========================================================================
+/* ==========================================================================
+   Mobile-First Navigation & App Shell
+   ========================================================================== */
+
+/* 1. Mobile Header (Screens <= 768px) */
+.nl-mobile-header {
+    display: none;
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    background: rgba(12, 59, 46, 0.98);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    padding: 8px 12px;
+}
+
+.nl-mobile-header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+}
+
+.nl-mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--cream);
+    text-decoration: none;
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.nl-mobile-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nl-mobile-lang-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: var(--cream);
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 3px 8px;
+    cursor: pointer;
+    line-height: 1.2;
+}
+
+.nl-mobile-role-badge {
+    font-size: 14px;
+    background: rgba(181, 224, 72, 0.2);
+    border: 1px solid var(--lime);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nl-mobile-menu-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--cream);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.nl-mobile-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* 2. Mobile Bottom Navigation Bar */
+.nl-mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1040;
+    background: rgba(12, 59, 46, 0.98);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.18);
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+}
+
+@media (max-width: 767.98px) {
+    body {
+        padding-bottom: 76px !important;
+    }
+    .nl-mobile-header {
+        display: flex;
+    }
+    .nl-mobile-bottom-nav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+}
+
+/* 3. Mobile "More" Offcanvas Drawer */
+.nl-more-drawer {
+    background: var(--cream) !important;
+    max-width: 320px;
+    border-left: 1px solid var(--border);
+}
+
+.nl-drawer-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nl-drawer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    color: var(--forest);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13.5px;
+    transition: background 0.15s ease;
+}
+
+.nl-drawer-item:hover, .nl-drawer-item.active {
+    background: #ffffff;
+    box-shadow: var(--shadow-sm);
+    color: var(--forest);
+}
+
+.nl-drawer-item i {
+    font-size: 16px;
+    width: 22px;
+    text-align: center;
+}
+
+.nl-bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(250, 248, 243, 0.72);
+    text-decoration: none;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 4px 6px;
+    border-radius: 12px;
+    min-width: 54px;
+    min-height: 48px;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.nl-bottom-nav-item i {
+    font-size: 18px;
+    margin-bottom: 2px;
+}
+
+.nl-bottom-nav-item:hover, .nl-bottom-nav-item.active {
+    color: var(--lime);
+}
+
+.nl-bottom-nav-item.primary-action {
+    background: var(--lime);
+    color: var(--forest);
+    border-radius: 20px;
+    padding: 6px 12px;
+    margin-top: -12px;
+    box-shadow: 0 4px 14px rgba(181, 224, 72, 0.4);
+    font-weight: 800;
+}
+
+.nl-bottom-nav-item.primary-action i {
+    font-size: 19px;
+}
+
+.nl-bottom-nav-item.primary-action:hover, .nl-bottom-nav-item.primary-action.active {
+    background: var(--lime-hover);
+    color: var(--forest);
+}
+
+/* Mobile Sticky Bottom Action Bar (e.g. Booking Submission) */
+.nl-mobile-sticky-action {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .nl-mobile-sticky-action {
+        display: block;
+        position: fixed;
+        bottom: 60px;
+        left: 0;
+        right: 0;
+        z-index: 1035;
+        background: rgba(250, 248, 243, 0.94);
+        backdrop-filter: blur(10px);
+        padding: 8px 16px;
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -4px 16px rgba(12, 59, 46, 0.08);
+    }
+}
+
+/* Compact 2x2 Waste Stream Grid */
+.stream-grid-2x2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+@media (max-width: 480px) {
+    .stream-grid-2x2 {
+        gap: 8px;
+    }
+}
+
+.stream-card-compact {
+    background: #ffffff;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 10px 10px 8px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 110px;
+    user-select: none;
+}
+
+.stream-card-compact:hover {
+    border-color: var(--forest);
+}
+
+.stream-card-compact.selected.wet {
+    border-color: var(--stream-wet);
+    background: var(--stream-wet-bg);
+}
+
+.stream-card-compact.selected.dry {
+    border-color: var(--stream-dry);
+    background: var(--stream-dry-bg);
+}
+
+.stream-card-compact.selected.ewaste {
+    border-color: var(--stream-ewaste);
+    background: var(--stream-ewaste-bg);
+}
+
+.stream-card-compact.selected.residual {
+    border-color: var(--stream-residual);
+    background: var(--stream-residual-bg);
+}
+
+.stream-card-compact .stream-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.stream-card-compact .stream-icon {
+    font-size: 20px;
+}
+
+.stream-card-compact .stream-name {
+    font-weight: 800;
+    font-size: 13.5px;
+    line-height: 1.2;
+    color: var(--ink);
+}
+
+.stream-card-compact .stream-dest {
+    font-size: 10px;
+    color: var(--ink-muted);
+    line-height: 1.2;
+    margin-top: 1px;
+}
+
+.stream-card-compact .stream-kg-box {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(0, 0, 0, 0.1);
+}
+
+/* Touch-Friendly Primary Button Standards */
+.btn-nl-touch, .btn-nl-lime, .btn-nl-giant {
+    min-height: 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive Table into Mobile Cards */
+@media (max-width: 767.98px) {
+    .nl-responsive-table {
+        display: block;
+        width: 100%;
+        border: none;
+    }
+    .nl-responsive-table thead {
+        display: none;
+    }
+    .nl-responsive-table tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .nl-responsive-table tr {
+        display: block;
+        background: #ffffff;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 12px 14px;
+        box-shadow: var(--shadow-sm);
+    }
+    .nl-responsive-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 13px;
+    }
+    .nl-responsive-table td:last-child {
+        border-bottom: none;
+        padding-top: 8px;
+    }
+    .nl-responsive-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--ink-muted);
+        font-size: 11.5px;
+        text-transform: uppercase;
+        margin-right: 12px;
+    }
+}
+
+/* Hero Grid & Step Process Responsive Layouts */
+.nl-hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: center;
+    padding: 1rem 0 2rem;
+}
+
+.nl-hero-slogan {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+    color: var(--forest);
+}
+
+.nl-hero-sub {
+    font-size: 1.05rem;
+    color: var(--ink-muted);
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.nl-hero-ctas {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.nl-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 991.98px) {
+    .nl-hero-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    .nl-steps-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .nl-hero-slogan {
+        font-size: 1.85rem;
+    }
+    .nl-hero-sub {
+        font-size: 0.95rem;
+    }
+    .nl-hero-ctas {
+        flex-direction: column;
+    }
+    .nl-hero-ctas a, .nl-hero-ctas button {
+        width: 100%;
+        text-align: center;
+    }
+    .nl-steps-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+}
+
+

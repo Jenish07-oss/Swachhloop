@@ -6,36 +6,33 @@
     <div class="col-md-5 col-lg-4">
         <div class="nl-card shadow-md">
             <div class="text-center mb-4">
-                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success-subtle text-success mb-2" style="width: 60px; height: 60px; font-size: 1.6rem;">
-                    {% if role == 'admin' %}
-                        <i class="fa-solid fa-shield-halved"></i>
-                    {% elif role == 'driver' %}
-                        <i class="fa-solid fa-truck-fast"></i>
-                    {% else %}
-                        <i class="fa-solid fa-user-check"></i>
-                    {% endif %}
-                </div>
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="{{ BRAND }}" class="nl-auth-logo">
                 <h2 class="fs-4 fw-bold text-dark mb-1">
                     {% if role == 'admin' %}
                         Municipal Admin Portal
                     {% elif role == 'driver' %}
                         Driver Route Portal
+                    {% elif role == 'society_manager' %}
+                        Society Manager Portal
                     {% else %}
-                        Citizen & Society Login
+                        Citizen Portal
                     {% endif %}
                 </h2>
                 <p class="small text-secondary mb-0">Sign in to access your {{ BRAND }} account</p>
             </div>
 
             <!-- Role Tabs -->
-            <div class="d-flex justify-content-center gap-1 p-1 bg-light rounded-3 mb-4 border">
-                <a href="{{ url_for('login_page', role='citizen') }}" class="btn btn-sm flex-fill fw-bold {% if role == 'citizen' %}btn-success text-white shadow-sm{% else %}btn-light text-muted{% endif %}">
+            <div class="d-flex justify-content-center gap-1 p-1 bg-light rounded-3 mb-4 border flex-wrap">
+                <a href="{{ url_for('login_page', role='citizen') }}" class="btn btn-xs btn-sm flex-fill fw-bold {% if role == 'citizen' %}btn-success text-white shadow-sm{% else %}btn-light text-muted{% endif %}">
                     Citizen
                 </a>
-                <a href="{{ url_for('login_page', role='driver') }}" class="btn btn-sm flex-fill fw-bold {% if role == 'driver' %}btn-success text-white shadow-sm{% else %}btn-light text-muted{% endif %}">
+                <a href="{{ url_for('login_page', role='society_manager') }}" class="btn btn-xs btn-sm flex-fill fw-bold {% if role == 'society_manager' %}btn-success text-white shadow-sm{% else %}btn-light text-muted{% endif %}">
+                    Society
+                </a>
+                <a href="{{ url_for('login_page', role='driver') }}" class="btn btn-xs btn-sm flex-fill fw-bold {% if role == 'driver' %}btn-success text-white shadow-sm{% else %}btn-light text-muted{% endif %}">
                     Driver
                 </a>
-                <a href="{{ url_for('login_page', role='admin') }}" class="btn btn-sm flex-fill fw-bold {% if role == 'admin' %}btn-success text-white shadow-sm{% else %}btn-light text-muted{% endif %}">
+                <a href="{{ url_for('login_page', role='admin') }}" class="btn btn-xs btn-sm flex-fill fw-bold {% if role == 'admin' %}btn-success text-white shadow-sm{% else %}btn-light text-muted{% endif %}">
                     Admin
                 </a>
             </div>
@@ -67,6 +64,7 @@
             <div class="p-3 bg-light rounded-3 border text-center small text-muted">
                 <div class="fw-bold text-dark mb-1"><i class="fa-solid fa-circle-info text-info me-1"></i> Demo Credentials</div>
                 <div>Citizen: <code>jenish</code> / <code>jenish123</code></div>
+                <div>Society: <code>society</code> / <code>society123</code></div>
                 <div>Driver: <code>vikram</code> / <code>vikram123</code></div>
                 <div>Admin: <code>admin</code> / <code>admin123</code></div>
             </div>

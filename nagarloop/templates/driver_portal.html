@@ -176,10 +176,16 @@
             </div>
 
             <h2 class="fs-2 fw-bold text-dark mb-1">{{ next_stop.citizen_name or 'Resident / Society' }}</h2>
-            <div class="text-muted small mb-3">
-                <i class="fa-solid fa-map-pin text-danger me-1"></i> {{ next_stop.street_segment }}
-                {% if next_stop.household_code %}• Code: <strong>{{ next_stop.household_code }}</strong>{% endif %}
+            <div class="text-dark fw-semibold mb-1">
+                <i class="fa-solid fa-map-pin text-danger me-1"></i> {{ next_stop.address or next_stop.street_segment or 'Address not available' }}
             </div>
+            <div class="text-muted small mb-2">
+                Exact Coordinates: <strong class="font-monospace text-dark">{{ next_stop.lat }}, {{ next_stop.lng }}</strong>
+                {% if next_stop.household_code %} • Code: <strong>{{ next_stop.household_code }}</strong>{% endif %}
+            </div>
+
+            <!-- Driver Next Stop Mini-Map -->
+            <div id="driver-next-stop-map" class="rounded-4 border shadow-sm mb-3" style="height: 180px; width: 100%;"></div>
 
             <!-- Streams & Estimated KG -->
             <div class="p-3 bg-light rounded-4 border mb-4">
@@ -206,7 +212,7 @@
             <!-- P3.4 Large Accessibility Buttons (min 50px height) -->
             <div class="row g-2">
                 <div class="col-12 col-md-4">
-                    <a href="https://www.google.com/maps/search/?api=1&query={{ next_stop.lat if next_stop.lat else '23.0375' }},{{ next_stop.lng if next_stop.lng else '72.5520' }}" target="_blank" class="btn btn-outline-dark w-100 rounded-pill fw-bold d-flex align-items-center justify-content-center" style="min-height: 52px; font-size: 1rem;">
+                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ next_stop.lat }},{{ next_stop.lng }}" target="_blank" class="btn btn-outline-dark w-100 rounded-pill fw-bold d-flex align-items-center justify-content-center" style="min-height: 52px; font-size: 1rem;">
                         <i class="fa-solid fa-diamond-turn-right text-primary me-2 fs-5"></i> NAVIGATE
                     </a>
                 </div>
@@ -252,7 +258,7 @@
     {% endif %}
 
     <!-- P3.9 ROUTE STOP LIST -->
-    <div class="nl-card mb-4">
+    <div class="nl-card mb-4" id="driver-route-list">
         <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
             <h3 class="fs-5 fw-bold mb-0 text-dark"><i class="fa-solid fa-list-ol text-success me-2"></i> Route Sequence List</h3>
             <span class="badge rounded-pill px-3 py-1 bg-light text-dark border">{{ stops|length }} Scheduled Stops</span>
@@ -411,6 +417,22 @@ document.addEventListener("DOMContentLoaded", function () {
     const endModalEl = document.getElementById('endShiftModal');
     if (endModalEl) {
         endShiftModalInstance = new bootstrap.Modal(endModalEl);
+    }
+
+    // Initialize Next Stop Mini Map
+    const mapEl = document.getElementById('driver-next-stop-map');
+    if (mapEl) {
+        {% if next_stop %}
+        const stopLat = {{ next_stop.lat | default(23.0375) }};
+        const stopLng = {{ next_stop.lng | default(72.5520) }};
+        const nextMap = L.map('driver-next-stop-map', { zoomControl: false }).setView([stopLat, stopLng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(nextMap);
+
+        const m = L.marker([stopLat, stopLng]).addTo(nextMap);
+        m.bindPopup(`<b>📍 Next Stop</b><br>{{ next_stop.citizen_name | default('Citizen') }}<br><small>{{ next_stop.address | default(next_stop.street_segment) }}</small><br><a href="https://www.google.com/maps/dir/?api=1&destination=${stopLat},${stopLng}" target="_blank" class="btn btn-xs btn-dark text-white rounded-pill px-2 py-1 mt-1 d-inline-block fw-bold" style="font-size:10px;">Turn Navigation</a>`).openPopup();
+        {% endif %}
     }
 });
 

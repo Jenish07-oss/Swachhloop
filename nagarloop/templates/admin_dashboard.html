@@ -182,6 +182,49 @@
         </div>
     </div>
 
+    <!-- Admin Quick Actions (Mobile Compact Grid) -->
+    <div class="nl-card mb-4 d-block d-md-none p-3">
+        <div class="small fw-bold text-uppercase text-muted mb-2 px-1" style="font-size: 11px;">Admin Quick Actions</div>
+        <div class="row g-2 text-center">
+            <div class="col-4">
+                <a href="{{ url_for('admin_dispatch') }}" class="p-2 rounded-3 border bg-light d-block text-decoration-none text-dark">
+                    <i class="fa-solid fa-truck-fast text-primary fs-5 mb-1 d-block"></i>
+                    <span class="small fw-bold" style="font-size: 11px;">Dispatch</span>
+                </a>
+            </div>
+            <div class="col-4">
+                <a href="{{ url_for('admin_societies') }}" class="p-2 rounded-3 border bg-light d-block text-decoration-none text-dark">
+                    <i class="fa-solid fa-building text-info fs-5 mb-1 d-block"></i>
+                    <span class="small fw-bold" style="font-size: 11px;">Societies</span>
+                </a>
+            </div>
+            <div class="col-4">
+                <a href="#facilities" class="p-2 rounded-3 border bg-light d-block text-decoration-none text-dark">
+                    <i class="fa-solid fa-industry text-success fs-5 mb-1 d-block"></i>
+                    <span class="small fw-bold" style="font-size: 11px;">Facilities</span>
+                </a>
+            </div>
+            <div class="col-4">
+                <a href="#sms-section" class="p-2 rounded-3 border bg-light d-block text-decoration-none text-dark">
+                    <i class="fa-solid fa-comment-sms text-warning fs-5 mb-1 d-block"></i>
+                    <span class="small fw-bold" style="font-size: 11px;">SMS Logs</span>
+                </a>
+            </div>
+            <div class="col-4">
+                <a href="{{ url_for('admin_reports') }}" class="p-2 rounded-3 border bg-light d-block text-decoration-none text-dark">
+                    <i class="fa-solid fa-file-lines text-secondary fs-5 mb-1 d-block"></i>
+                    <span class="small fw-bold" style="font-size: 11px;">Reports</span>
+                </a>
+            </div>
+            <div class="col-4">
+                <a href="{{ url_for('public_leaderboard') }}" class="p-2 rounded-3 border bg-light d-block text-decoration-none text-dark">
+                    <i class="fa-solid fa-trophy text-warning fs-5 mb-1 d-block"></i>
+                    <span class="small fw-bold" style="font-size: 11px;">Board</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- TODAY'S OPERATIONS & NEEDS ATTENTION QUEUE -->
     <div class="row g-4 mb-4">
         <!-- Operations Summary Table -->
@@ -241,7 +284,7 @@
         </div>
 
         <!-- Needs Attention Queue -->
-        <div class="col-lg-6">
+        <div class="col-lg-6" id="needs-attention">
             <div class="nl-card h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
                     <div class="d-flex align-items-center gap-2">
@@ -307,7 +350,7 @@
     </div>
 
     <!-- DESTINATION FACILITIES CAPACITY BOARD -->
-    <div class="nl-card mb-4">
+    <div class="nl-card mb-4" id="facilities">
         <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-wrap gap-2">
             <div class="d-flex align-items-center gap-2">
                 <i class="fa-solid fa-industry text-success fs-5"></i>
@@ -680,7 +723,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    adminMap = L.map('admin-map').setView([23.0375, 72.5520], 14);
+    adminMap = L.map('admin-map').setView([22.3094, 72.1362], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(adminMap);
@@ -691,11 +734,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function loadMapData(filter) {
     markersLayer.clearLayers();
+    const latLngBounds = [];
+
     fetch('/api/pickups')
         .then(r => r.json())
         .then(data => {
             (data.pickups || []).forEach(p => {
-                // If filtering by stream, check if pickup has that stream
                 if (filter && filter !== 'all') {
                     const hasStream = (p.streams || []).some(s => s.stream_type === filter);
                     if (!hasStream) return;
@@ -703,15 +747,34 @@ function loadMapData(filter) {
 
                 const color = p.status === 'delivered' ? '#16A34A' : (p.status === 'collected' ? '#2563EB' : (p.status === 'failed' ? '#DC2626' : '#D97706'));
                 const m = L.circleMarker([p.lat, p.lng], {
-                    radius: 7,
+                    radius: 8,
                     fillColor: color,
                     color: '#fff',
                     weight: 2,
-                    fillOpacity: 0.9
+                    fillOpacity: 0.95
                 }).addTo(markersLayer);
 
-                m.bindPopup(`<b>${p.pickup_code || ('Pickup #' + p.id)}</b><br>${p.citizen_name || 'Citizen'}<br>Status: <strong>${p.status}</strong><br>Est: ${p.total_kg || 0} kg`);
+                latLngBounds.push([p.lat, p.lng]);
+
+                const addrStr = p.address || p.street_segment || 'Gujarat, India';
+                const vanStr = p.van_code ? `<br>Van: <strong>${p.van_code}</strong>` : '';
+                m.bindPopup(`
+                    <div style="min-width: 180px;">
+                        <strong style="color:#0C3B2E; font-size:12px;">${p.pickup_code || ('NL-2026-' + p.id)}</strong>
+                        <div style="font-size:11px; margin-top:2px; font-weight:bold;">${p.citizen_name || 'Citizen'}</div>
+                        <div style="font-size:10.5px; color:#52525b; margin:2px 0;">📍 ${addrStr}</div>
+                        <div style="font-size:10px; color:#71717a;">GPS: ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</div>
+                        <div style="font-size:10.5px; margin-top:4px;">Status: <strong>${p.status}</strong> | Est: <strong>${p.total_kg || 0} kg</strong>${vanStr}</div>
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}" target="_blank" style="display:inline-block; margin-top:6px; background:#0C3B2E; color:#B5E048; padding:3px 8px; border-radius:12px; font-size:10px; text-decoration:none; font-weight:bold;">
+                            <i class="fa-solid fa-diamond-turn-right"></i> Navigate
+                        </a>
+                    </div>
+                `);
             });
+
+            if (latLngBounds.length > 0) {
+                adminMap.fitBounds(latLngBounds, { padding: [30, 30], maxZoom: 15 });
+            }
         });
 
     fetch('/api/facilities')
@@ -725,7 +788,7 @@ function loadMapData(filter) {
                     iconSize: [120, 30]
                 });
                 L.marker([f.lat, f.lng], { icon: icon }).addTo(markersLayer)
-                    .bindPopup(`<b>🏭 ${f.name}</b><br>${f.facility_type}<br>Load: ${f.current_load_kg || 0} / ${f.capacity_kg} kg`);
+                    .bindPopup(`<b>🏭 ${f.name}</b><br>${f.facility_type}<br>Load: ${f.current_load_kg || 0} / ${f.capacity_kg} kg<br><a href="https://www.google.com/maps/dir/?api=1&destination=${f.lat},${f.lng}" target="_blank" style="display:inline-block; margin-top:4px; font-size:10px;">Navigate to Plant</a>`);
             });
         });
 }

@@ -1,4 +1,5 @@
 import os
+import re
 import csv
 import math
 import time
@@ -7,6 +8,8 @@ import json
 import base64
 import threading
 import random
+import urllib.request
+import urllib.parse
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_file, session
 from database import get_db, init_db
@@ -67,6 +70,31 @@ def login_required(roles=None):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+def validate_indian_phone(phone_str):
+    """
+    Validate and normalize Indian mobile numbers.
+    Accepted formats:
+      - 10 digits starting with 6, 7, 8, 9 (e.g. 9825012345)
+      - With +91 or 91 or 0 prefix (e.g. +919825012345, 919825012345, 09825012345)
+      - With spaces or hyphens (e.g. 98250-12345, +91 98250 12345)
+    Returns:
+      Normalized 10-digit string if valid, else None.
+    """
+    if not phone_str:
+        return None
+    # Strip spaces, hyphens, parentheses, plus
+    clean = re.sub(r'[\s\-\(\)\+]', '', str(phone_str).strip())
+    # Strip +91, 91, or leading 0
+    if clean.startswith('91') and len(clean) == 12:
+        clean = clean[2:]
+    elif clean.startswith('0') and len(clean) == 11:
+        clean = clean[1:]
+    
+    # Must be exactly 10 digits and start with 6, 7, 8, or 9
+    if re.match(r'^[6-9]\d{9}$', clean):
+        return clean
+    return None
 
 def log_sms(phone, message, event_type, pickup_id=None, db_conn=None):
     """Unified Notification & SMS Simulation Engine with duplicate prevention (Phase 3 Spec)"""
@@ -262,10 +290,15 @@ def register():
     if request.method == 'POST':
         reg_type = request.form.get('reg_type', 'citizen')
         password = request.form.get('password', '').strip()
-        phone = request.form.get('phone', '').strip()
+        raw_phone = request.form.get('phone', '').strip()
 
-        if not phone or not password:
+        if not raw_phone or not password:
             flash("Mobile number and password are required.", "danger")
+            return render_template('register.html', reg_type=reg_type)
+
+        phone = validate_indian_phone(raw_phone)
+        if not phone:
+            flash("Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9 (e.g. 9825012345).", "danger")
             return render_template('register.html', reg_type=reg_type)
 
         conn = get_db()
@@ -520,6 +553,18 @@ def book_pickup():
     conn = get_db()
     cur = conn.cursor()
 
+    # Address determination & persistence
+    address = request.form.get('address', '').strip()
+    if not address:
+        if is_society and society_id:
+            s_row = conn.execute("SELECT address, collection_point FROM societies WHERE id = ?", (society_id,)).fetchone()
+            address = f"{s_row['collection_point']}, {s_row['address']}" if s_row else "Gujarat, India"
+        elif household_id:
+            h_row = conn.execute("SELECT street_segment FROM households WHERE id = ?", (household_id,)).fetchone()
+            address = f"{h_row['street_segment']}, Gujarat, India" if h_row else "Gujarat, India"
+        else:
+            address = "Gujarat, India"
+
     cur.execute("SELECT lat, lng FROM pickups LIMIT 40")
     existing_coords = cur.fetchall()
     pickup_zone = 1
@@ -529,13 +574,25 @@ def book_pickup():
         kmeans.fit(coords_arr)
         pickup_zone = int(kmeans.predict(np.array([[lat, lng]]))[0]) + 1
 
+    ai_image_check = request.form.get('ai_image_check', 'passed').strip()
+    try:
+        ai_confidence = float(request.form.get('ai_confidence', '0.85') or 0.85)
+    except ValueError:
+        ai_confidence = 0.85
+
+    # Backend Security Enforcement: Hard block if AI validation explicitly failed, warned, not submitted, or confidence < 0.30
+    if ai_image_check in ['failed', 'warning', 'skipped', 'not_submitted'] or ai_confidence < 0.30:
+        flash("⚠️ Booking blocked: A valid waste photo must be verified before booking. Please upload/take a clear photo of waste.", "danger")
+        return redirect(url_for('society_dashboard') if is_society else url_for('citizen_booking'))
+
     cur.execute("""
         INSERT INTO pickups (
-            household_id, society_id, is_society, lat, lng,
-            bin_score, photo_path, status, pickup_zone, total_kg, earned_points
+            household_id, society_id, is_society, address, lat, lng,
+            bin_score, photo_path, status, pickup_zone, total_kg, earned_points,
+            ai_image_check, ai_confidence
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)
-    """, (household_id if not is_society else None, society_id if is_society else None, is_society, lat, lng, bin_score, photo_path, pickup_zone, total_kg, green_points))
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
+    """, (household_id if not is_society else None, society_id if is_society else None, is_society, address, lat, lng, bin_score, photo_path, pickup_zone, total_kg, green_points, ai_image_check, ai_confidence))
     pickup_id = cur.lastrowid
     p_code = format_pickup_code(pickup_id)
     cur.execute("UPDATE pickups SET pickup_code = ? WHERE id = ?", (p_code, pickup_id))
@@ -586,7 +643,8 @@ def report_public():
         estimated_kg = float(request.form.get('estimated_kg', '12.0') or 12.0)
         description = request.form.get('description', '').strip()
         reporter_name = request.form.get('reporter_name', '').strip() or 'Anonymous Citizen'
-        reporter_phone = request.form.get('reporter_phone', '').strip() or 'N/A'
+        raw_rep_phone = request.form.get('reporter_phone', '').strip()
+        reporter_phone = validate_indian_phone(raw_rep_phone) if raw_rep_phone else 'N/A'
 
         photo_path = "/static/images/bins/sample_bin_1.svg"
         if 'photo' in request.files:
@@ -600,13 +658,24 @@ def report_public():
         conn = get_db()
         cur = conn.cursor()
 
+        ai_image_check = request.form.get('ai_image_check', 'passed').strip()
+        try:
+            ai_confidence = float(request.form.get('ai_confidence', '0.85') or 0.85)
+        except ValueError:
+            ai_confidence = 0.85
+
+        if ai_image_check in ['failed', 'warning', 'skipped', 'not_submitted'] or ai_confidence < 0.30:
+            flash("⚠️ Public report blocked: A valid waste photo must be verified before submitting. Please attach or take a clear photo of waste.", "danger")
+            return redirect(url_for('report_public'))
+
         cur.execute("""
             INSERT INTO pickups (
                 is_public, reporter_name, reporter_phone, public_description,
-                lat, lng, bin_score, photo_path, status, total_kg, earned_points
+                address, lat, lng, bin_score, photo_path, status, total_kg, earned_points,
+                ai_image_check, ai_confidence
             )
-            VALUES (1, ?, ?, ?, ?, ?, 70, ?, 'pending', ?, 0)
-        """, (reporter_name, reporter_phone, description, lat, lng, photo_path, estimated_kg))
+            VALUES (1, ?, ?, ?, ?, ?, ?, 70, ?, 'pending', ?, 0, ?, ?)
+        """, (reporter_name, reporter_phone, description, address, lat, lng, photo_path, estimated_kg, ai_image_check, ai_confidence))
         pickup_id = cur.lastrowid
         p_code = format_pickup_code(pickup_id)
         cur.execute("UPDATE pickups SET pickup_code = ? WHERE id = ?", (p_code, pickup_id))
@@ -1973,6 +2042,7 @@ def api_pickups():
     result = []
     for p in pickups:
         p_dict = dict(p)
+        p_dict['address'] = p['address'] or p['street_segment'] or 'Address not available'
         streams = conn.execute("""
             SELECT ps.stream_type, ps.estimated_kg, ps.status, f.name as facility_name, f.facility_type
             FROM pickup_streams ps
@@ -2110,6 +2180,180 @@ def api_update_status(pickup_id):
         'pickup_id': pickup_id,
         'new_status': new_status
     })
+
+# ----------------------------------------------------
+# GUJARAT LOCATION & GEOCODING APIS
+# ----------------------------------------------------
+
+LOCATION_SEARCH_CACHE = {}
+LOCATION_REVERSE_CACHE = {}
+
+GUJARAT_LOCAL_GAZETTEER = [
+    {"name": "Navrangpura", "city": "Ahmedabad", "lat": 23.0375, "lng": 72.5520, "display": "Navrangpura, Ahmedabad, Gujarat 380009"},
+    {"name": "Commerce Six Roads", "city": "Ahmedabad", "lat": 23.0365, "lng": 72.5535, "display": "Commerce Six Roads, Navrangpura, Ahmedabad, Gujarat 380009"},
+    {"name": "Vijay Cross Roads", "city": "Ahmedabad", "lat": 23.0392, "lng": 72.5480, "display": "Vijay Cross Roads, Navrangpura, Ahmedabad, Gujarat 380009"},
+    {"name": "Bodakdev", "city": "Ahmedabad", "lat": 23.0372, "lng": 72.5120, "display": "Bodakdev, SG Highway, Ahmedabad, Gujarat 380054"},
+    {"name": "Satellite", "city": "Ahmedabad", "lat": 23.0298, "lng": 72.5273, "display": "Satellite Road, Ahmedabad, Gujarat 380015"},
+    {"name": "Vastrapur", "city": "Ahmedabad", "lat": 23.0350, "lng": 72.5293, "display": "Vastrapur Lake, Ahmedabad, Gujarat 380015"},
+    {"name": "Prahlad Nagar", "city": "Ahmedabad", "lat": 23.0120, "lng": 72.5080, "display": "Prahlad Nagar, SG Highway, Ahmedabad, Gujarat 380015"},
+    {"name": "Maninagar", "city": "Ahmedabad", "lat": 22.9978, "lng": 72.6033, "display": "Maninagar East, Ahmedabad, Gujarat 380008"},
+    {"name": "Paldi", "city": "Ahmedabad", "lat": 23.0125, "lng": 72.5625, "display": "Paldi Cross Roads, Ahmedabad, Gujarat 380007"},
+    {"name": "Ashram Road", "city": "Ahmedabad", "lat": 23.0300, "lng": 72.5700, "display": "Ashram Road, Usmanpura, Ahmedabad, Gujarat 380014"},
+    {"name": "Bopal", "city": "Ahmedabad", "lat": 23.0345, "lng": 72.4645, "display": "South Bopal, Ahmedabad, Gujarat 380058"},
+    {"name": "Gota", "city": "Ahmedabad", "lat": 23.0980, "lng": 72.5350, "display": "Gota Cross Roads, SG Highway, Ahmedabad, Gujarat 382481"},
+    {"name": "Chandkheda", "city": "Ahmedabad", "lat": 23.1100, "lng": 72.5850, "display": "Chandkheda, Ahmedabad, Gujarat 382424"},
+    {"name": "Infocity", "city": "Gandhinagar", "lat": 23.1920, "lng": 72.6280, "display": "Infocity, Gandhinagar, Gujarat 382007"},
+    {"name": "Sector 21", "city": "Gandhinagar", "lat": 23.2320, "lng": 72.6500, "display": "Sector 21, Gandhinagar, Gujarat 382021"},
+    {"name": "GIFT City", "city": "Gandhinagar", "lat": 23.1610, "lng": 72.6840, "display": "GIFT City, Gandhinagar, Gujarat 382355"},
+    {"name": "Sector 6", "city": "Gandhinagar", "lat": 23.2150, "lng": 72.6360, "display": "Sector 6, Gandhinagar, Gujarat 382006"},
+    {"name": "Athwa Lines", "city": "Surat", "lat": 21.1780, "lng": 72.8050, "display": "Athwa Lines, Surat, Gujarat 395007"},
+    {"name": "Adajan", "city": "Surat", "lat": 21.1980, "lng": 72.7950, "display": "Adajan Hazira Road, Surat, Gujarat 395009"},
+    {"name": "Vesu", "city": "Surat", "lat": 21.1450, "lng": 72.7750, "display": "VIP Road, Vesu, Surat, Gujarat 395007"},
+    {"name": "Varachha", "city": "Surat", "lat": 21.2180, "lng": 72.8650, "display": "Varachha Main Road, Surat, Gujarat 395006"},
+    {"name": "Althan", "city": "Surat", "lat": 21.1550, "lng": 72.8100, "display": "Althan Road, Surat, Gujarat 395017"},
+    {"name": "Alkapuri", "city": "Vadodara", "lat": 22.3110, "lng": 73.1750, "display": "RC Dutt Road, Alkapuri, Vadodara, Gujarat 390007"},
+    {"name": "Gotri", "city": "Vadodara", "lat": 22.3180, "lng": 73.1450, "display": "Gotri Road, Vadodara, Gujarat 390021"},
+    {"name": "Fatehgunj", "city": "Vadodara", "lat": 22.3250, "lng": 73.1890, "display": "Fatehgunj Main Road, Vadodara, Gujarat 390002"},
+    {"name": "Manjalpur", "city": "Vadodara", "lat": 22.2700, "lng": 73.1950, "display": "Manjalpur Naka, Vadodara, Gujarat 390011"},
+    {"name": "Kalawad Road", "city": "Rajkot", "lat": 22.2850, "lng": 70.7680, "display": "Kalawad Road, Rajkot, Gujarat 360005"},
+    {"name": "Race Course", "city": "Rajkot", "lat": 22.3020, "lng": 70.7950, "display": "Race Course Ring Road, Rajkot, Gujarat 360001"},
+    {"name": "Yagnik Road", "city": "Rajkot", "lat": 22.2960, "lng": 70.7980, "display": "Dr. Yagnik Road, Rajkot, Gujarat 360001"},
+    {"name": "University Road", "city": "Rajkot", "lat": 22.2920, "lng": 70.7550, "display": "University Road, Rajkot, Gujarat 360005"},
+    {"name": "Waghawadi Road", "city": "Bhavnagar", "lat": 21.7550, "lng": 72.1450, "display": "Waghawadi Road, Bhavnagar, Gujarat 364002"},
+    {"name": "Kaliyabid", "city": "Bhavnagar", "lat": 21.7450, "lng": 72.1380, "display": "Kaliyabid, Bhavnagar, Gujarat 364002"},
+    {"name": "Digjam", "city": "Jamnagar", "lat": 22.4650, "lng": 70.0650, "display": "Aerodrome Road, Digjam, Jamnagar, Gujarat 361006"},
+    {"name": "MG Road", "city": "Junagadh", "lat": 21.5200, "lng": 70.4600, "display": "MG Road, Junagadh, Gujarat 362001"},
+    {"name": "Vallabh Vidyanagar", "city": "Anand", "lat": 22.5500, "lng": 72.9300, "display": "Mota Bazaar, Vallabh Vidyanagar, Anand, Gujarat 388120"}
+]
+
+@app.route('/api/location/search')
+def api_location_search():
+    q = request.args.get('q', '').strip()
+    request_id = request.args.get('request_id', '')
+    if len(q) < 3:
+        return jsonify({'success': True, 'results': [], 'request_id': request_id})
+
+    cache_key = q.lower()
+    if cache_key in LOCATION_SEARCH_CACHE:
+        return jsonify({'success': True, 'results': LOCATION_SEARCH_CACHE[cache_key], 'request_id': request_id})
+
+    results = []
+    # 1. Search Local Gazetteer First
+    q_words = [w.lower() for w in q.split() if len(w) > 1]
+    for item in GUJARAT_LOCAL_GAZETTEER:
+        item_text = f"{item['name']} {item['city']} {item['display']}".lower()
+        if all(w in item_text for w in q_words) or q.lower() in item_text:
+            results.append({
+                'title': item['name'],
+                'subtitle': f"{item['city']}, Gujarat",
+                'display_name': item['display'],
+                'lat': item['lat'],
+                'lng': item['lng'],
+                'source': 'gazetteer'
+            })
+
+    # 2. If fewer than 4 results, query OpenStreetMap Nominatim with safe rate-limiting and user-agent
+    if len(results) < 4:
+        try:
+            query_param = q if ('gujarat' in q.lower() or 'india' in q.lower()) else f"{q}, Gujarat, India"
+            url = f"https://nominatim.openstreetmap.org/search?format=json&q={urllib.parse.quote(query_param)}&countrycodes=in&viewbox=68.1,24.7,74.5,20.1&limit=6&addressdetails=1"
+            req = urllib.request.Request(url, headers={
+                'User-Agent': 'NagarLoop-CircularRecovery/2.0 (contact: info@nagarloop.org)',
+                'Accept-Language': 'en'
+            })
+            with urllib.request.urlopen(req, timeout=3.5) as response:
+                osm_data = json.loads(response.read().decode('utf-8'))
+                for item in osm_data:
+                    display = item.get('display_name', '')
+                    parts = display.split(',')
+                    title = parts[0].strip()
+                    subtitle = ", ".join([p.strip() for p in parts[1:4]])
+                    lat = float(item['lat'])
+                    lng = float(item['lon'])
+
+                    # Avoid duplicates
+                    if not any(abs(r['lat'] - lat) < 0.002 and abs(r['lng'] - lng) < 0.002 for r in results):
+                        results.append({
+                            'title': title,
+                            'subtitle': subtitle or 'Gujarat, India',
+                            'display_name': display,
+                            'lat': lat,
+                            'lng': lng,
+                            'source': 'nominatim'
+                        })
+        except Exception:
+            # Fallback smoothly to gazetteer without throwing error
+            pass
+
+    # Cache results (max 500 items in memory)
+    if len(LOCATION_SEARCH_CACHE) > 500:
+        LOCATION_SEARCH_CACHE.clear()
+    LOCATION_SEARCH_CACHE[cache_key] = results[:6]
+
+    return jsonify({'success': True, 'results': results[:6], 'request_id': request_id})
+
+@app.route('/api/location/reverse')
+def api_location_reverse():
+    lat = request.args.get('lat', '')
+    lng = request.args.get('lng', '')
+    try:
+        lat_f = round(float(lat), 5)
+        lng_f = round(float(lng), 5)
+    except (ValueError, TypeError):
+        return jsonify({'success': False, 'message': 'Invalid coordinates'}), 400
+
+    cache_key = f"{lat_f},{lng_f}"
+    if cache_key in LOCATION_REVERSE_CACHE:
+        return jsonify({'success': True, 'address': LOCATION_REVERSE_CACHE[cache_key]})
+
+    readable_address = None
+    # 1. Match closest local gazetteer within 150m
+    closest = None
+    min_dist = float('inf')
+    for item in GUJARAT_LOCAL_GAZETTEER:
+        d = math.hypot(item['lat'] - lat_f, item['lng'] - lng_f)
+        if d < min_dist:
+            min_dist = d
+            closest = item
+
+    if min_dist < 0.002 and closest: # within ~200 meters
+        readable_address = closest['display']
+
+    # 2. If not in immediate vicinity, query Nominatim reverse
+    if not readable_address:
+        try:
+            url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat_f}&lon={lng_f}&zoom=18&addressdetails=1"
+            req = urllib.request.Request(url, headers={
+                'User-Agent': 'NagarLoop-CircularRecovery/2.0 (contact: info@nagarloop.org)',
+                'Accept-Language': 'en'
+            })
+            with urllib.request.urlopen(req, timeout=3.5) as response:
+                osm_data = json.loads(response.read().decode('utf-8'))
+                if osm_data and 'display_name' in osm_data:
+                    addr_dict = osm_data.get('address', {})
+                    parts = [
+                        addr_dict.get('building') or addr_dict.get('amenity') or addr_dict.get('house_number') or '',
+                        addr_dict.get('road') or addr_dict.get('suburb') or addr_dict.get('neighbourhood') or '',
+                        addr_dict.get('city') or addr_dict.get('town') or addr_dict.get('village') or addr_dict.get('county') or '',
+                        addr_dict.get('state') or 'Gujarat',
+                        addr_dict.get('postcode') or ''
+                    ]
+                    parts = [p.strip() for p in parts if p.strip()]
+                    readable_address = ", ".join(parts) if len(parts) >= 2 else osm_data['display_name']
+        except Exception:
+            pass
+
+    if not readable_address:
+        if closest:
+            readable_address = f"Near {closest['name']}, {closest['city']}, Gujarat"
+        else:
+            readable_address = f"Location at {lat_f:.4f}, {lng_f:.4f}, Gujarat"
+
+    if len(LOCATION_REVERSE_CACHE) > 500:
+        LOCATION_REVERSE_CACHE.clear()
+    LOCATION_REVERSE_CACHE[cache_key] = readable_address
+
+    return jsonify({'success': True, 'address': readable_address})
 
 @app.route('/api/demo/reset', methods=['POST'])
 def api_demo_reset():

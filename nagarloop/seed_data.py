@@ -148,6 +148,7 @@ def seed():
             'household_id': i,
             'society_id': soc_id,
             'is_society': is_soc,
+            'address': f"{societies_data[soc_id-1][1]}, {societies_data[soc_id-1][4]}" if is_soc else f"{street}, Navrangpura, Ahmedabad, Gujarat 380009",
             'lat': round(float(lats[i - 1]), 5),
             'lng': round(float(lngs[i - 1]), 5),
             'bin_score': score,
@@ -226,12 +227,12 @@ def seed():
     cursor.executemany("""
         INSERT INTO pickups (
             id, pickup_code, household_id, society_id, is_society,
-            lat, lng, bin_score, photo_path, status,
+            address, lat, lng, bin_score, photo_path, status,
             assigned_van_id, pickup_zone, total_kg, earned_points
         )
         VALUES (
             :id, :pickup_code, :household_id, :society_id, :is_society,
-            :lat, :lng, :bin_score, :photo_path, :status,
+            :address, :lat, :lng, :bin_score, :photo_path, :status,
             :assigned_van_id, :pickup_zone, :total_kg, :earned_points
         )
     """, raw_pickups)

@@ -84,6 +84,7 @@ def init_db():
             reporter_name TEXT,
             reporter_phone TEXT,
             public_description TEXT,
+            address TEXT,
             lat REAL NOT NULL,
             lng REAL NOT NULL,
             bin_score INTEGER DEFAULT 75,
@@ -249,6 +250,9 @@ def init_db():
         ("users", "locality", "TEXT"),
         ("users", "society_id", "INTEGER"),
         ("points_ledger", "society_id", "INTEGER"),
+        ("pickups", "address", "TEXT"),
+        ("pickups", "ai_image_check", "TEXT DEFAULT 'passed'"),
+        ("pickups", "ai_confidence", "REAL DEFAULT 0.0"),
     ]
 
     for table, col, col_type in migrations:

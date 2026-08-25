@@ -3,8 +3,8 @@
 BRAND = "NagarLoop"
 SUB_BRAND = "Municipal Circular Waste Platform"
 SLOGAN = {
-    "en": "Your society's waste, back in the loop.",
-    "gu": "તમારી સોસાયટીનો કચરો, ફરી લૂપમાં."
+    "en": "Collect. Recover. Reuse. Repeat.",
+    "gu": "એકત્ર કરો. પુનઃપ્રાપ્ત કરો. પુનઃઉપયોગ કરો. પુનરાવર્તન કરો."
 }
 SUPPORT_EMAIL = "support@nagarloop.in"
 CITY = "Ahmedabad"  # Configurable municipal jurisdiction

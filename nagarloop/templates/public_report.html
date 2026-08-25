@@ -90,13 +90,63 @@
 
             <!-- Location & Map -->
             <div class="mb-4">
-                <label class="form-label fw-bold text-dark fs-6 mb-2">3. Location of Waste</label>
-                <div class="input-group mb-2">
-                    <span class="input-group-text bg-white"><i class="fa-solid fa-map-pin text-danger"></i></span>
-                    <input type="text" name="address" id="pub-address" class="form-control py-2" placeholder="e.g. Near Vijay Cross Roads Block A or St. Xavier's Corner" required>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="form-label fw-bold text-dark fs-6 mb-0">3. Location of Waste (Anywhere across Gujarat)</label>
+                    <button type="button" class="btn btn-xs btn-outline-success fw-bold px-3 py-1 rounded-pill shadow-xs" style="font-size: 11px;" onclick="pubPicker.useGPSLocation()">
+                        <i class="fa-solid fa-crosshairs me-1 text-success"></i> Use My Current Location
+                    </button>
                 </div>
-                <div id="public-report-map" class="rounded-4 border shadow-sm mb-2" style="height: 220px; width: 100%;"></div>
-                <small class="text-muted">Click or drag pin to adjust exact location coordinates.</small>
+
+                <!-- Location Search Bar with Live Suggestions Dropdown -->
+                <div class="nl-address-wrapper mb-2">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                        <input type="text" name="address" id="pub-address" class="form-control py-2 fw-semibold" placeholder="Search area, landmark, or street in Gujarat..." value="Near Vijay Cross Roads, Navrangpura, Ahmedabad, Gujarat 380009" autocomplete="off" required>
+                        <button type="button" class="btn btn-dark fw-bold px-3" onclick="pubPicker.searchLocation(document.getElementById('pub-address').value)" title="Search on Map">
+                            Search
+                        </button>
+                    </div>
+                    <div id="pub-address-suggestions" class="nl-suggestions-dropdown"></div>
+                </div>
+
+                <!-- Map & Pin Placement Container -->
+                <div id="pub-map-wrapper">
+                    <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+                        <span class="small text-muted" style="font-size: 11px;" id="pub-status-msg">Click map or drag pin for exact public waste location.</span>
+                        <div class="d-flex gap-1 flex-wrap">
+                            <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="pubPicker.jumpToCity('Ahmedabad', 23.0225, 72.5714)">Ahmedabad</button>
+                            <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="pubPicker.jumpToCity('Gandhinagar', 23.2156, 72.6369)">Gandhinagar</button>
+                            <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="pubPicker.jumpToCity('Surat', 21.1702, 72.8311)">Surat</button>
+                            <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="pubPicker.jumpToCity('Vadodara', 22.3072, 73.1812)">Vadodara</button>
+                            <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="pubPicker.jumpToCity('Rajkot', 22.3039, 70.8022)">Rajkot</button>
+                        </div>
+                    </div>
+
+                    <div id="public-report-map" class="rounded-4 border shadow-sm mb-2" style="height: 200px; width: 100%;"></div>
+
+                    <!-- Confirm Location Action -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted" style="font-size: 11px;">Move pin to exact roadside spot before confirming</small>
+                        <button type="button" id="pub-confirm-location" class="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold shadow-xs">
+                            <i class="fa-solid fa-check me-1"></i> Confirm Location
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Confirmed Location Summary Card -->
+                <div id="pub-confirmed-card" class="p-2 bg-light rounded-3 border mt-2 shadow-xs d-flex justify-content-between align-items-center">
+                    <div class="text-truncate pe-2" style="max-width: 80%;">
+                        <div class="text-dark small fw-bold text-truncate" id="pub-confirmed-address">Near Vijay Cross Roads, Navrangpura, Ahmedabad, Gujarat 380009</div>
+                        <div class="text-muted font-monospace" style="font-size: 10px;">Coordinates: <span id="pub-confirmed-coords">23.037500, 72.552000</span></div>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="badge bg-success-subtle text-success border border-success" style="font-size: 9.5px;">✓ Selected</span>
+                        <button type="button" id="pub-refine-location" class="btn btn-xs btn-outline-dark rounded-pill px-2 py-0.5" style="font-size: 10px;">
+                            Change
+                        </button>
+                    </div>
+                </div>
+
                 <input type="hidden" name="lat" id="pub-lat" value="23.0375">
                 <input type="hidden" name="lng" id="pub-lng" value="72.5520">
             </div>
@@ -104,10 +154,60 @@
             <!-- Photo & Description -->
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
-                    <label class="form-label fw-bold text-dark fs-6 mb-2">4. Attach Photo (Recommended)</label>
-                    <div class="p-3 bg-light rounded-4 border text-center">
-                        <i class="fa-solid fa-camera fs-3 text-success mb-2 d-block"></i>
-                        <input type="file" name="photo" class="form-control" accept="image/*">
+                    <label class="form-label fw-bold text-dark fs-6 mb-2"><i class="fa-solid fa-microchip text-success me-1"></i> 4. Photo Check (AI Verified)</label>
+                    <div class="p-3 bg-light rounded-4 border">
+                        <div class="d-flex gap-2 mb-2 flex-wrap">
+                            <button type="button" class="btn btn-sm btn-dark rounded-pill px-3 fw-bold flex-grow-1" onclick="wasteValidator.openCamera('pub-camera-video', 'pub-camera-modal', 'pub-camera-error')">
+                                <i class="fa-solid fa-camera me-1 text-lime"></i> 📷 Take Photo
+                            </button>
+                            <label class="btn btn-sm btn-outline-dark rounded-pill px-3 fw-bold mb-0 flex-grow-1 text-center" style="cursor: pointer;">
+                                <i class="fa-solid fa-folder-open me-1"></i> Upload Gallery
+                                <input type="file" name="photo" id="pub-photo-upload" class="d-none" accept="image/*" onchange="wasteValidator.handleFileInput(this, 'pub-preview-img')">
+                            </label>
+                        </div>
+
+                        <div id="pub-camera-error" class="alert alert-warning small py-1 px-2 mb-2 d-none" style="font-size: 11px;"></div>
+
+                        <!-- Live Camera Viewfinder Modal -->
+                        <div id="pub-camera-modal" class="position-relative bg-dark rounded-3 overflow-hidden mb-2 d-none" style="min-height: 200px;">
+                            <video id="pub-camera-video" autoplay playsinline muted class="w-100 h-100 object-fit-cover" style="max-height: 240px;"></video>
+                            <div class="position-absolute bottom-0 start-0 end-0 p-2 bg-dark bg-opacity-75 text-center d-flex justify-content-center gap-2">
+                                <button type="button" class="btn btn-sm btn-success rounded-pill px-4 fw-bold" onclick="wasteValidator.snapPhoto('pub-camera-video', 'pub-camera-modal', 'pub-photo-upload', 'pub-preview-img')">
+                                    <i class="fa-solid fa-circle-dot me-1"></i> Snap Photo
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="wasteValidator.closeCamera('pub-camera-modal')">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Photo Preview & AI Result Card -->
+                        <div id="photo-preview-container" class="d-none">
+                            <div class="position-relative mb-2 text-center bg-white rounded-3 p-2 border">
+                                <img id="pub-preview-img" src="" class="img-fluid rounded-2" style="max-height: 160px; object-fit: contain;" alt="Waste Preview">
+                                <div id="ai-loading-spinner" class="position-absolute top-50 start-50 translate-middle bg-dark bg-opacity-75 text-white p-2 rounded-3 small fw-bold d-none">
+                                    <span class="spinner-border spinner-border-sm me-1 text-lime" role="status"></span> Checking photo...
+                                </div>
+                            </div>
+
+                            <div id="ai-result-card" class="p-2 rounded-3 mb-2 border text-start small d-none">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <span id="ai-badge" class="badge rounded-pill px-2 py-1 fw-bold">✓ Verified</span>
+                                    <span id="ai-prediction-label" class="fw-bold text-dark small"></span>
+                                </div>
+                                <div id="ai-feedback-msg" class="text-secondary" style="font-size: 11px;"></div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center gap-2">
+                                <button type="button" class="btn btn-xs btn-outline-danger rounded-pill px-3 py-1 fw-bold" onclick="wasteValidator.resetPhoto('pub-photo-upload', 'photo-preview-container')">
+                                    <i class="fa-solid fa-rotate-left me-1"></i> Retake
+                                </button>
+                                <span id="ai-continue-msg" class="small text-success fw-bold d-none">✓ Ready</span>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="ai_image_check" id="ai-image-check" value="not_submitted">
+                        <input type="hidden" name="ai_confidence" id="ai-confidence" value="0.0">
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -124,44 +224,50 @@
                         <input type="text" name="reporter_name" class="form-control form-control-sm rounded-pill" placeholder="Your Name (Optional)">
                     </div>
                     <div class="col-md-6">
-                        <input type="tel" name="reporter_phone" class="form-control form-control-sm rounded-pill" placeholder="Mobile Number (Optional)">
+                        <input type="tel" name="reporter_phone" class="form-control form-control-sm rounded-pill" placeholder="10-digit Indian Mobile (Optional)" pattern="^[6-9]\d{9}$" maxlength="10" title="10-digit Indian mobile number starting with 6, 7, 8, or 9">
                     </div>
                 </div>
             </div>
 
-            <button type="submit" class="btn-nl-lime btn-nl-giant w-100 shadow-md">
-                <i class="fa-solid fa-paper-plane me-2"></i> Submit Public Waste Report
+            <!-- Desktop Submit Button -->
+            <button type="submit" id="btn-submit-public" class="btn-nl-lime btn-nl-giant w-100 shadow-md d-none d-md-flex opacity-50" disabled title="A valid waste photo must be verified before submitting">
+                <i class="fa-solid fa-paper-plane fs-4 me-2"></i> Submit Public Waste Report
             </button>
+
+            <!-- Mobile Sticky Bottom Action -->
+            <div class="nl-mobile-sticky-action">
+                <button type="submit" id="btn-submit-public-mobile" class="btn-nl-lime w-100 fw-bold rounded-pill shadow-md opacity-50" style="min-height: 48px; font-size: 1rem;" disabled title="A valid waste photo must be verified before submitting">
+                    <i class="fa-solid fa-paper-plane me-2"></i> Submit Public Report
+                </button>
+            </div>
         </form>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+<script src="{{ url_for('static', filename='js/waste-photo-validator.js') }}"></script>
+<script src="{{ url_for('static', filename='js/nagarloop_location.js') }}"></script>
 <script>
-let pubMap, pubMarker;
+let pubPicker;
 document.addEventListener("DOMContentLoaded", function () {
-    const lat = 23.0375;
-    const lng = 72.5520;
-
-    pubMap = L.map('public-report-map').setView([lat, lng], 14);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(pubMap);
-
-    pubMarker = L.marker([lat, lng], { draggable: true }).addTo(pubMap);
-    pubMarker.bindPopup("<b>📍 Public Waste Location</b>").openPopup();
-
-    pubMarker.on('dragend', function (e) {
-        const pos = e.target.getLatLng();
-        document.getElementById('pub-lat').value = pos.lat.toFixed(5);
-        document.getElementById('pub-lng').value = pos.lng.toFixed(5);
-    });
-
-    pubMap.on('click', function (e) {
-        pubMarker.setLatLng(e.latlng);
-        document.getElementById('pub-lat').value = e.latlng.lat.toFixed(5);
-        document.getElementById('pub-lng').value = e.latlng.lng.toFixed(5);
+    pubPicker = new NagarLoopLocationPicker({
+        mapElementId: 'public-report-map',
+        latInputId: 'pub-lat',
+        lngInputId: 'pub-lng',
+        addressInputId: 'pub-address',
+        confirmAddressId: 'pub-confirmed-address',
+        confirmCoordsId: 'pub-confirmed-coords',
+        statusMsgId: 'pub-status-msg',
+        collapsibleWrapperId: 'pub-map-wrapper',
+        confirmLocationBtnId: 'pub-confirm-location',
+        refineLocationBtnId: 'pub-refine-location',
+        confirmedCardId: 'pub-confirmed-card',
+        initialLat: 23.0375,
+        initialLng: 72.5520,
+        initialAddress: 'Near Vijay Cross Roads, Navrangpura, Ahmedabad, Gujarat 380009'
     });
 });
 </script>

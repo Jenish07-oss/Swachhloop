@@ -5,9 +5,7 @@
 <div class="nl-fade-up" style="max-width: 580px; margin: 2rem auto;">
     <div class="nl-card p-4 p-md-5">
         <div class="text-center mb-4">
-            <span class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 64px; height: 64px; background: var(--forest); color: var(--lime);">
-                <i class="fa-solid fa-user-plus fs-3"></i>
-            </span>
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="{{ BRAND }}" class="nl-auth-logo">
             <h1 class="fs-3 fw-bold text-dark mb-1">Join {{ BRAND }}</h1>
             <p class="text-secondary small mb-0">Create an account for door-to-door or society-wide circular collection</p>
         </div>
@@ -38,8 +36,12 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-dark">Mobile Number (Login ID)</label>
-                        <input type="tel" name="phone" class="form-control rounded-3 py-2" placeholder="e.g. 9825012345" required>
+                        <label class="form-label small fw-bold text-dark">Mobile Number (Indian 10-Digit Mobile)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 fw-bold text-dark" style="font-size: 13.5px;">🇮🇳 +91</span>
+                            <input type="tel" name="phone" class="form-control rounded-end-3 py-2 border-start-0" placeholder="9825012345" pattern="^[6-9]\d{9}$" maxlength="10" required title="Enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9">
+                        </div>
+                        <div class="form-text text-muted" style="font-size: 11px;">Must be a valid 10-digit Indian number starting with 6, 7, 8, or 9.</div>
                     </div>
 
                     <div class="mb-3">
@@ -74,8 +76,12 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-dark">Manager Mobile Number</label>
-                        <input type="tel" name="phone" class="form-control rounded-3 py-2" placeholder="e.g. 9825012346" required>
+                        <label class="form-label small fw-bold text-dark">Manager Mobile Number (Indian 10-Digit Mobile)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 fw-bold text-dark" style="font-size: 13.5px;">🇮🇳 +91</span>
+                            <input type="tel" name="phone" class="form-control rounded-end-3 py-2 border-start-0" placeholder="9825012346" pattern="^[6-9]\d{9}$" maxlength="10" required title="Enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9">
+                        </div>
+                        <div class="form-text text-muted" style="font-size: 11px;">Must be a valid 10-digit Indian number starting with 6, 7, 8, or 9.</div>
                     </div>
 
                     <div class="mb-3">

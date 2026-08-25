@@ -37,8 +37,19 @@
                                 <td class="fw-bold text-dark">{{ pickup.citizen_name or 'Citizen' }} ({{ pickup.household_code or 'SOC-001' }})</td>
                             </tr>
                             <tr>
-                                <td class="text-muted fw-semibold">Location:</td>
-                                <td class="text-dark fw-semibold">{{ pickup.street_segment or 'Navrangpura Ward' }}</td>
+                                <td class="text-muted fw-semibold">📍 Pickup Location:</td>
+                                <td class="text-dark">
+                                    <div class="fw-bold">{{ pickup.address or pickup.street_segment or 'Address not available' }}</div>
+                                    <div class="small text-muted font-monospace">GPS: {{ pickup.lat }}, {{ pickup.lng }}</div>
+                                    <div class="mt-1">
+                                        <a href="https://www.google.com/maps/dir/?api=1&destination={{ pickup.lat }},{{ pickup.lng }}" target="_blank" class="btn btn-xs btn-outline-dark rounded-pill px-2 py-1 fw-bold" style="font-size: 11px;">
+                                            <i class="fa-solid fa-diamond-turn-right text-primary me-1"></i> Navigate
+                                        </a>
+                                        <a href="https://www.google.com/maps/search/?api=1&query={{ pickup.lat }},{{ pickup.lng }}" target="_blank" class="btn btn-xs btn-outline-secondary rounded-pill px-2 py-1 fw-bold ms-1" style="font-size: 11px;">
+                                            <i class="fa-solid fa-map me-1"></i> View on Map
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
                             <tr>
                                 <td class="text-muted fw-semibold">Assigned Fleet:</td>

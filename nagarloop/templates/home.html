@@ -7,7 +7,8 @@
     <section class="nl-hero-grid mb-4">
         <div>
             <div class="d-inline-flex align-items-center gap-2 px-3 py-1 bg-white border text-dark rounded-pill small fw-bold mb-3 shadow-sm">
-                <i class="fa-solid fa-leaf text-success"></i> {{ SUB_BRAND }}
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="{{ BRAND }}" style="width: 18px; height: 18px; object-fit: contain;">
+                <span>{{ SUB_BRAND }}</span>
             </div>
             
             <h1 class="nl-hero-slogan">
@@ -15,7 +16,7 @@
             </h1>
             
             <p class="nl-hero-sub">
-                Connecting residential societies, smart collection fleets, and certified recycling facilities for 100% verified circular waste recovery.
+                Connecting citizens, housing societies, smart electric fleets, and certified recycling facilities for 100% verified circular waste recovery.
             </p>
 
             <div class="nl-hero-ctas">

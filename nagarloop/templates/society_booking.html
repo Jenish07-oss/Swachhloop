@@ -50,107 +50,218 @@
                     <span class="small text-muted fst-italic">{{ tr('est_qty_note') }}</span>
                 </div>
 
-                <div class="row g-3">
+            <!-- Stream selection cards -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h3 class="fs-6 fw-bold text-dark mb-0"><i class="fa-solid fa-layer-group text-success me-1"></i> 1. Select Bulk Streams & Est. KG</h3>
+                    <span class="small text-muted" style="font-size: 11px;">Select all active bays</span>
+                </div>
+
+                <div class="stream-grid-2x2">
                     <!-- Wet -->
-                    <div class="col-md-6">
-                        <div class="stream-card wet selected p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="stream-icon-box">🥬</span>
-                                <input class="form-check-input fs-5" type="checkbox" name="stream_wet" checked>
+                    <div class="stream-card-compact wet selected" id="soc-card-wet" onclick="toggleSocStream('stream_wet', 'soc-card-wet', 'soc-kg-wet')">
+                        <div>
+                            <div class="stream-header">
+                                <span class="stream-icon">🥬</span>
+                                <input class="form-check-input fs-5" type="checkbox" name="stream_wet" id="soc_stream_wet" checked onclick="event.stopPropagation(); syncSocStreamCard('stream_wet', 'soc-card-wet', 'soc-kg-wet');">
                             </div>
-                            <strong class="d-block text-dark">{{ tr('wet_name') }}</strong>
-                            <small class="text-secondary d-block mb-2">{{ tr('wet_desc') }}</small>
-                            <div class="mt-2 pt-2 border-top">
-                                <label class="small fw-bold text-muted d-block mb-1" style="font-size: 11px;">{{ tr('est_qty_note') }}:</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="number" step="0.5" min="0.5" name="stream_wet_kg" class="form-control rounded-start-pill text-center fw-bold" value="25.0">
-                                    <span class="input-group-text rounded-end-pill bg-white text-muted fw-bold">kg</span>
-                                </div>
+                            <div class="stream-name">{{ tr('wet_name') }}</div>
+                            <div class="stream-dest">Compost / Bio-CNG</div>
+                        </div>
+                        <div class="stream-kg-box" id="soc-kg-wet" onclick="event.stopPropagation()">
+                            <div class="input-group input-group-sm">
+                                <input type="number" step="0.5" min="0.5" name="stream_wet_kg" class="form-control text-center fw-bold py-1" value="25.0">
+                                <span class="input-group-text bg-white small px-1 fw-bold">kg</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Dry -->
-                    <div class="col-md-6">
-                        <div class="stream-card dry selected p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="stream-icon-box">📦</span>
-                                <input class="form-check-input fs-5" type="checkbox" name="stream_dry" checked>
+                    <div class="stream-card-compact dry selected" id="soc-card-dry" onclick="toggleSocStream('stream_dry', 'soc-card-dry', 'soc-kg-dry')">
+                        <div>
+                            <div class="stream-header">
+                                <span class="stream-icon">📦</span>
+                                <input class="form-check-input fs-5" type="checkbox" name="stream_dry" id="soc_stream_dry" checked onclick="event.stopPropagation(); syncSocStreamCard('stream_dry', 'soc-card-dry', 'soc-kg-dry');">
                             </div>
-                            <strong class="d-block text-dark">{{ tr('dry_name') }}</strong>
-                            <small class="text-secondary d-block mb-2">{{ tr('dry_desc') }}</small>
-                            <div class="mt-2 pt-2 border-top">
-                                <label class="small fw-bold text-muted d-block mb-1" style="font-size: 11px;">{{ tr('est_qty_note') }}:</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="number" step="0.5" min="0.5" name="stream_dry_kg" class="form-control rounded-start-pill text-center fw-bold" value="18.0">
-                                    <span class="input-group-text rounded-end-pill bg-white text-muted fw-bold">kg</span>
-                                </div>
+                            <div class="stream-name">{{ tr('dry_name') }}</div>
+                            <div class="stream-dest">MRF Facility</div>
+                        </div>
+                        <div class="stream-kg-box" id="soc-kg-dry" onclick="event.stopPropagation()">
+                            <div class="input-group input-group-sm">
+                                <input type="number" step="0.5" min="0.5" name="stream_dry_kg" class="form-control text-center fw-bold py-1" value="18.0">
+                                <span class="input-group-text bg-white small px-1 fw-bold">kg</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- E-Waste -->
-                    <div class="col-md-6">
-                        <div class="stream-card ewaste p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="stream-icon-box">🔌</span>
-                                <input class="form-check-input fs-5" type="checkbox" name="stream_ewaste">
+                    <div class="stream-card-compact ewaste" id="soc-card-ewaste" onclick="toggleSocStream('stream_ewaste', 'soc-card-ewaste', 'soc-kg-ewaste')">
+                        <div>
+                            <div class="stream-header">
+                                <span class="stream-icon">🔌</span>
+                                <input class="form-check-input fs-5" type="checkbox" name="stream_ewaste" id="soc_stream_ewaste" onclick="event.stopPropagation(); syncSocStreamCard('stream_ewaste', 'soc-card-ewaste', 'soc-kg-ewaste');">
                             </div>
-                            <strong class="d-block text-dark">{{ tr('ewaste_name') }}</strong>
-                            <small class="text-secondary d-block mb-2">{{ tr('ewaste_desc') }}</small>
-                            <div class="mt-2 pt-2 border-top">
-                                <label class="small fw-bold text-muted d-block mb-1" style="font-size: 11px;">{{ tr('est_qty_note') }}:</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="number" step="0.5" min="0.5" name="stream_ewaste_kg" class="form-control rounded-start-pill text-center fw-bold" value="5.0">
-                                    <span class="input-group-text rounded-end-pill bg-white text-muted fw-bold">kg</span>
-                                </div>
+                            <div class="stream-name">{{ tr('ewaste_name') }}</div>
+                            <div class="stream-dest">Reg. Recycler</div>
+                        </div>
+                        <div class="stream-kg-box d-none" id="soc-kg-ewaste" onclick="event.stopPropagation()">
+                            <div class="input-group input-group-sm">
+                                <input type="number" step="0.5" min="0.5" name="stream_ewaste_kg" class="form-control text-center fw-bold py-1" value="5.0">
+                                <span class="input-group-text bg-white small px-1 fw-bold">kg</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Residual -->
-                    <div class="col-md-6">
-                        <div class="stream-card residual p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="stream-icon-box">🔥</span>
-                                <input class="form-check-input fs-5" type="checkbox" name="stream_residual">
+                    <div class="stream-card-compact residual" id="soc-card-residual" onclick="toggleSocStream('stream_residual', 'soc-card-residual', 'soc-kg-residual')">
+                        <div>
+                            <div class="stream-header">
+                                <span class="stream-icon">🔥</span>
+                                <input class="form-check-input fs-5" type="checkbox" name="stream_residual" id="soc_stream_residual" onclick="event.stopPropagation(); syncSocStreamCard('stream_residual', 'soc-card-residual', 'soc-kg-residual');">
                             </div>
-                            <strong class="d-block text-dark">{{ tr('residual_name') }}</strong>
-                            <small class="text-secondary d-block mb-2">{{ tr('residual_desc') }}</small>
-                            <div class="mt-2 pt-2 border-top">
-                                <label class="small fw-bold text-muted d-block mb-1" style="font-size: 11px;">{{ tr('est_qty_note') }}:</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="number" step="0.5" min="0.5" name="stream_residual_kg" class="form-control rounded-start-pill text-center fw-bold" value="8.0">
-                                    <span class="input-group-text rounded-end-pill bg-white text-muted fw-bold">kg</span>
-                                </div>
+                            <div class="stream-name">{{ tr('residual_name') }}</div>
+                            <div class="stream-dest">RDF / Kiln</div>
+                        </div>
+                        <div class="stream-kg-box d-none" id="soc-kg-residual" onclick="event.stopPropagation()">
+                            <div class="input-group input-group-sm">
+                                <input type="number" step="0.5" min="0.5" name="stream_residual_kg" class="form-control text-center fw-bold py-1" value="8.0">
+                                <span class="input-group-text bg-white small px-1 fw-bold">kg</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Society Collection Point Confirmation -->
-            <div class="p-3 bg-light rounded-4 border mb-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="small fw-bold text-dark text-uppercase" style="font-size: 11px;">Pickup Station</div>
-                        <div class="fw-bold text-dark fs-6"><i class="fa-solid fa-map-pin text-danger me-1"></i> {{ society.collection_point }}</div>
-                        <small class="text-muted">{{ society.address }}</small>
-                    </div>
-                    <span class="badge bg-success text-white rounded-pill px-3 py-2">Security Notified</span>
+            <!-- Step 2: Society Collection Bay & Exact Gujarat Map Pin -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h3 class="fs-6 fw-bold text-dark mb-0"><i class="fa-solid fa-map-location-dot text-success me-1"></i> 2. Collection Gate & Map Pin</h3>
+                    <button type="button" class="btn btn-xs btn-outline-success rounded-pill px-2 py-1 fw-bold" style="font-size: 11px;" onclick="socPicker.useGPSLocation()">
+                        <i class="fa-solid fa-crosshairs me-1"></i> Use My Current Location
+                    </button>
                 </div>
+
+                <!-- Address Input & Live Autocomplete Suggestions -->
+                <div class="nl-address-wrapper mb-2">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                        <input type="text" name="address" id="soc-address" class="form-control py-2 fw-semibold" placeholder="Search area, street, landmark or address in Gujarat..." value="{{ society.collection_point }}, {{ society.address }}" autocomplete="off" required>
+                        <button type="button" class="btn btn-dark fw-bold px-3" onclick="socPicker.searchLocation(document.getElementById('soc-address').value)" title="Search on Map">
+                            Search
+                        </button>
+                    </div>
+                    <div id="soc-address-suggestions" class="nl-suggestions-dropdown"></div>
+                </div>
+
+                <!-- Map & Pin Placement Container -->
+                <div id="soc-map-wrapper">
+                    <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+                        <span class="small text-muted" style="font-size: 11px;" id="soc-status-msg">Click map or drag pin for exact society gate/bay.</span>
+                        <div class="d-flex gap-1 flex-wrap">
+                            <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="socPicker.jumpToCity('Ahmedabad', 23.0225, 72.5714)">Ahmedabad</button>
+                            <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="socPicker.jumpToCity('Gandhinagar', 23.2156, 72.6369)">Gandhinagar</button>
+                            <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="socPicker.jumpToCity('Surat', 21.1702, 72.8311)">Surat</button>
+                            <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="socPicker.jumpToCity('Vadodara', 22.3072, 73.1812)">Vadodara</button>
+                            <button type="button" class="btn btn-xs btn-light border rounded-pill px-2 py-0.5" style="font-size: 10px;" onclick="socPicker.jumpToCity('Rajkot', 22.3039, 70.8022)">Rajkot</button>
+                        </div>
+                    </div>
+
+                    <div id="society-booking-map" class="rounded-3 border shadow-xs mb-2" style="height: 200px; width: 100%;"></div>
+
+                    <!-- Confirm Location Action -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted" style="font-size: 11px;">Fine-tune pin to society collection gate</small>
+                        <button type="button" id="soc-confirm-location" class="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold shadow-xs">
+                            <i class="fa-solid fa-check me-1"></i> Confirm Location
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Confirmed Location Summary Card -->
+                <div id="soc-confirmed-card" class="p-2 bg-light rounded-3 border shadow-xs d-flex justify-content-between align-items-center">
+                    <div class="text-truncate pe-2" style="max-width: 80%;">
+                        <div class="text-dark small fw-bold text-truncate" id="soc-confirmed-address">{{ society.collection_point }}, {{ society.address }}</div>
+                        <div class="text-muted font-monospace" style="font-size: 10px;">Coordinates: <span id="soc-confirmed-coords">23.037500, 72.552000</span></div>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="badge bg-success-subtle text-success border border-success" style="font-size: 9.5px;">✓ Selected</span>
+                        <button type="button" id="soc-refine-location" class="btn btn-xs btn-outline-dark rounded-pill px-2 py-0.5" style="font-size: 10px;">
+                            Change
+                        </button>
+                    </div>
+                </div>
+
+                <input type="hidden" name="lat" id="soc-lat" value="23.0375">
+                <input type="hidden" name="lng" id="soc-lng" value="72.5520">
             </div>
 
             <!-- Bin Bay Photo Upload -->
             <div class="mb-4">
-                <label class="form-label fw-bold text-dark fs-6 mb-2">{{ tr('step3_title') }}</label>
-                <input type="file" name="photo" class="form-control rounded-3" accept="image/*">
+                <label class="form-label fw-bold text-dark small mb-1">{{ tr('step3_title') }}</label>
+                <input type="file" name="photo" class="form-control form-control-sm rounded-3" accept="image/*">
             </div>
 
-            <button type="submit" class="btn-nl-lime btn-nl-giant w-100 shadow-md">
-                <i class="fa-solid fa-truck-fast me-2"></i> {{ tr('confirm_btn') }}
+            <!-- Desktop Submit Button -->
+            <button type="submit" class="btn-nl-lime btn-nl-giant w-100 shadow-md d-none d-md-flex">
+                <i class="fa-solid fa-circle-check fs-4 me-2"></i> Confirm Society Bulk Booking
             </button>
+
+            <!-- Mobile Sticky Bottom Action -->
+            <div class="nl-mobile-sticky-action">
+                <button type="submit" class="btn-nl-lime w-100 fw-bold rounded-pill shadow-md" style="min-height: 48px; font-size: 1rem;">
+                    <i class="fa-solid fa-circle-check me-2"></i> Confirm Society Bulk Booking
+                </button>
+            </div>
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/nagarloop_location.js') }}"></script>
+<script>
+let socPicker;
+document.addEventListener("DOMContentLoaded", function () {
+    socPicker = new NagarLoopLocationPicker({
+        mapElementId: 'society-booking-map',
+        latInputId: 'soc-lat',
+        lngInputId: 'soc-lng',
+        addressInputId: 'soc-address',
+        confirmAddressId: 'soc-confirmed-address',
+        confirmCoordsId: 'soc-confirmed-coords',
+        statusMsgId: 'soc-status-msg',
+        collapsibleWrapperId: 'soc-map-wrapper',
+        confirmLocationBtnId: 'soc-confirm-location',
+        refineLocationBtnId: 'soc-refine-location',
+        confirmedCardId: 'soc-confirmed-card',
+        initialLat: 23.0375,
+        initialLng: 72.5520,
+        initialAddress: {{ (society.collection_point ~ ', ' ~ society.address) | tojson }}
+    });
+});
+
+function toggleSocStream(checkboxId, cardId, kgBoxId) {
+    const cb = document.getElementById('soc_' + checkboxId);
+    if (cb) {
+        cb.checked = !cb.checked;
+        syncSocStreamCard(checkboxId, cardId, kgBoxId);
+    }
+}
+
+function syncSocStreamCard(checkboxId, cardId, kgBoxId) {
+    const cb = document.getElementById('soc_' + checkboxId);
+    const card = document.getElementById(cardId);
+    const kgBox = document.getElementById(kgBoxId);
+
+    if (cb && card) {
+        if (cb.checked) {
+            card.classList.add('selected');
+            if (kgBox) kgBox.classList.remove('d-none');
+        } else {
+            card.classList.remove('selected');
+            if (kgBox) kgBox.classList.add('d-none');
+        }
+    }
+}
+</script>
 {% endblock %}
