@@ -418,15 +418,12 @@ def send_otp_api():
     # Send Email
     send_otp_email(email, otp_code)
 
-    # In simulation/demo mode (when MAIL_USERNAME is empty or for @nagarloop.in demo accounts), return demo_otp for instant hackathon testing
-    if not MAIL_USERNAME or email.endswith('@nagarloop.in'):
-        return jsonify({
-            'success': True,
-            'message': f'OTP sent to {email}. [Demo OTP: {otp_code}]',
-            'demo_otp': otp_code
-        })
-
-    return jsonify({'success': True, 'message': 'OTP sent to your email address.'})
+    # Return demo_otp so OTP is ALWAYS available instantly on screen for all registrations & logins
+    return jsonify({
+        'success': True,
+        'message': f'OTP sent to {email}. [Verification Code: {otp_code}]',
+        'demo_otp': otp_code
+    })
 
 @app.route('/api/auth/verify-otp', methods=['POST'])
 def verify_otp_api():
@@ -687,7 +684,8 @@ def register():
 
             session['pending_verification_email'] = user_email
             session['pending_role'] = 'society_manager'
-            flash(f"🎉 Account created! We sent a 6-digit OTP code to {user_email}. Please verify your email.", "info")
+            session['pending_otp'] = otp_code
+            flash(f"🎉 Account created! Verification OTP Code: {otp_code}. Sent to {user_email}.", "info")
             return redirect(url_for('verify_email_page'))
 
         else:
@@ -733,7 +731,8 @@ def register():
 
             session['pending_verification_email'] = user_email
             session['pending_role'] = 'citizen'
-            flash(f"🎉 Account created! We sent a 6-digit OTP code to {user_email}. Please verify your email.", "info")
+            session['pending_otp'] = otp_code
+            flash(f"🎉 Account created! Verification OTP Code: {otp_code}. Sent to {user_email}.", "info")
             return redirect(url_for('verify_email_page'))
 
     return render_template('register.html', reg_type=reg_type)
@@ -743,6 +742,7 @@ def verify_email_page():
     """Dedicated Email OTP Verification Page (Req #8, #9)"""
     email = session.get('pending_verification_email')
     target_role = session.get('pending_role', 'citizen')
+    demo_otp = session.get('pending_otp')
 
     if not email:
         flash("No pending email verification found. Please register or log in.", "warning")
@@ -755,7 +755,7 @@ def verify_email_page():
     if request.method == 'POST':
         otp_input = request.form.get('otp', '').strip()
         if not otp_input or len(otp_input) != 6:
-            return render_template('verify_email.html', masked_email=masked_email, error_msg="Please enter a valid 6-digit OTP code.")
+            return render_template('verify_email.html', masked_email=masked_email, demo_otp=demo_otp, error_msg="Please enter a valid 6-digit OTP code.")
 
         conn = get_db()
         otp_record = conn.execute("""
@@ -833,7 +833,7 @@ def verify_email_page():
         flash("🎉 Email verified successfully! Please log in to your account.", "success")
         return redirect(url_for('login_page', role=target_role))
 
-    return render_template('verify_email.html', masked_email=masked_email)
+    return render_template('verify_email.html', masked_email=masked_email, demo_otp=demo_otp)
 
 @app.route('/resend-otp', methods=['POST'])
 def resend_otp():
@@ -853,7 +853,7 @@ def resend_otp():
 
         if recent_otp:
             conn.close()
-            flash(f"Please wait {OTP_RESEND_COOLDOWN_SECONDS} seconds before requesting another code.", "warning")
+            flash(f"Please wait {OTP_RESEND_COOLDOWN_SECONDS} seconds before requesting another OTP.", "warning")
             return redirect(url_for('verify_email_page'))
 
     # Invalidate old OTPs for this email
@@ -871,7 +871,8 @@ def resend_otp():
     conn.close()
 
     send_otp_email(email, otp_code)
-    flash("A new 6-digit verification code has been sent to your email.", "success")
+    session['pending_otp'] = otp_code
+    flash(f"🎉 New OTP sent: {otp_code} to {email}.", "success")
     return redirect(url_for('verify_email_page'))
 
 @app.route('/change-email', methods=['POST'])
