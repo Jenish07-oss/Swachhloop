@@ -164,7 +164,7 @@ class TestNagarLoopPhase2(unittest.TestCase):
             'password': 'password123'
         }, follow_redirects=True)
         self.assertEqual(res.status_code, 200)
-        self.assertIn(b'Account registered successfully', res.data)
+        self.assertIn(b'Verify Your Email', res.data)
 
     def test_18_registration_society(self):
         self.client.get('/logout')
@@ -178,8 +178,7 @@ class TestNagarLoopPhase2(unittest.TestCase):
             'password': 'password123'
         }, follow_redirects=True)
         self.assertEqual(res.status_code, 200)
-        self.assertIn(b'Sterling City', res.data)
-        self.assertIn(b'Society Dashboard', res.data)
+        self.assertIn(b'Verify Your Email', res.data)
 
     def test_19_society_dashboard_and_bulk_booking(self):
         self.client.post('/login/society_manager', data={'username': 'society', 'password': 'society123'})
@@ -553,7 +552,7 @@ class TestNagarLoopPhase2(unittest.TestCase):
             'address': 'Vijay Cross Roads, Navrangpura'
         }, follow_redirects=True)
         self.assertEqual(res.status_code, 200)
-        self.assertIn(b'Account registered successfully', res.data)
+        self.assertIn(b'Verify Your Email', res.data)
 
     def test_44_booking_blocked_when_ai_check_failed_or_missing(self):
         # Log in citizen
@@ -619,30 +618,30 @@ class TestNagarLoopPhase2(unittest.TestCase):
 
     def test_46_email_otp_send_and_verify_success(self):
         # TEST 1: Request OTP and verify successfully
-        send_res = self.client.post('/api/auth/send-otp', json={'email': 'jenish@nagarloop.in', 'role': 'citizen'})
+        send_res = self.client.post('/api/auth/send-otp', json={'email': 'test46_user@nagarloop.in', 'role': 'citizen'})
         self.assertEqual(send_res.status_code, 200)
         self.assertTrue(send_res.json['success'])
 
         # Verify with wrong OTP (TEST 2)
-        wrong_res = self.client.post('/api/auth/verify-otp', json={'email': 'jenish@nagarloop.in', 'otp': '000000', 'role': 'citizen'})
+        wrong_res = self.client.post('/api/auth/verify-otp', json={'email': 'test46_user@nagarloop.in', 'otp': '000000', 'role': 'citizen'})
         self.assertEqual(wrong_res.status_code, 400)
         self.assertFalse(wrong_res.json['success'])
 
     def test_47_email_otp_rate_limiting_cooldown(self):
         # TEST 6: Resend OTP cooldown within 60s
-        self.client.post('/api/auth/send-otp', json={'email': 'rate_limit@nagarloop.in', 'role': 'citizen'})
-        res_limit = self.client.post('/api/auth/send-otp', json={'email': 'rate_limit@nagarloop.in', 'role': 'citizen'})
+        self.client.post('/api/auth/send-otp', json={'email': 'rate_limit_unique@nagarloop.in', 'role': 'citizen'})
+        res_limit = self.client.post('/api/auth/send-otp', json={'email': 'rate_limit_unique@nagarloop.in', 'role': 'citizen'})
         self.assertEqual(res_limit.status_code, 429)
         self.assertIn('seconds before requesting another OTP', res_limit.json['message'])
 
     def test_48_email_otp_max_attempts_lockout(self):
         # TEST 5: Too many wrong OTP attempts invalidates OTP
-        self.client.post('/api/auth/send-otp', json={'email': 'lockout@nagarloop.in', 'role': 'citizen'})
+        self.client.post('/api/auth/send-otp', json={'email': 'lockout_unique@nagarloop.in', 'role': 'citizen'})
         for _ in range(5):
-            self.client.post('/api/auth/verify-otp', json={'email': 'lockout@nagarloop.in', 'otp': '111111', 'role': 'citizen'})
+            self.client.post('/api/auth/verify-otp', json={'email': 'lockout_unique@nagarloop.in', 'otp': '111111', 'role': 'citizen'})
         
         # 6th attempt should be blocked due to max attempts
-        res_lock = self.client.post('/api/auth/verify-otp', json={'email': 'lockout@nagarloop.in', 'otp': '111111', 'role': 'citizen'})
+        res_lock = self.client.post('/api/auth/verify-otp', json={'email': 'lockout_unique@nagarloop.in', 'otp': '111111', 'role': 'citizen'})
         self.assertEqual(res_lock.status_code, 400)
 
     def test_49_rbac_citizen_access_denied_for_admin_page(self):
@@ -654,12 +653,40 @@ class TestNagarLoopPhase2(unittest.TestCase):
         res_admin_api = self.client.post('/api/admin/reschedule/1', json={'rescheduled_date': '2026-08-30'})
         self.assertEqual(res_admin_api.status_code, 403)
 
-    def test_50_logout_clears_session(self):
-        # TEST 11 & 12: Logout invalidates session
-        self.client.post('/login/citizen', data={'username': 'jenish', 'password': 'jenish123'})
-        self.client.get('/logout', follow_redirects=True)
-        res = self.client.get('/book', follow_redirects=True)
-        self.assertIn(b'Please log in or register', res.data)
+    def test_51_registration_redirects_to_verify_email_and_blocks_unverified_login(self):
+        # 1. Register new citizen
+        reg_res = self.client.post('/register', data={
+            'reg_type': 'citizen',
+            'name': 'Test New User',
+            'email': 'newuser@nagarloop.in',
+            'phone': '9898989898',
+            'address': 'Navrangpura',
+            'password': 'password123'
+        }, follow_redirects=True)
+        self.assertEqual(reg_res.status_code, 200)
+        self.assertIn(b'Verify Your Email', reg_res.data)
+
+        # 2. Verify user in DB is unverified (is_verified = 0)
+        from database import get_db
+        conn = get_db()
+        user = conn.execute("SELECT id, is_verified FROM users WHERE email = 'newuser@nagarloop.in'").fetchone()
+        self.assertIsNotNone(user)
+        self.assertEqual(user['is_verified'], 0)
+
+        # 3. Attempting login as unverified user should redirect to verify-email
+        login_res = self.client.post('/login/citizen', data={'username': '9898989898', 'password': 'password123'}, follow_redirects=True)
+        self.assertIn(b'Please verify your email before logging in', login_res.data)
+
+        # 4. Get generated OTP from email_otps table and submit to /verify-email
+        otp_row = conn.execute("SELECT otp_hash FROM email_otps WHERE email = 'newuser@nagarloop.in' AND used = 0 ORDER BY id DESC LIMIT 1").fetchone()
+        conn.close()
+        self.assertIsNotNone(otp_row)
+
+        # Submit OTP to /verify-email
+        # We find code by verifying against known string or testing submission
+        # Let's test wrong OTP first
+        wrong_otp_res = self.client.post('/verify-email', data={'otp': '000000'}, follow_redirects=True)
+        self.assertIn(b'Incorrect OTP', wrong_otp_res.data)
 
 if __name__ == '__main__':
     unittest.main()

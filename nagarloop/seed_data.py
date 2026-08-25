@@ -12,6 +12,8 @@ def seed():
     cursor.execute("DROP TABLE IF EXISTS users")
     cursor.execute("DROP TABLE IF EXISTS audit_logs")
     cursor.execute("DROP TABLE IF EXISTS routes")
+    cursor.execute("DROP TABLE IF EXISTS users")
+    cursor.execute("DROP TABLE IF EXISTS email_otps")
     cursor.execute("DROP TABLE IF EXISTS points_ledger")
     cursor.execute("DROP TABLE IF EXISTS pickup_streams")
     cursor.execute("DROP TABLE IF EXISTS pickups")

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Verify Email — {{ BRAND }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-5 col-lg-4">
+        <div class="nl-card shadow-md">
+            <div class="text-center mb-4">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="{{ BRAND }}" class="nl-auth-logo">
+                <h1 class="fs-4 fw-bold text-dark mb-1">Verify Your Email</h1>
+                <p class="small text-secondary mb-0">We sent a 6-digit verification code to:</p>
+                <div class="fw-bold text-success mt-1 font-monospace">{{ masked_email }}</div>
+            </div>
+
+            {% if error_msg %}
+            <div class="alert alert-danger small py-2 px-3 mb-3">
+                <i class="fa-solid fa-circle-exclamation me-1"></i> {{ error_msg }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('verify_email_page') }}">
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-dark text-center w-100">Enter 6-Digit OTP Code</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-light"><i class="fa-solid fa-key text-muted"></i></span>
+                        <input type="text" name="otp" id="otp-input" class="form-control text-center font-monospace fs-4 fw-bold letter-spacing-3" placeholder="482731" maxlength="6" pattern="\d{6}" required autofocus autocomplete="one-time-code">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-nl-lime w-100 fw-bold fs-6 py-2 shadow-sm mb-3">
+                    <i class="fa-solid fa-shield-check me-1"></i> Verify Email & Continue
+                </button>
+            </form>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                <form method="POST" action="{{ url_for('change_email') }}">
+                    <button type="submit" class="btn btn-link btn-sm text-secondary text-decoration-none p-0">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Change Email
+                    </button>
+                </form>
+
+                <form method="POST" action="{{ url_for('resend_otp') }}" id="form-resend">
+                    <button type="submit" id="btn-resend" class="btn btn-link btn-sm text-success text-decoration-none p-0 fw-bold" disabled>
+                        Resend Code (<span id="resend-timer">60</span>s)
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const otpInput = document.getElementById('otp-input');
+    if (otpInput) otpInput.focus();
+
+    let seconds = 60;
+    const btnResend = document.getElementById('btn-resend');
+    const timerSpan = document.getElementById('resend-timer');
+
+    const timer = setInterval(() => {
+        seconds--;
+        if (timerSpan) timerSpan.textContent = seconds;
+        if (seconds <= 0) {
+            clearInterval(timer);
+            if (btnResend) {
+                btnResend.disabled = false;
+                btnResend.innerHTML = '<i class="fa-solid fa-rotate-right me-1"></i> Resend Code';
+            }
+        }
+    }, 1000);
+});
+</script>
+{% endblock %}

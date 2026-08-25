@@ -505,6 +505,12 @@ def login_page(role):
         conn.close()
 
         if user:
+            if user['is_verified'] == 0:
+                session['pending_verification_email'] = user['email']
+                session['pending_role'] = user['role']
+                flash("Please verify your email before logging in.", "warning")
+                return redirect(url_for('verify_email_page'))
+
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['name'] = user['name']
@@ -591,29 +597,32 @@ def register():
                 VALUES (?, ?, ?, ?, 1, ?)
             """, (soc_code, society_name, phone, address, soc_id))
             hh_id = cur.lastrowid
-
+            user_email = email or f"society{soc_id}@nagarloop.in"
             cur.execute("""
                 INSERT INTO users (username, password, name, role, phone, email, is_verified, locality, household_id, society_id)
-                VALUES (?, ?, ?, 'society_manager', ?, ?, 1, ?, ?, ?)
-            """, (phone, password, manager_name, phone, email or f"society{soc_id}@nagarloop.in", address, hh_id, soc_id))
+                VALUES (?, ?, ?, 'society_manager', ?, ?, 0, ?, ?, ?)
+            """, (phone, password, manager_name, phone, user_email, address, hh_id, soc_id))
             user_id = cur.lastrowid
+            conn.commit()
+
+            # Generate OTP & Dispatch Email
+            otp_code = generate_secure_otp()
+            otp_hashed = hash_otp(otp_code)
+            expires_at = (datetime.now() + timedelta(minutes=OTP_EXPIRY_MINUTES)).strftime('%Y-%m-%d %H:%M:%S')
+
+            cur.execute("""
+                INSERT INTO email_otps (email, otp_hash, expires_at, attempts, used)
+                VALUES (?, ?, ?, 0, 0)
+            """, (user_email, otp_hashed, expires_at))
             conn.commit()
             conn.close()
 
-            session['user_id'] = user_id
-            session['username'] = phone
-            session['name'] = manager_name
-            session['role'] = 'society_manager'
-            session['society_id'] = soc_id
-            session['household_id'] = hh_id
-            session['user'] = {
-                'id': user_id, 'username': phone, 'name': manager_name,
-                'role': 'society_manager', 'society_id': soc_id, 'household_id': hh_id
-            }
+            send_otp_email(user_email, otp_code)
 
-            log_sms(phone, f"Welcome to NagarLoop! Society '{society_name}' is registered for circular collection.", "society_registered")
-            flash(f"🎉 Society '{society_name}' registered successfully! Welcome, {manager_name}.", "success")
-            return redirect(url_for('society_dashboard'))
+            session['pending_verification_email'] = user_email
+            session['pending_role'] = 'society_manager'
+            flash(f"🎉 Account created! We sent a 6-digit OTP code to {user_email}. Please verify your email.", "info")
+            return redirect(url_for('verify_email_page'))
 
         else:
             name = request.form.get('name', '').strip()
@@ -634,29 +643,146 @@ def register():
             """, (hh_code, name, phone, address))
             hh_id = cur.lastrowid
 
+            user_email = email or f"citizen{hh_id}@nagarloop.in"
             cur.execute("""
                 INSERT INTO users (username, password, name, role, phone, email, is_verified, locality, household_id)
-                VALUES (?, ?, ?, 'citizen', ?, ?, 1, ?, ?)
-            """, (phone, password, name, phone, email or f"citizen{hh_id}@nagarloop.in", address, hh_id))
+                VALUES (?, ?, ?, 'citizen', ?, ?, 0, ?, ?)
+            """, (phone, password, name, phone, user_email, address, hh_id))
             user_id = cur.lastrowid
+            conn.commit()
+
+            # Generate OTP & Dispatch Email
+            otp_code = generate_secure_otp()
+            otp_hashed = hash_otp(otp_code)
+            expires_at = (datetime.now() + timedelta(minutes=OTP_EXPIRY_MINUTES)).strftime('%Y-%m-%d %H:%M:%S')
+
+            cur.execute("""
+                INSERT INTO email_otps (email, otp_hash, expires_at, attempts, used)
+                VALUES (?, ?, ?, 0, 0)
+            """, (user_email, otp_hashed, expires_at))
             conn.commit()
             conn.close()
 
-            session['user_id'] = user_id
-            session['username'] = phone
-            session['name'] = name
-            session['role'] = 'citizen'
-            session['household_id'] = hh_id
-            session['user'] = {
-                'id': user_id, 'username': phone, 'name': name,
-                'role': 'citizen', 'household_id': hh_id
-            }
+            send_otp_email(user_email, otp_code)
 
-            log_sms(phone, f"Welcome to NagarLoop, {name}! Your citizen account is now active.", "citizen_registered")
-            flash(f"🎉 Account registered successfully! Welcome, {name}.", "success")
-            return redirect(url_for('citizen_booking'))
+            session['pending_verification_email'] = user_email
+            session['pending_role'] = 'citizen'
+            flash(f"🎉 Account created! We sent a 6-digit OTP code to {user_email}. Please verify your email.", "info")
+            return redirect(url_for('verify_email_page'))
 
     return render_template('register.html', reg_type=reg_type)
+
+@app.route('/verify-email', methods=['GET', 'POST'])
+def verify_email_page():
+    """Dedicated Email OTP Verification Page (Req #8, #9)"""
+    email = session.get('pending_verification_email')
+    target_role = session.get('pending_role', 'citizen')
+
+    if not email:
+        flash("No pending email verification found. Please register or log in.", "warning")
+        return redirect(url_for('register'))
+
+    # Mask recipient email for privacy in UI
+    parts = email.split('@')
+    masked_email = f"{parts[0][:2]}****@{parts[1]}" if len(parts[0]) > 2 else f"*@{parts[1]}"
+
+    if request.method == 'POST':
+        otp_input = request.form.get('otp', '').strip()
+        if not otp_input or len(otp_input) != 6:
+            return render_template('verify_email.html', masked_email=masked_email, error_msg="Please enter a valid 6-digit OTP code.")
+
+        conn = get_db()
+        otp_record = conn.execute("""
+            SELECT * FROM email_otps 
+            WHERE email = ? AND used = 0
+            ORDER BY id DESC LIMIT 1
+        """, (email,)).fetchone()
+
+        if not otp_record:
+            conn.close()
+            return render_template('verify_email.html', masked_email=masked_email, error_msg="Incorrect OTP. Please try again.")
+
+        # Check attempt limits
+        if otp_record['attempts'] >= OTP_MAX_ATTEMPTS:
+            conn.execute("UPDATE email_otps SET used = 1 WHERE id = ?", (otp_record['id'],))
+            conn.commit()
+            conn.close()
+            return render_template('verify_email.html', masked_email=masked_email, error_msg="Too many failed attempts. Please click Resend Code.")
+
+        # Check expiry
+        expires_at_dt = datetime.strptime(otp_record['expires_at'], '%Y-%m-%d %H:%M:%S')
+        if datetime.now() > expires_at_dt:
+            conn.execute("UPDATE email_otps SET used = 1 WHERE id = ?", (otp_record['id'],))
+            conn.commit()
+            conn.close()
+            return render_template('verify_email.html', masked_email=masked_email, error_msg="This OTP has expired. Please click Resend Code.")
+
+        # Check Hash
+        if hash_otp(otp_input) != otp_record['otp_hash']:
+            conn.execute("UPDATE email_otps SET attempts = attempts + 1 WHERE id = ?", (otp_record['id'],))
+            conn.commit()
+            conn.close()
+            return render_template('verify_email.html', masked_email=masked_email, error_msg="Incorrect OTP. Please try again.")
+
+        # SUCCESS: Mark user verified & OTP used
+        conn.execute("UPDATE users SET is_verified = 1 WHERE email = ? OR username = ?", (email, email))
+        conn.execute("UPDATE email_otps SET used = 1 WHERE id = ?", (otp_record['id'],))
+        conn.commit()
+        conn.close()
+
+        session.pop('pending_verification_email', None)
+        session.pop('pending_role', None)
+
+        flash("🎉 Email verified successfully! Please log in to your account.", "success")
+        return redirect(url_for('login_page', role=target_role))
+
+    return render_template('verify_email.html', masked_email=masked_email)
+
+@app.route('/resend-otp', methods=['POST'])
+def resend_otp():
+    """Resend OTP handler with rate limiting (Req #6, #19)"""
+    email = session.get('pending_verification_email')
+    if not email:
+        flash("No pending verification found.", "warning")
+        return redirect(url_for('register'))
+
+    conn = get_db()
+    recent_otp = conn.execute("""
+        SELECT created_at FROM email_otps 
+        WHERE email = ? AND datetime(created_at) > datetime('now', '-' || ? || ' seconds')
+        ORDER BY id DESC LIMIT 1
+    """, (email, OTP_RESEND_COOLDOWN_SECONDS)).fetchone()
+
+    if recent_otp:
+        conn.close()
+        flash(f"Please wait {OTP_RESEND_COOLDOWN_SECONDS} seconds before requesting another code.", "warning")
+        return redirect(url_for('verify_email_page'))
+
+    # Invalidate old OTPs for this email
+    conn.execute("UPDATE email_otps SET used = 1 WHERE email = ? AND used = 0", (email,))
+
+    otp_code = generate_secure_otp()
+    otp_hashed = hash_otp(otp_code)
+    expires_at = (datetime.now() + timedelta(minutes=OTP_EXPIRY_MINUTES)).strftime('%Y-%m-%d %H:%M:%S')
+
+    conn.execute("""
+        INSERT INTO email_otps (email, otp_hash, expires_at, attempts, used)
+        VALUES (?, ?, ?, 0, 0)
+    """, (email, otp_hashed, expires_at))
+    conn.commit()
+    conn.close()
+
+    send_otp_email(email, otp_code)
+    flash("A new 6-digit verification code has been sent to your email.", "success")
+    return redirect(url_for('verify_email_page'))
+
+@app.route('/change-email', methods=['POST'])
+def change_email():
+    """Safe email change handler (Req #10)"""
+    session.pop('pending_verification_email', None)
+    session.pop('pending_role', None)
+    flash("You can now enter a different email address to register.", "info")
+    return redirect(url_for('register'))
 
 @app.route('/logout')
 def logout():
