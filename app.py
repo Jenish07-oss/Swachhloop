@@ -418,11 +418,17 @@ def send_otp_api():
     # Send Email
     send_otp_email(email, otp_code)
 
-    # Return demo_otp so OTP is ALWAYS available instantly on screen for all registrations & logins
+    # Return demo_otp ONLY for @nagarloop.in demo accounts
+    if email.endswith('@nagarloop.in'):
+        return jsonify({
+            'success': True,
+            'message': f'OTP sent to {email}. [Demo OTP: {otp_code}]',
+            'demo_otp': otp_code
+        })
+
     return jsonify({
         'success': True,
-        'message': f'OTP sent to {email}. [Verification Code: {otp_code}]',
-        'demo_otp': otp_code
+        'message': f'OTP sent to {email}. Please check your email inbox.'
     })
 
 @app.route('/api/auth/verify-otp', methods=['POST'])
@@ -684,8 +690,12 @@ def register():
 
             session['pending_verification_email'] = user_email
             session['pending_role'] = 'society_manager'
-            session['pending_otp'] = otp_code
-            flash(f"🎉 Account created! Verification OTP Code: {otp_code}. Sent to {user_email}.", "info")
+            if user_email.endswith('@nagarloop.in'):
+                session['pending_otp'] = otp_code
+                flash(f"🎉 Account created! Verification OTP Code: {otp_code}. Sent to {user_email}.", "info")
+            else:
+                session.pop('pending_otp', None)
+                flash(f"🎉 Account created! We sent a 6-digit OTP code to {user_email}. Please check your email inbox.", "info")
             return redirect(url_for('verify_email_page'))
 
         else:
@@ -731,8 +741,12 @@ def register():
 
             session['pending_verification_email'] = user_email
             session['pending_role'] = 'citizen'
-            session['pending_otp'] = otp_code
-            flash(f"🎉 Account created! Verification OTP Code: {otp_code}. Sent to {user_email}.", "info")
+            if user_email.endswith('@nagarloop.in'):
+                session['pending_otp'] = otp_code
+                flash(f"🎉 Account created! Verification OTP Code: {otp_code}. Sent to {user_email}.", "info")
+            else:
+                session.pop('pending_otp', None)
+                flash(f"🎉 Account created! We sent a 6-digit OTP code to {user_email}. Please check your email inbox.", "info")
             return redirect(url_for('verify_email_page'))
 
     return render_template('register.html', reg_type=reg_type)
@@ -742,7 +756,7 @@ def verify_email_page():
     """Dedicated Email OTP Verification Page (Req #8, #9)"""
     email = session.get('pending_verification_email')
     target_role = session.get('pending_role', 'citizen')
-    demo_otp = session.get('pending_otp')
+    demo_otp = session.get('pending_otp') if (email and email.endswith('@nagarloop.in')) else None
 
     if not email:
         flash("No pending email verification found. Please register or log in.", "warning")
@@ -871,8 +885,12 @@ def resend_otp():
     conn.close()
 
     send_otp_email(email, otp_code)
-    session['pending_otp'] = otp_code
-    flash(f"🎉 New OTP sent: {otp_code} to {email}.", "success")
+    if email.endswith('@nagarloop.in'):
+        session['pending_otp'] = otp_code
+        flash(f"🎉 New OTP sent: {otp_code} to {email}.", "success")
+    else:
+        session.pop('pending_otp', None)
+        flash(f"🎉 A new 6-digit verification code has been sent to {email}. Please check your email inbox.", "success")
     return redirect(url_for('verify_email_page'))
 
 @app.route('/change-email', methods=['POST'])
